@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kstartup-api-catalog"
+version = "1.0.1"
+description = "K-Startup API announcement collector with deadline classification"
+requires-python = ">=3.10"
+
+[project.scripts]
+kstartup-catalog = "api_catalog:main"
+
+[tool.setuptools]
+py-modules = ["api_catalog", "_api_catalog_core"]
