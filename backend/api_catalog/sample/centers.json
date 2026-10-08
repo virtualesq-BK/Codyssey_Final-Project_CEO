@@ -1,0 +1,14 @@
+[
+  {
+    "cntr_id": 10,
+    "buld_id": 20,
+    "cntr_nm": "예제 창업센터",
+    "buld_nm": "예제 건물",
+    "regin_clss": "세종특별자치시",
+    "addr": "세종시 예제 주소",
+    "latde": 36.5,
+    "lgtde": 127.3,
+    "spce_cnt": 2,
+    "hmpg": "https://example.org/center"
+  }
+]
