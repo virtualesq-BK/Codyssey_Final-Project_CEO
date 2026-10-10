@@ -9,9 +9,9 @@
 | 서비스 | URL | 플랫폼 |
 |---|---|---|
 | **Frontend (프론트엔드)** | https://codyssey-final-project-ceo-g9sg.vercel.app | Vercel |
-| **Backend API** | https://nadosajang-api.onrender.com | Render |
-| **API 문서 (Swagger)** | https://nadosajang-api.onrender.com/docs | Render |
-| **Health Check** | https://nadosajang-api.onrender.com/api/v1/health | Render |
+| **Backend API** | https://codyssey-final-project-ceo.onrender.com | Render |
+| **API 문서 (Swagger)** | https://codyssey-final-project-ceo.onrender.com/docs | Render |
+| **Health Check** | https://codyssey-final-project-ceo.onrender.com/api/v1/health | Render |
 
 > Render 무료 플랜은 비활성 상태에서 스핀다운됩니다. 첫 요청 시 30~60초 지연이 발생할 수 있습니다.
 
@@ -216,7 +216,7 @@ bizrag DB가 없을 때 다음 외부 API를 통해 실시간으로 Evidence를 
 | 구분 | 기술 | URL |
 |---|---|---|
 | Frontend | Vercel (Next.js 자동 빌드·배포) | https://codyssey-final-project-ceo-g9sg.vercel.app |
-| Backend | Render (Python Web Service, `render.yaml`) | https://nadosajang-api.onrender.com |
+| Backend | Render (Python Web Service, `render.yaml`) | https://codyssey-final-project-ceo.onrender.com |
 | 로컬 개발 | Docker + Docker Compose | `http://localhost:3000` / `http://localhost:8000` |
 
 ### 공통 Schema (Pydantic)
