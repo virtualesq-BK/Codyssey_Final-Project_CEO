@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kstartup-api-catalog"
+version = "1.3.0"
+description = "K-Startup API announcement collector with deadline classification"
+requires-python = ">=3.10"
+
+[project.scripts]
+kstartup-catalog = "api_catalog:main"
+kstartup-attachments = "attachment_catalog:main"
+kstartup-references = "reference_catalog:main"
+
+[project.optional-dependencies]
+documents = ["pdfplumber>=0.11,<1"]
+hwp = ["pyhwp>=0.1b15,<0.2", "six>=1.16,<2"]
+
+[tool.setuptools]
+py-modules = ["api_catalog", "_api_catalog_core", "attachment_catalog", "forms_documents", "forms_http", "reference_catalog"]
