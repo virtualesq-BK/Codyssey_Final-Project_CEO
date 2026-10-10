@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nadosajang-api
+    name: codyssey-final-project-ceo
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
