@@ -35,23 +35,6 @@ class MarketAgent(BaseAgent):
         )
 
 
-class CustomerAgent(BaseAgent):
-    async def _execute(self, idea: BusinessIdea) -> AgentResult:
-        return AgentResult(
-            agent_name=self.agent_name,
-            status=AgentStatus.SUCCESS,
-            summary=f"'{idea.customer}' 고객 분석 완료 (더미)",
-            findings=[
-                {"target_segment": idea.customer},
-                {"pain_points": ["편의성 부족", "비용 문제"]},
-                {"willingness_to_pay": "미확인"},
-            ],
-            evidence=[_dummy_evidence("고객 인터뷰 필요", "CustomerAgent")],
-            recommendations=["고객 인터뷰 최소 10건 수행 권장"],
-            confidence=0.4,
-        )
-
-
 class CompetitorAgent(BaseAgent):
     async def _execute(self, idea: BusinessIdea) -> AgentResult:
         return AgentResult(
@@ -68,18 +51,38 @@ class CompetitorAgent(BaseAgent):
         )
 
 
-class BusinessModelAgent(BaseAgent):
+class FinancialAgent(BaseAgent):
     async def _execute(self, idea: BusinessIdea) -> AgentResult:
         return AgentResult(
             agent_name=self.agent_name,
             status=AgentStatus.SUCCESS,
-            summary="비즈니스 모델 분석 완료 (더미)",
+            summary="재무 분석 완료 (더미)",
             findings=[
-                {"revenue_model": "미확정"},
-                {"value_proposition": idea.solution},
-                {"channels": ["온라인", "오프라인"]},
+                {"initial_investment": "미확정"},
+                {"break_even": "미확정"},
+                {"monthly_burn": "미확정"},
             ],
-            evidence=[_dummy_evidence("BM 검증 필요", "BusinessModelAgent")],
-            recommendations=["수익 모델 명확화 후 단가 계산 필요"],
+            evidence=[_dummy_evidence("재무 모델링 필요", "FinancialAgent")],
+            recommendations=["초기 투자비용과 월 운영비 추정 필요"],
+            confidence=0.3,
+        )
+
+
+class RiskAgent(BaseAgent):
+    async def _execute(self, idea: BusinessIdea) -> AgentResult:
+        return AgentResult(
+            agent_name=self.agent_name,
+            status=AgentStatus.SUCCESS,
+            summary="리스크 분석 완료 (더미)",
+            findings=[
+                {"market_risk": "시장 반응 불확실성"},
+                {"regulatory_risk": "규제 리스크 미확인"},
+                {"execution_risk": "팀 역량 확인 필요"},
+            ],
+            evidence=[_dummy_evidence("리스크 상세 분석 필요", "RiskAgent")],
+            recommendations=["핵심 리스크 Top3 도출 후 대응책 수립"],
             confidence=0.4,
         )
+
+# Orchestrator와 기존 호출 코드의 가져오기 경로를 유지한다.
+from app.agents.business_agents import CustomerAgent, BusinessModelAgent
