@@ -1,6 +1,6 @@
 # 나도사장 (NadoSajang)
 
-> AI 기반 예비창업자 사업성 분석 서비스
+> AI 기반 예비창업자 사업성 분석 서비스 — "아이디어 한 줄에서 지원서 재료까지"
 
 ---
 
@@ -9,27 +9,29 @@
 1. [프로젝트 개요](#1-프로젝트-개요)
 2. [문제 정의](#2-문제-정의)
 3. [타겟 사용자](#3-타겟-사용자)
-4. [서비스 흐름](#4-서비스-흐름)
-5. [AI 활용 방식](#5-ai-활용-방식)
-6. [기술적 접근 방식](#6-기술적-접근-방식)
-7. [프로젝트 구조](#7-프로젝트-구조)
-8. [팀 구성 및 담당 업무](#8-팀-구성-및-담당-업무)
-9. [일정 계획](#9-일정-계획)
-10. [개발 환경 설정](#10-개발-환경-설정)
-11. [API 명세](#11-api-명세)
-12. [Git 브랜치 전략](#12-git-브랜치-전략)
+4. [서비스 구성](#4-서비스-구성)
+5. [서비스 흐름](#5-서비스-흐름)
+6. [AI 활용 방식](#6-ai-활용-방식)
+7. [기술적 접근 방식](#7-기술적-접근-방식)
+8. [프로젝트 구조](#8-프로젝트-구조)
+9. [팀 구성 및 담당 업무](#9-팀-구성-및-담당-업무)
+10. [일정 계획](#10-일정-계획)
+11. [개발 환경 설정](#11-개발-환경-설정)
+12. [API 명세](#12-api-명세)
+13. [Git 브랜치 전략](#13-git-브랜치-전략)
 
 ---
 
 ## 1. 프로젝트 개요
 
-**나도사장**은 예비창업자가 자신의 프로필과 사업 아이디어를 입력하면, Multi-Agent AI 시스템이 시장·고객·경쟁·재무·리스크를 자동으로 분석하고 사업성 리포트와 실행 계획을 제공하는 서비스다.
+**나도사장**은 예비창업자가 사업 아이디어를 입력하면, Multi-Agent AI 시스템이 시장·고객·경쟁·재무·리스크를 자동으로 분석하고 사업성 리포트와 실행 계획을 제공하는 서비스다.  
+"창업자판 사람인"을 모토로, 공고 찾기부터 AI 지원서 초안까지 창업 전 과정을 지원한다.
 
 | 항목 | 내용 |
 |---|---|
 | 개발 기간 | 4주 |
 | 팀 규모 | 5명 |
-| 주요 기술 | Python, FastAPI, LangChain/LLM, React/Next.js |
+| 주요 기술 | Python · FastAPI · Multi-Agent AI · Next.js · Tailwind CSS |
 | GitHub | https://github.com/virtualesq-BK/Codyssey_Final-Project_CEO |
 
 ---
@@ -49,7 +51,7 @@
 
 ### 우리의 해결 방식
 
-AI Multi-Agent 시스템으로 전문 컨설팅 수준의 사업성 분석을 **저비용·빠른 속도**로 자동화한다.
+AI Multi-Agent 시스템으로 전문 컨설팅 수준의 사업성 분석을 **저비용·빠른 속도**로 자동화하고, 맞춤 창업 공고와 지원서 초안까지 한 번에 제공한다.
 
 ---
 
@@ -72,11 +74,25 @@ AI Multi-Agent 시스템으로 전문 컨설팅 수준의 사업성 분석을 **
 
 ---
 
-## 4. 서비스 흐름
+## 4. 서비스 구성
+
+나도사장은 5개 메뉴로 구성된다.
+
+| 메뉴 | URL | 기능 |
+|---|---|---|
+| **공고 찾기** | `/programs` | 정부·지자체 창업 지원 공고 검색 및 필터링 (상태·지역·분야·키워드) |
+| **MY아이디어** | `/ideas` | AI 진단을 완료한 아이디어 목록 · 판정 결과 카드 조회 |
+| **AI 지원서** | `/` | 아이디어 입력 → 6개 에이전트 병렬 분석 → 사업성 판정 (메인 기능) |
+| **스타트업라운지** | `/lounge` | 창업 뉴스, 정부 포털, 투자·교육 리소스 링크 모음 |
+| **마이페이지** | `/mypage` | 분석 통계 요약, 최근 아이디어 목록, 빠른 메뉴 |
+
+---
+
+## 5. 서비스 흐름
 
 ```
 [사용자 입력]
-  사업 아이디어 + 프로필
+  사업 아이디어 (제목·문제·고객·솔루션·산업·지역)
        │
        ▼
 [Orchestrator Agent]
@@ -85,32 +101,33 @@ AI Multi-Agent 시스템으로 전문 컨설팅 수준의 사업성 분석을 **
   ┌────┴────────────────┐
   │ 병렬 실행 (Phase 1) │
   ├─────────────────────┤
-  │  Market Agent       │  → 시장 규모·트렌드 분석
-  │  Customer Agent     │  → 고객 세그먼트·니즈 분석
-  │  Competitor Agent   │  → 경쟁사·차별화 분석
+  │  MarketAgent        │  → 시장 규모·트렌드 분석
+  │  CustomerAgent      │  → 고객 세그먼트·니즈 분석
+  │  CompetitorAgent    │  → 경쟁사·차별화 분석
   └─────────────────────┘
        │
        ▼
-  BusinessModel Agent    → 수익 모델·가치 제안 분석
+  BusinessModelAgent    → 수익 모델·가치 제안 분석
        │
   ┌────┴────────────────┐
   │ 병렬 실행 (Phase 3) │
   ├─────────────────────┤
-  │  Financial Agent    │  → 초기 비용·손익분기점
-  │  Risk Agent         │  → 리스크 식별·대응책
+  │  FinancialAgent     │  → 초기 비용·손익분기점
+  │  RiskAgent          │  → 리스크 식별·대응책
   └─────────────────────┘
        │
        ▼
-  Decision Agent         → 종합 판단 (GO / PIVOT / VALIDATE MORE / STOP)
+  DecisionAgent         → GO / PIVOT / VALIDATE MORE / STOP
        │
        ▼
 [결과 출력]
   사업성 리포트 + Action Plan
+  + MY아이디어 자동 저장 (localStorage)
 ```
 
 ---
 
-## 5. AI 활용 방식
+## 6. AI 활용 방식
 
 ### Multi-Agent Architecture
 
@@ -118,13 +135,13 @@ AI Multi-Agent 시스템으로 전문 컨설팅 수준의 사업성 분석을 **
 
 | Agent | AI 활용 방법 |
 |---|---|
-| **Market Agent** | RAG(Retrieval-Augmented Generation)로 실제 시장 통계·뉴스 검색 후 LLM이 종합 분석 |
-| **Customer Agent** | LLM 기반 고객 페르소나 생성, 고객 Pain Point 추출 |
-| **Competitor Agent** | 웹 검색 + LLM으로 경쟁사 비교 분석 |
-| **BusinessModel Agent** | LLM 기반 비즈니스 모델 Canvas 구조화 |
-| **Financial Agent** | 구조화된 계산 + LLM으로 재무 시나리오 생성 |
-| **Risk Agent** | LLM 기반 리스크 매트릭스 생성 |
-| **Decision Agent** | 모든 Agent 결과를 종합하여 SWOT + 최종 판단 생성 |
+| **MarketAgent** | RAG(Retrieval-Augmented Generation)로 실제 시장 통계·뉴스 검색 후 LLM 종합 분석 |
+| **CustomerAgent** | LLM 기반 고객 페르소나 생성, Pain Point / Gain 추출 |
+| **CompetitorAgent** | 웹 검색 + LLM으로 경쟁사 비교 분석 |
+| **BusinessModelAgent** | LLM 기반 Business Model Canvas 구조화 |
+| **FinancialAgent** | 구조화된 계산 + LLM으로 재무 시나리오 생성 |
+| **RiskAgent** | LLM 기반 리스크 매트릭스 생성 |
+| **DecisionAgent** | 전체 결과 종합 → SWOT + 최종 GO/PIVOT/VALIDATE_MORE/STOP 판정 |
 
 ### LLM Provider 추상화
 
@@ -133,6 +150,7 @@ Agent → LLMProvider → OpenAI / Anthropic
 ```
 
 - 환경변수(`LLM_PROVIDER`, `LLM_MODEL`)로 모델 교체 가능
+- `OPENAI_BASE_URL` 지원 → 커스텀 프록시 엔드포인트 사용 가능
 - API 키는 `.env`에서만 관리
 
 ### Evidence 기반 판단 원칙
@@ -143,7 +161,7 @@ Agent → LLMProvider → OpenAI / Anthropic
 
 ---
 
-## 6. 기술적 접근 방식
+## 7. 기술적 접근 방식
 
 ### Backend
 
@@ -152,8 +170,8 @@ Agent → LLMProvider → OpenAI / Anthropic
 | 언어 | Python 3.11 |
 | API Framework | FastAPI |
 | AI Orchestration | 자체 Multi-Agent Framework |
-| LLM | OpenAI GPT-4o / Anthropic Claude (환경변수 선택) |
-| RAG | LangChain + Vector DB (B팀원 구현) |
+| LLM | OpenAI GPT 계열 / Anthropic Claude (환경변수 선택) |
+| RAG | bizrag 어댑터 (SQLite Knowledge DB) |
 | Database | SQLite (개발) / PostgreSQL (프로덕션 예정) |
 | ORM | SQLAlchemy 2.0 (async) |
 
@@ -161,10 +179,19 @@ Agent → LLMProvider → OpenAI / Anthropic
 
 | 구분 | 기술 |
 |---|---|
-| Framework | React / Next.js |
-| 스타일 | Tailwind CSS |
-| 상태관리 | (E팀원 선택) |
-| API 통신 | fetch / axios |
+| Framework | Next.js 14 (App Router) |
+| 언어 | TypeScript |
+| 스타일 | Tailwind CSS + IBM Plex Sans KR |
+| 상태 | React useState + localStorage (아이디어 기록) |
+| API 통신 | Next.js API Routes (서버 사이드 프록시) |
+
+### 배포
+
+| 구분 | 기술 |
+|---|---|
+| 컨테이너화 | Docker + Docker Compose |
+| Backend | `http://backend:8000` (컨테이너 내부 통신) |
+| Frontend | `http://frontend:3000` → `/api/v1/*` 프록시 → 백엔드 |
 
 ### 공통 Schema (Pydantic)
 
@@ -176,45 +203,58 @@ BusinessIdea  →  Orchestrator  →  AgentResult × 6  →  DecisionResult
 
 ---
 
-## 7. 프로젝트 구조
+## 8. 프로젝트 구조
 
 ```
 Codyssey_Final-Project_CEO/
 ├── backend/
 │   ├── app/
 │   │   ├── core/
-│   │   │   ├── schemas.py        # 공통 Domain 모델 (BusinessIdea, AgentResult 등)
-│   │   │   ├── base_agent.py     # BaseAgent (retry, logging)
-│   │   │   ├── llm_provider.py   # LLM 추상화 (OpenAI / Anthropic / Mock)
-│   │   │   └── config.py         # 환경변수 설정
+│   │   │   ├── schemas.py          # 공통 Domain 모델
+│   │   │   ├── base_agent.py       # BaseAgent (retry, logging)
+│   │   │   ├── llm_provider.py     # LLM 추상화 (OpenAI / Anthropic)
+│   │   │   └── config.py           # .env 자동 로드 (절대 경로)
 │   │   ├── agents/
-│   │   │   ├── orchestrator.py   # Orchestrator Agent
-│   │   │   ├── decision_agent.py # Decision Agent
-│   │   │   ├── dummy_agents.py   # 1주차 E2E용 Dummy Agents
-│   │   │   ├── market_agent.py   # (B팀원 구현)
-│   │   │   ├── customer_agent.py # (C팀원 구현)
-│   │   │   ├── competitor_agent.py # (C팀원 구현)
-│   │   │   ├── bm_agent.py       # (C팀원 구현)
-│   │   │   ├── financial_agent.py # (D팀원 구현)
-│   │   │   └── risk_agent.py     # (D팀원 구현)
+│   │   │   ├── orchestrator.py     # Orchestrator (병렬/순차 workflow)
+│   │   │   ├── decision_agent.py   # DecisionAgent (GO/PIVOT/VALIDATE/STOP)
+│   │   │   ├── market_agent.py     # MarketAgent (RAG 연동)
+│   │   │   ├── business_agents.py  # CustomerAgent, CompetitorAgent, BusinessModelAgent
+│   │   │   ├── financial_agent.py  # FinancialAgent
+│   │   │   ├── risk_agent.py       # RiskAgent
+│   │   │   └── dummy_agents.py     # E2E 테스트용 Dummy
 │   │   ├── api/
-│   │   │   ├── main.py           # FastAPI app
-│   │   │   └── routes.py         # API endpoints
+│   │   │   ├── main.py             # FastAPI app (CORS, lifespan)
+│   │   │   └── routes.py           # API endpoints
+│   │   ├── rag/
+│   │   │   ├── providers.py        # RAG provider 초기화
+│   │   │   └── bizrag_adapters.py  # bizrag ↔ Agent 인터페이스 어댑터
+│   │   ├── financial/              # 재무 계산 모듈
+│   │   ├── risk/                   # 리스크 분류 모듈
 │   │   └── db/
-│   │       ├── models.py         # SQLAlchemy models
-│   │       └── session.py        # DB session
+│   │       ├── models.py           # SQLAlchemy models
+│   │       └── session.py          # DB session (async)
+│   ├── api_catalog/                # 창업 공고 수집·저장 모듈
 │   ├── tests/
-│   │   ├── test_schemas.py
-│   │   ├── test_llm_provider.py
-│   │   ├── test_orchestrator.py
-│   │   ├── test_decision_agent.py
-│   │   └── test_agent_failure.py
-│   ├── requirements.txt
-│   └── pytest.ini
-├── frontend/                     # (E팀원 구현)
+│   └── requirements.txt
+├── frontend/
 │   └── src/
-├── docs/
-│   └── GIT_WORKFLOW.md
+│       ├── app/
+│       │   ├── page.tsx            # AI 지원서 (메인 분석 페이지)
+│       │   ├── programs/page.tsx   # 공고 찾기
+│       │   ├── ideas/page.tsx      # MY아이디어
+│       │   ├── lounge/page.tsx     # 스타트업라운지
+│       │   ├── mypage/page.tsx     # 마이페이지
+│       │   ├── layout.tsx
+│       │   ├── globals.css
+│       │   └── api/v1/             # Next.js API Routes (백엔드 프록시)
+│       │       ├── analyze/route.ts
+│       │       ├── health/route.ts
+│       │       └── programs/route.ts
+│       └── components/
+│           ├── Header.tsx          # 네비게이션 (5개 메뉴)
+│           ├── AgentResultCard.tsx # 에이전트별 결과 카드
+│           └── DecisionBanner.tsx  # 종합 판정 배너
+├── docker-compose.yml
 ├── .env.example
 ├── .gitignore
 └── README.md
@@ -222,44 +262,34 @@ Codyssey_Final-Project_CEO/
 
 ---
 
-## 8. 팀 구성 및 담당 업무
+## 9. 팀 구성 및 담당 업무
 
-### A팀원 — AI Architecture Lead
+### A팀원 — AI Architecture Lead & Frontend
 **브랜치:** `feature/A-ai-architecture`
 
 **완료된 작업:**
 - [x] 공통 Domain Schema (`BusinessIdea`, `Evidence`, `AgentResult`, `DecisionResult`)
 - [x] `BaseAgent` (retry, fallback, token 수집)
-- [x] `LLMProvider` 추상화 (OpenAI / Anthropic / Mock)
+- [x] `LLMProvider` 추상화 (OpenAI / Anthropic / Mock, `OPENAI_BASE_URL` 지원)
 - [x] `OrchestratorAgent` (병렬/순차 workflow, PARTIAL 상태)
 - [x] `DecisionAgent` (SWOT + GO/PIVOT/VALIDATE_MORE/STOP)
-- [x] `DummyAgents` (1주차 E2E 연결용)
-- [x] FastAPI 서버 (`/api/v1/analyze`, `/api/v1/health`)
-- [x] 29개 테스트 통과
+- [x] FastAPI 서버 (`/api/v1/analyze`, `/api/v1/health`, `/api/v1/programs`)
+- [x] bizrag 어댑터 (RAG provider 주입 인터페이스)
+- [x] `.env` 절대 경로 자동 탐색 (`config.py`)
+- [x] Next.js 프론트엔드 전체 구현
+  - [x] 랜딩 히어로 + 5단계 프로세스 소개
+  - [x] AI 사업성 진단 폼 + 6개 에이전트 결과 UI
+  - [x] 공고 찾기 (검색·필터·상세 패널)
+  - [x] MY아이디어 (localStorage 기반 이력 관리)
+  - [x] 스타트업라운지 (뉴스·리소스 링크)
+  - [x] 마이페이지 (통계 요약)
+- [x] Next.js API Routes 백엔드 프록시 (300초 타임아웃)
+- [x] Docker Compose 배포 구성
 
 **남은 작업:**
-- [ ] 팀원 실제 Agent를 Orchestrator에 등록
+- [ ] 팀원 실제 Agent 통합 테스트
 - [ ] Token usage DB 저장 연동
-- [ ] 창업지원사업 Agent 추가 (B팀원과 협력)
 - [ ] 전체 E2E 통합 테스트
-
-**Integration 규칙 (다른 팀원 참고):**
-
-```python
-# 자신의 Agent를 이렇게 만들면 바로 연결된다
-from app.core.base_agent import BaseAgent
-from app.core.schemas import AgentResult, AgentStatus, BusinessIdea
-
-class MyAgent(BaseAgent):
-    async def _execute(self, idea: BusinessIdea) -> AgentResult:
-        raw = await self.llm.generate(f"분석 대상: {idea.title}")
-        return AgentResult(
-            agent_name=self.agent_name,
-            status=AgentStatus.SUCCESS,
-            summary="분석 완료",
-            confidence=0.7,
-        )
-```
 
 ---
 
@@ -267,21 +297,11 @@ class MyAgent(BaseAgent):
 **브랜치:** `feature/B-rag-market`
 
 **담당 작업:**
-- [ ] **창업지원사업 검색 Agent** 구현
-  - 중소벤처기업부, K-스타트업 등 공공데이터 수집
-  - 사용자 조건(업종, 지역, 단계)에 맞는 지원사업 매칭
-- [ ] **Market Agent** 구현 (dummy → 실제 RAG)
-  - Vector DB 구축 (시장 통계, 뉴스, 산업 보고서)
-  - RAG 파이프라인: 검색 → 청킹 → 임베딩 → 생성
-  - 출처 포함 `Evidence` 반환
-- [ ] Vector DB 선택 및 설정 (Chroma / Pinecone / Weaviate)
-- [ ] 데이터 수집 스크립트 작성
+- [ ] **Market Agent** 구현 (RAG 파이프라인 완성)
+- [ ] Vector DB 구축 (시장 통계, 뉴스, 산업 보고서)
+- [ ] bizrag Knowledge DB 동기화 (`rag/data/knowledge.db`)
 
-**파일 위치:** `backend/app/agents/market_agent.py` (신규 생성)
-
-**A팀원과 협의 필요:**
-- `MarketAgent` 클래스 이름 및 파일명 확정
-- `Evidence` 스키마에 추가 필드 필요 시 사전 공지
+**파일 위치:** `backend/app/agents/market_agent.py`
 
 ---
 
@@ -289,26 +309,9 @@ class MyAgent(BaseAgent):
 **브랜치:** `feature/C-business`
 
 **담당 작업:**
-- [ ] **Customer Agent** 구현 (dummy → 실제)
-  - 타겟 고객 세그먼트 분석
-  - 고객 페르소나 생성
-  - Pain Point / Gain 분석
-- [ ] **Competitor Agent** 구현 (dummy → 실제)
-  - 직접/간접 경쟁사 식별
-  - 경쟁사 포지셔닝 분석
-  - 차별화 전략 도출
-- [ ] **BusinessModel Agent** 구현 (dummy → 실제)
-  - Business Model Canvas 자동 생성
-  - 수익 모델 타당성 분석
-  - 가치 제안 명확화
-
-**파일 위치:**
-- `backend/app/agents/customer_agent.py`
-- `backend/app/agents/competitor_agent.py`
-- `backend/app/agents/bm_agent.py`
-
-**A팀원과 협의 필요:**
-- `BusinessModelAgent` 클래스명 확정 (현재 Orchestrator에 `BusinessModelAgent`로 등록됨)
+- [ ] **CustomerAgent** 구현 (`business_agents.py`)
+- [ ] **CompetitorAgent** 구현 (`business_agents.py`)
+- [ ] **BusinessModelAgent** 구현 (`business_agents.py`)
 
 ---
 
@@ -316,143 +319,86 @@ class MyAgent(BaseAgent):
 **브랜치:** `feature/D-financial-risk`
 
 **담당 작업:**
-- [ ] **Financial Agent** 구현 (dummy → 실제)
-  - 초기 투자 비용 추정
-  - 월 운영비 / BEP(손익분기점) 계산
-  - 3년 재무 시나리오 (낙관/기본/비관)
-  - 임의 수치 생성 금지 — 입력 기반 계산 원칙
-- [ ] **Risk Agent** 구현 (dummy → 실제)
-  - 시장/운영/재무/규제 리스크 매트릭스
-  - 리스크 심각도 × 발생 가능성 평가
-  - 리스크별 대응 전략 제시
-- [ ] 재무 계산 로직 단위 테스트 작성
-
-**파일 위치:**
-- `backend/app/agents/financial_agent.py`
-- `backend/app/agents/risk_agent.py`
-
-**주의사항:**
-- 재무 수치는 반드시 사용자 입력(`user_profile.capital` 등) 기반으로 계산
-- 근거 없는 시장 규모 수치 사용 금지
+- [ ] **FinancialAgent** 완성 (`financial_agent.py`)
+- [ ] **RiskAgent** 완성 (`risk_agent.py`)
+- [ ] 재무 계산 로직 단위 테스트
 
 ---
 
-### E팀원 — Frontend
+### E팀원 — 추가 기능 지원
 **브랜치:** `feature/E-frontend`
 
 **담당 작업:**
-- [ ] **입력 페이지** — 사업 아이디어 + 사용자 프로필 입력 폼
-- [ ] **분석 진행 페이지** — 각 Agent 실행 상태 실시간 표시
-- [ ] **결과 리포트 페이지** — SWOT, 재무 요약, Action Plan 시각화
-- [ ] **창업지원사업 추천** 카드 UI
-- [ ] **Decision Badge** — GO / PIVOT / VALIDATE MORE / STOP 시각화
-- [ ] FastAPI 연동 (`POST /api/v1/analyze`)
-
-**API 연동 예시:**
-
-```javascript
-const response = await fetch('/api/v1/analyze', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    title: "배달 세탁 서비스",
-    problem: "직장인 세탁소 방문 불편",
-    customer: "25-40대 직장인",
-    solution: "앱 기반 픽업·배달 세탁",
-    industry: "생활서비스",
-    location: "서울"
-  })
-});
-const data = await response.json();
-// data.workflow_result.decision_result.decision → "GO" | "PIVOT" | ...
-```
-
-**파일 위치:** `frontend/` 디렉터리 (구조는 E팀원 선택)
+- [ ] 창업지원사업 공고 실데이터 연동 (`api_catalog` → `/api/v1/programs`)
+- [ ] UI/UX 개선 및 반응형 최적화
 
 ---
 
-## 9. 일정 계획
-
-### 전체 일정 (4주)
+## 10. 일정 계획
 
 | 주차 | 목표 | 완료 기준 |
 |---|---|---|
-| **1주차** | E2E 골격 연결 | Frontend → FastAPI → Orchestrator → Dummy Agents → DecisionResult → Frontend 동작 |
-| **2주차** | 핵심 Agent 구현 | Market / Customer / Competitor Agent 실제 LLM 연결, RAG 파이프라인 구축 |
-| **3주차** | 전체 Agent 통합 | Financial / Risk Agent 완성, Decision Agent 품질 개선, 창업지원사업 검색 완성 |
+| **1주차** | E2E 골격 연결 | Frontend → FastAPI → Orchestrator → Agents → Frontend 동작 ✅ |
+| **2주차** | 핵심 Agent 구현 | MarketAgent RAG 완성, Customer/Competitor/BM Agent LLM 연결 |
+| **3주차** | 전체 Agent 통합 | Financial/Risk Agent 완성, 공고 실데이터 연동 |
 | **4주차** | 완성 및 배포 | UI 완성, 통합 테스트, 발표 자료 준비 |
-
-### 1주차 상세 계획 (현재 진행 중)
-
-| 담당 | 이번 주 할 일 | 완료 기준 |
-|---|---|---|
-| **A** | ~~Architecture 구현~~ (완료), Orchestrator 안정화 | 테스트 29개 통과 ✅ |
-| **B** | Vector DB 선택, 데이터 수집 파이프라인 설계 | `market_agent.py` 더미 → 실제 1차 연결 |
-| **C** | Customer / Competitor Agent 1차 구현 | `customer_agent.py`, `competitor_agent.py` 초안 |
-| **D** | Financial / Risk Agent 1차 구현 | `financial_agent.py`, `risk_agent.py` 초안 |
-| **E** | Frontend 환경 세팅, 입력 폼 + API 연동 | `/api/v1/analyze` 호출 후 결과 화면 출력 |
-
-### 2주차 목표
-
-- B: RAG 파이프라인 완성 (Retrieval + Generation)
-- C: 3개 Agent LLM 연결 완료
-- D: 재무 계산 로직 구현
-- E: 결과 리포트 페이지 UI 완성
-- A: 실제 Agent 교체 및 통합 테스트
-
-### 3주차 목표
-
-- 전체 Agent 실제 데이터로 E2E 동작
-- Decision Agent 품질 개선
-- 창업지원사업 검색 기능 완성
-
-### 4주차 목표
-
-- 버그 수정 및 성능 최적화
-- UI/UX 개선
-- 발표 데모 준비
 
 ---
 
-## 10. 개발 환경 설정
+## 11. 개발 환경 설정
 
 ### 사전 요구사항
 
 - Python 3.11+
-- Node.js 18+ (Frontend)
-- Git
+- Node.js 18+
+- Docker & Docker Compose (선택)
 
-### Backend 설정
+### 빠른 시작 (Docker Compose)
 
 ```bash
-# 1. 저장소 clone
 git clone https://github.com/virtualesq-BK/Codyssey_Final-Project_CEO.git
 cd Codyssey_Final-Project_CEO
 
-# 2. 자신의 브랜치 checkout
-git checkout feature/B-rag-market   # 예시
+# .env 설정
+cp .env.example .env
+# .env에 OPENAI_API_KEY, OPENAI_BASE_URL 입력
 
-# 3. 가상환경 생성 및 패키지 설치
+# 전체 서비스 실행
+docker compose up --build
+# → Frontend: http://localhost:3000
+# → Backend API: http://localhost:8000/docs
+```
+
+### 로컬 개발
+
+```bash
+# Backend
 cd backend
 python -m venv .venv
-source .venv/bin/activate    # Windows: .venv\Scripts\activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python -m uvicorn app.api.main:app --reload --port 8000
 
-# 4. 환경변수 설정
-cp ../.env.example .env
-# .env에 OPENAI_API_KEY 또는 ANTHROPIC_API_KEY 입력
+# Frontend (별도 터미널)
+cd frontend
+npm install
+npm run dev   # → http://localhost:3000
+```
 
-# 5. 서버 실행
-python -m uvicorn app.api.main:app --reload
-# → http://localhost:8000/docs
+### 테스트
 
-# 6. 테스트 실행
+```bash
+cd backend
 python -m pytest tests/ -v
 ```
 
 ### API 동작 확인
 
 ```bash
+# 헬스 체크
+curl http://localhost:8000/api/v1/health
+
+# 사업성 분석
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{
@@ -463,11 +409,14 @@ curl -X POST http://localhost:8000/api/v1/analyze \
     "industry": "생활서비스",
     "location": "서울"
   }'
+
+# 창업 공고 목록
+curl "http://localhost:8000/api/v1/programs?status=모집중&region=서울"
 ```
 
 ---
 
-## 11. API 명세
+## 12. API 명세
 
 ### POST /api/v1/analyze
 
@@ -483,13 +432,7 @@ curl -X POST http://localhost:8000/api/v1/analyze \
   "solution": "제안 솔루션",
   "industry": "산업 분야",
   "location": "서울",
-  "business_stage": "idea",
-  "user_profile": {
-    "name": "홍길동",
-    "capital": 5000,
-    "background": "IT 개발자",
-    "region": "서울"
-  }
+  "business_stage": "idea"
 }
 ```
 
@@ -499,23 +442,18 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 {
   "idea_id": "uuid",
   "workflow_result": {
-    "status": "success",
+    "status": "success | partial | failed",
     "agent_results": {
-      "MarketAgent": { "status": "success", "summary": "...", "confidence": 0.7 },
-      "CustomerAgent": { "..." },
-      "DecisionAgent": { "..." }
+      "MarketAgent": { "status": "success", "summary": "...", "confidence": 0.7 }
     },
     "decision_result": {
       "summary": "종합 요약",
       "strengths": ["강점1"],
       "weaknesses": ["약점1"],
-      "opportunities": ["기회1"],
-      "risks": ["위험1"],
-      "financial_summary": "...",
-      "action_plan": ["1단계: ...", "2단계: ..."],
-      "decision": "GO",
+      "action_plan": ["1단계: ..."],
+      "decision": "GO | PIVOT | VALIDATE_MORE | STOP",
       "confidence": 0.75,
-      "disclaimer": "본 분석은 의사결정 지원 목적이며 실제 사업 성공을 보장하지 않습니다."
+      "disclaimer": "본 분석은 의사결정 지원 목적입니다."
     }
   }
 }
@@ -523,15 +461,47 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 
 ### GET /api/v1/health
 
-서버 상태 확인
-
 ```json
 { "status": "ok", "service": "나도사장 API" }
 ```
 
+### GET /api/v1/programs
+
+창업 지원 공고 목록을 반환한다.
+
+**Query Parameters**
+
+| 파라미터 | 설명 | 예시 |
+|---|---|---|
+| `status` | 마감 상태 필터 | `모집중` \| `마감임박(D-3)` \| `마감` |
+| `region` | 지역 필터 | `서울`, `경기`, `전국` |
+| `category` | 분야 필터 | `청년창업`, `기술창업` |
+| `q` | 키워드 검색 | `AI`, `헬스케어` |
+
+**Response**
+
+```json
+{
+  "total": 8,
+  "items": [
+    {
+      "id": "P001",
+      "title": "2024년 초기창업패키지",
+      "organization": "중소벤처기업부",
+      "category": "창업지원",
+      "region": "전국",
+      "deadline_status": "모집중",
+      "ends_on": "2025-03-31",
+      "amount": "최대 1억원",
+      "detail_url": "https://www.k-startup.go.kr"
+    }
+  ]
+}
+```
+
 ---
 
-## 12. Git 브랜치 전략
+## 13. Git 브랜치 전략
 
 자세한 내용은 [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) 참고.
 
@@ -554,7 +524,7 @@ main          ← 최종 배포 (PR만 허용)
 
 - `.env` 파일 commit 절대 금지
 - 공통 스키마(`schemas.py`) 변경 시 전체 팀 공지 필수
-- 테스트 없이 PR 금지
+- Next.js API Routes(`/api/v1/*`)는 백엔드 프록시 역할 — 직접 로직 추가 금지
 - 임의의 시장 규모·재무 수치를 LLM으로 생성 금지 (근거 기반 분석 원칙)
 - 본 서비스는 **의사결정 지원** 도구이며 실제 사업 성공을 보장하지 않음
 
