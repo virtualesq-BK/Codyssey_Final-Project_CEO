@@ -84,5 +84,6 @@ class RiskAgent(BaseAgent):
             confidence=0.4,
         )
 
-# Orchestrator와 기존 호출 코드의 가져오기 경로를 유지한다.
-from app.agents.business_agents import CustomerAgent, BusinessModelAgent
+# CustomerAgent / BusinessModelAgent 는 business_agents.py 에 실제 구현이 있다.
+# 기존 import 경로 호환을 위해 re-export 유지한다.
+from app.agents.business_agents import CustomerAgent, BusinessModelAgent  # noqa: F401
