@@ -74,6 +74,10 @@ class Orchestrator:
         result.agent_results.update(phase1_results)
 
         # ── Phase 2: BusinessModelAgent (Phase1 의존) ────────────────────
+        from app.agents.business_agents import BusinessModelAgent
+        business_agent = self.agents["BusinessModelAgent"]
+        if isinstance(business_agent, BusinessModelAgent):
+            business_agent.set_agent_results(phase1_results)
         bm_result = await self._run_one("BusinessModelAgent", idea)
         result.agent_results["BusinessModelAgent"] = bm_result
 
