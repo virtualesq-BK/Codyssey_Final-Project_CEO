@@ -1,0 +1,6 @@
+.env
+.venv/
+data/
+inbox/
+logs/
+__pycache__/

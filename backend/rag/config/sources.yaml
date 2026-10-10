@@ -1,0 +1,135 @@
+# bizrag 수집 설정
+# cadence: daily | weekly | monthly | quarterly
+#   `python -m bizrag sync`를 하루 1번만 예약 실행하면, 각 작업이 마지막 성공 시각을 보고
+#   주기가 됐을 때만 실제로 호출합니다.
+# 키는 이 파일이 아니라 .env 에 넣습니다.
+
+database: data/knowledge.db
+
+sources:
+
+  # ── 네이버 ────────────────────────────────────────────────────────────
+  # 정기(월): 쇼핑 1분류 클릭 추이 + 분야별 연령/성별 분포
+  # 검색 시: 검색어 트렌드, 쇼핑 키워드 클릭 (캐시 7일/7일)
+  # 키: NCP 콘솔 > NAVER API HUB 앱의 Client ID/Secret (2026년 개발자센터에서 이관)
+  naver:
+    enabled: true
+    cadence: monthly
+    history_months: 36
+    # shopping_categories: {식품: "50000006", 생활/건강: "50000008"}   # 생략 시 1분류 10개 전체
+
+  # ── KOSIS ────────────────────────────────────────────────────────────
+  # 정기(월): 아래 검색어로 통계표 카탈로그 갱신 + watch_tables 및 '에이전트가 조회했던 표' 최신값 갱신
+  kosis:
+    enabled: true
+    cadence: monthly
+    catalog_limit: 30
+    watch_searches:
+      - 온라인쇼핑 거래액
+      - 소매판매액지수
+      - 서비스업생산지수
+      - 가계동향 소비지출
+      - 전국사업체조사 사업체수
+      - 1인 가구
+      - 소비자물가지수
+    watch_tables: []
+    # 예시 — 통계표 ID는 `python -m bizrag try 온라인쇼핑` 이나 search 결과의 '조회키'에서 확인
+    #   - {orgId: "101", tblId: "DT_XXXXXXX", prdSe: "M", recent: 36}
+
+  # ── 국가법령정보 ──────────────────────────────────────────────────────
+  # 정기(월): 감시 법령의 개정 여부 확인 → 바뀐 경우에만 조문 전체 재적재
+  # 검색 시 law_add 로 추가한 법령도 자동으로 감시 대상이 됩니다
+  law:
+    enabled: true
+    cadence: monthly
+    watch_laws:
+      - 소비자기본법
+      - 전자상거래 등에서의 소비자보호에 관한 법률
+      - 표시·광고의 공정화에 관한 법률
+      - 개인정보 보호법
+      - 제조물 책임법
+      - 식품위생법
+      - 화장품법
+      - 의료기기법
+      - 중소기업창업 지원법
+
+  # ── KIPRIS Plus ──────────────────────────────────────────────────────
+  # 검색 시에만 호출 (캐시 30일). 정기 수집 없음
+  kipris:
+    enabled: true
+
+  # ── World Bank (키 불필요) ───────────────────────────────────────────
+  worldbank:
+    enabled: true
+    cadence: monthly
+    mrv: 15
+    countries: [KOR, USA, JPN, CHN, VNM, IDN, THA, DEU, GBR, IND]
+    # indicators: 생략 시 인구·GDP·1인당GDP·가계소비·인터넷이용률·도시화율·고령인구·물가
+
+  # ── 공공데이터포털: 파일데이터 자동변환 API ───────────────────────────
+  # 데이터셋 ID만 적으면 최신 버전을 자동으로 찾아 '새 버전만' 적재합니다.
+  # ⚠ 데이터셋마다 data.go.kr 페이지에서 [활용신청]을 눌러야 합니다 (즉시 승인, 반영 1~2시간)
+  # 새 데이터셋 확인: python -m bizrag discover <데이터셋ID>
+  datagokr:
+    enabled: true
+    file_datasets:
+      - id: "3040720"
+        name: 한국소비자원 소비자 피해구제 정보
+        cadence: monthly          # 분기 공개 → 월 1회 새 버전 확인
+        backfill: 4               # 최초 실행 시 최근 4개 분기
+        aggregate:
+          group_by: [물품명, 청구이유]   # 실제 필드: 물품명·성별·연령·접수일·지역·처리결과·청구이유·판매유형
+          doc_type: consumer_complaint
+          min_count: 3
+
+      - id: "15083256"
+        name: 한국소비자원 생필품 및 서비스 가격 정보
+        cadence: weekly
+        backfill: 3
+
+      - id: "15034787"
+        name: KOTRA 해외진출기업
+        cadence: monthly
+        backfill: 1
+        aggregate:
+          group_by: [업종중분류, 진출국가]
+          doc_type: overseas_entry
+          min_count: 3
+
+      # 아래 두 개는 대화에서 언급된 자료입니다. data.go.kr에서 데이터셋 ID(주소의 숫자)를 확인해 넣고
+      # enabled: true 로 바꾸세요. (확인 방법: python -m bizrag discover <ID>)
+      - id: ""
+        name: 한국소비자원 품목별 소비자상담 현황
+        enabled: false
+        cadence: monthly
+        backfill: 6
+      - id: ""
+        name: 한국소비자원 소비자상담 표준답변
+        enabled: false
+        cadence: monthly          # 버전이 바뀔 때만 적재
+        as_documents:
+          doc_type: consumer_faq
+          title_fields: []        # discover로 필드명 확인 후 예: [품목, 질문]
+
+  # ── 공공데이터포털: 일반 REST API (설정만으로 추가) ─────────────────────
+  datagokr_rest:
+    enabled: true
+    apis:
+      - name: kotra_market_news
+        description: KOTRA 해외시장뉴스
+        enabled: false            # data.go.kr 'KOTRA 해외시장뉴스' 활용신청 후 상세페이지의 요청주소를 endpoint에 넣고 true
+        endpoint: ""
+        params: {}
+        items_path: response.body.items.item
+        id_field: ""
+        title_field: ""
+        body_fields: []
+        date_field: ""
+        cadence: daily
+        doc_type: market_news
+
+  # ── 수동 투입 폴더 ───────────────────────────────────────────────────
+  # 예: 국가데이터처 온라인 수집 가격 정보 CSV → inbox/online_price/ 에 넣기
+  inbox:
+    enabled: true
+    path: inbox
