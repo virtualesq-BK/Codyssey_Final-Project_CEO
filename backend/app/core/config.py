@@ -18,5 +18,8 @@ class Settings(BaseSettings):
     app_host: str = "0.0.0.0"
     app_port: int = 8000
 
+    # bizrag (B팀 RAG) — 값이 없으면 NullProvider 기본값으로 동작
+    bizrag_db_path: str = ""
+
 
 settings = Settings()

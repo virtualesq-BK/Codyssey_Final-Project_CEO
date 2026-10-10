@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from app.agents.orchestrator import Orchestrator
 from app.core.schemas import BusinessIdea, BusinessStage, UserProfile, WorkflowResult
+from app.rag.providers import get_adapters
 
 router = APIRouter(prefix="/api/v1")
 
@@ -36,7 +37,12 @@ async def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         idea_id=str(uuid.uuid4()),
         **req.model_dump(),
     )
-    orchestrator = Orchestrator()
+    adapters = get_adapters()
+    orchestrator = Orchestrator(
+        evidence_retriever=adapters.evidence_retriever if adapters else None,
+        benchmark_provider=adapters.benchmark_provider if adapters else None,
+        risk_evidence_provider=adapters.risk_evidence_provider if adapters else None,
+    )
     try:
         result = await orchestrator.run(idea)
     except Exception as exc:
