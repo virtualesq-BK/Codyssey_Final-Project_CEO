@@ -285,7 +285,7 @@ class MyAgent(BaseAgent):
 
 ---
 
-### C(전지영) — Business Analysis Agent 
+### C(유상우) — Business Analysis Agent 
 **브랜치:** `feature/C-business`
 
 **담당 작업:**
@@ -337,7 +337,7 @@ class MyAgent(BaseAgent):
 
 ---
 
-### E(유상우) — Frontend
+### E(전지영) — Frontend
 **브랜치:** `feature/E-frontend`
 
 **담당 작업:**
