@@ -9,7 +9,9 @@ URL='https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pban
 def docx(text='1. 사업 아이디어를 설명하세요.'):
     xml=f'''<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:tbl><w:tr><w:tc><w:p><w:r><w:t>{text}</w:t></w:r></w:p></w:tc><w:tc><w:p/></w:tc></w:tr></w:tbl></w:body></w:document>'''
     b=io.BytesIO()
-    with zipfile.ZipFile(b,'w') as z:z.writestr('word/document.xml',xml)
+    # 동일한 내용의 테스트 파일은 실행 시각과 관계없이 동일한 바이트를 생성한다.
+    with zipfile.ZipFile(b,'w') as z:
+        z.writestr(zipfile.ZipInfo('word/document.xml', date_time=(2026,1,1,0,0,0)),xml)
     return b.getvalue()
 
 class Fake:
