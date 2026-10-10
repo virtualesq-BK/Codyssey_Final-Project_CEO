@@ -4,17 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 
-const STORAGE_KEY = "nadosajang_ideas";
-
-type SavedIdea = {
-  id: string;
-  title: string;
-  industry: string;
-  decision: string;
-  confidence: number;
-  summary: string;
-  savedAt: string;
-};
+import { type SavedIdea, loadIdeasFromStorage, deleteIdeaFromStorage } from "@/lib/storage";
 
 const DECISION_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   GO: { label: "GO", bg: "#E6F9F0", color: "#1A7A4A" },
@@ -23,32 +13,15 @@ const DECISION_CONFIG: Record<string, { label: string; bg: string; color: string
   STOP: { label: "STOP", bg: "#FDECEA", color: "#B42318" },
 };
 
-export function saveIdeaToStorage(idea: SavedIdea) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const list: SavedIdea[] = raw ? JSON.parse(raw) : [];
-    const filtered = list.filter((i) => i.id !== idea.id);
-    filtered.unshift(idea);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered.slice(0, 20)));
-  } catch {}
-}
-
 export default function IdeasPage() {
   const [ideas, setIdeas] = useState<SavedIdea[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      setIdeas(raw ? JSON.parse(raw) : []);
-    } catch {
-      setIdeas([]);
-    }
+    setIdeas(loadIdeasFromStorage());
   }, []);
 
   function deleteIdea(id: string) {
-    const updated = ideas.filter((i) => i.id !== id);
-    setIdeas(updated);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
+    setIdeas(deleteIdeaFromStorage(id));
   }
 
   return (

@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
-      // @ts-expect-error Node18+ fetch signal timeout
       signal: AbortSignal.timeout(300_000),
     });
     const data = await res.text();
