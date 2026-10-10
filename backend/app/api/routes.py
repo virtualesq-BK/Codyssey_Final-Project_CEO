@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from app.agents.orchestrator import Orchestrator
 from app.core.schemas import BusinessIdea, BusinessStage, UserProfile, WorkflowResult
 from app.rag.providers import get_adapters
+from app.rag.external_retrievers import build_external_retriever
 
 router = APIRouter(prefix="/api/v1")
 
@@ -146,8 +147,11 @@ async def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         **req.model_dump(),
     )
     adapters = get_adapters()
+    evidence_retriever = (
+        adapters.evidence_retriever if adapters else build_external_retriever()
+    )
     orchestrator = Orchestrator(
-        evidence_retriever=adapters.evidence_retriever if adapters else None,
+        evidence_retriever=evidence_retriever,
         benchmark_provider=adapters.benchmark_provider if adapters else None,
         risk_evidence_provider=adapters.risk_evidence_provider if adapters else None,
     )

@@ -32,5 +32,12 @@ class Settings(BaseSettings):
     # bizrag (B팀 RAG) — 값이 없으면 NullProvider 기본값으로 동작
     bizrag_db_path: str = ""
 
+    # 외부 API 키 — evidence_retriever 에서 사용
+    naver_client_id: str = ""
+    naver_client_secret: str = ""
+    kosis_api_key: str = ""
+    kipris_api_key: str = ""
+    data_go_kr_service_key: str = ""
+
 
 settings = Settings()
