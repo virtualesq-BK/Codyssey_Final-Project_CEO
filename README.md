@@ -263,7 +263,7 @@ class MyAgent(BaseAgent):
 
 ---
 
-### B팀원 — RAG & Market Agent
+### B(조경학) — RAG & Market Agent
 **브랜치:** `feature/B-rag-market`
 
 **담당 작업:**
@@ -285,7 +285,7 @@ class MyAgent(BaseAgent):
 
 ---
 
-### C팀원 — Business Analysis Agent
+### C(전지영) — Business Analysis Agent 
 **브랜치:** `feature/C-business`
 
 **담당 작업:**
@@ -312,7 +312,7 @@ class MyAgent(BaseAgent):
 
 ---
 
-### D팀원 — Financial & Risk Agent
+### D(전선형) — Financial & Risk Agent
 **브랜치:** `feature/D-financial-risk`
 
 **담당 작업:**
@@ -337,7 +337,7 @@ class MyAgent(BaseAgent):
 
 ---
 
-### E팀원 — Frontend
+### E(유상우) — Frontend
 **브랜치:** `feature/E-frontend`
 
 **담당 작업:**
