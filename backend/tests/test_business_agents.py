@@ -141,26 +141,43 @@ async def test_downgraded_fact_caps_confidence_even_with_other_evidence():
 @pytest.mark.asyncio
 async def test_shared_retriever_is_used_by_both_agents_and_customer_context_is_sent():
     from app.agents.business_workflow import build_business_workflow
-    from app.agents.business_agents import CustomerProfile
+    from app.agents.business_agents import CompetitionAnalysis, CustomerProfile
     from app.core.schemas import Evidence
     queries = []
+
+    def _competition_data():
+        c = claim()
+        competitor = {"name": "경쟁사A", "description": c, "strengths": [c],
+                      "weaknesses": [c], "target_customer": c}
+        return {"summary": "경쟁 분석", "direct_competitors": [competitor],
+                "indirect_competitors": [], "differentiation": [c],
+                "entry_barriers": [c], "competitive_position": c,
+                "recommendations": ["조사 필요"], "confidence": 0.5}
+
     class InspectingProvider(MockProvider):
         async def generate_structured(self, prompt, response_model, system=""):
             payload = json.loads(prompt)
             if response_model is CustomerProfile:
                 return response_model.model_validate(customer_data())
+            if response_model is CompetitionAnalysis:
+                return response_model.model_validate(_competition_data())
+            # BusinessModelAnalysis
             assert payload["customer_result"]["findings"][0]["customer_profile"]["personas"]
             fields = response_model.model_fields["canvas"].annotation.model_fields
             return response_model.model_validate({"summary": "Canvas", "canvas": {
                 key: [claim()] for key in fields}, "recommendations": ["Test"], "confidence": 0.8})
+
     async def retrieve(query):
         queries.append(query)
         return [Evidence(title="Report", source="Research", content="Data")]
+
     workflow = build_business_workflow(llm_provider=InspectingProvider(), evidence_retriever=retrieve)
     result = await workflow.run(idea())
-    assert len(queries) == 2
-    assert queries[0] != queries[1]
+    # CustomerAgent + CompetitorAgent + BusinessModelAgent 각 1회씩 검색
+    assert len(queries) == 3
+    assert len(set(queries)) == 3  # 모든 쿼리가 서로 다름
     assert result.agent_results["CustomerAgent"].evidence
+    assert result.agent_results["CompetitorAgent"].evidence
     assert result.agent_results["BusinessModelAgent"].evidence
 
 
