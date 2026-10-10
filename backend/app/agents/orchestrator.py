@@ -47,11 +47,11 @@ class Orchestrator:
             BusinessModelAgent,
             CompetitorAgent,
             CustomerAgent,
-            FinancialAgent,
             MarketAgent,
-            RiskAgent,
         )
         from app.agents.decision_agent import DecisionAgent
+        from app.agents.financial_agent import FinancialAgent
+        from app.agents.risk_agent import RiskAgent
 
         self.agents: dict[str, BaseAgent] = {
             "MarketAgent": market_agent or MarketAgent(llm_provider=llm_provider),
