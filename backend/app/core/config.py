@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     llm_provider: str = "openai"
     llm_model: str = "gpt-4o-mini"
     openai_api_key: str = ""
+    openai_base_url: str = ""   # 커스텀 엔드포인트 (프록시 등). 빈 문자열이면 기본값 사용
     anthropic_api_key: str = ""
 
     # Database

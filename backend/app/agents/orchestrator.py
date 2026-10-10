@@ -46,14 +46,17 @@ class Orchestrator:
         benchmark_provider=None,       # BenchmarkProvider: FinancialAgent 용
         risk_evidence_provider=None,   # RiskEvidenceProvider: RiskAgent 용
     ):
-        from app.agents.dummy_agents import MarketAgent
+        from app.agents.market_agent import MarketAgent
         from app.agents.business_agents import CustomerAgent, CompetitorAgent, BusinessModelAgent
         from app.agents.decision_agent import DecisionAgent
         from app.agents.financial_agent import FinancialAgent
         from app.agents.risk_agent import RiskAgent
 
         self.agents: dict[str, BaseAgent] = {
-            "MarketAgent": market_agent or MarketAgent(llm_provider=llm_provider),
+            "MarketAgent": market_agent or MarketAgent(
+                llm_provider=llm_provider,
+                evidence_retriever=evidence_retriever,
+            ),
             "CustomerAgent": customer_agent or CustomerAgent(
                 llm_provider=llm_provider,
                 evidence_retriever=evidence_retriever,
