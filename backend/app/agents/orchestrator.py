@@ -41,25 +41,42 @@ class Orchestrator:
         risk_agent: Optional[BaseAgent] = None,
         decision_agent: Optional[object] = None,
         llm_provider: Optional[LLMProvider] = None,
+        # B팀 RAG 연동 인터페이스 (구현 전까지 None → Null* 기본값 사용)
+        evidence_retriever=None,       # EvidenceRetriever: CustomerAgent / BusinessModelAgent 용
+        benchmark_provider=None,       # BenchmarkProvider: FinancialAgent 용
+        risk_evidence_provider=None,   # RiskEvidenceProvider: RiskAgent 용
     ):
-        # 기본값: Dummy Agents (팀원 구현 전까지)
-        from app.agents.dummy_agents import (
-            BusinessModelAgent,
-            CompetitorAgent,
-            CustomerAgent,
-            MarketAgent,
-        )
+        from app.agents.market_agent import MarketAgent
+        from app.agents.business_agents import CustomerAgent, CompetitorAgent, BusinessModelAgent
         from app.agents.decision_agent import DecisionAgent
         from app.agents.financial_agent import FinancialAgent
         from app.agents.risk_agent import RiskAgent
 
         self.agents: dict[str, BaseAgent] = {
-            "MarketAgent": market_agent or MarketAgent(llm_provider=llm_provider),
-            "CustomerAgent": customer_agent or CustomerAgent(llm_provider=llm_provider),
-            "CompetitorAgent": competitor_agent or CompetitorAgent(llm_provider=llm_provider),
-            "BusinessModelAgent": business_model_agent or BusinessModelAgent(llm_provider=llm_provider),
-            "FinancialAgent": financial_agent or FinancialAgent(llm_provider=llm_provider),
-            "RiskAgent": risk_agent or RiskAgent(llm_provider=llm_provider),
+            "MarketAgent": market_agent or MarketAgent(
+                llm_provider=llm_provider,
+                evidence_retriever=evidence_retriever,
+            ),
+            "CustomerAgent": customer_agent or CustomerAgent(
+                llm_provider=llm_provider,
+                evidence_retriever=evidence_retriever,
+            ),
+            "CompetitorAgent": competitor_agent or CompetitorAgent(
+                llm_provider=llm_provider,
+                evidence_retriever=evidence_retriever,
+            ),
+            "BusinessModelAgent": business_model_agent or BusinessModelAgent(
+                llm_provider=llm_provider,
+                evidence_retriever=evidence_retriever,
+            ),
+            "FinancialAgent": financial_agent or FinancialAgent(
+                llm_provider=llm_provider,
+                benchmark_provider=benchmark_provider,
+            ),
+            "RiskAgent": risk_agent or RiskAgent(
+                llm_provider=llm_provider,
+                evidence_provider=risk_evidence_provider,
+            ),
         }
         self._decision_agent: object = decision_agent or DecisionAgent(llm_provider=llm_provider)
 

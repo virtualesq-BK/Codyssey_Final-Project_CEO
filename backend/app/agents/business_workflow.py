@@ -1,5 +1,10 @@
-"""B팀의 공유 검색 어댑터를 C팀의 두 Agent에 주입하는 워크플로 구성 도우미."""
-from app.agents.business_agents import BusinessModelAgent, CustomerAgent, EvidenceRetriever
+"""B팀의 공유 검색 어댑터를 C팀 Agent에 주입하는 워크플로 구성 도우미."""
+from app.agents.business_agents import (
+    BusinessModelAgent,
+    CompetitorAgent,
+    CustomerAgent,
+    EvidenceRetriever,
+)
 from app.agents.orchestrator import Orchestrator
 from app.core.llm_provider import LLMProvider
 
@@ -20,5 +25,6 @@ def build_business_workflow(
     return Orchestrator(
         llm_provider=llm_provider,
         customer_agent=CustomerAgent(**options),
+        competitor_agent=CompetitorAgent(**options),
         business_model_agent=BusinessModelAgent(**options),
     )

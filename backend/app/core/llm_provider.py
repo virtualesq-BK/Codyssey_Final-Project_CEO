@@ -71,10 +71,13 @@ class LLMProvider(ABC):
 
 
 class OpenAIProvider(LLMProvider):
-    def __init__(self, model: str, api_key: str, agent_name: str = "unknown"):
+    def __init__(self, model: str, api_key: str, agent_name: str = "unknown", base_url: str = ""):
         super().__init__(model, agent_name)
         from openai import AsyncOpenAI
-        self._client = AsyncOpenAI(api_key=api_key)
+        kwargs: dict = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self._client = AsyncOpenAI(**kwargs)
 
     async def generate(self, prompt: str, system: str = "") -> str:
         messages = []
@@ -212,4 +215,9 @@ def build_provider(agent_name: str = "unknown") -> LLMProvider:
     if provider == "anthropic":
         return AnthropicProvider(model=model, api_key=settings.anthropic_api_key, agent_name=agent_name)
     else:
-        return OpenAIProvider(model=model, api_key=settings.openai_api_key, agent_name=agent_name)
+        return OpenAIProvider(
+            model=model,
+            api_key=settings.openai_api_key,
+            agent_name=agent_name,
+            base_url=settings.openai_base_url,
+        )

@@ -4,12 +4,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
+from app.core.config import settings
 from app.db.session import init_db
+from app.rag.providers import init_rag_providers
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    init_rag_providers(settings.bizrag_db_path)
     yield
 
 
