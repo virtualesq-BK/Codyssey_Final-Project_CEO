@@ -172,6 +172,19 @@ Agent → LLMProvider → OpenAI / Anthropic
 - 각 Agent가 수집한 `Evidence`(출처 포함)에 근거한 판단만 수행
 - 근거 부족 시 "근거 부족 / 추가 검토 필요"로 명시
 
+### 외부 API Evidence 수집 (연결 완료)
+
+bizrag DB가 없을 때 다음 외부 API를 통해 실시간으로 Evidence를 수집한다.
+
+| API | 용도 | 상태 |
+|---|---|---|
+| **KOSIS (통계청)** | 산업별 사업체수·종사자 통계, 시장 규모 근거 | ✅ 정상 |
+| **Naver DataLab** | 키워드 검색 트렌드 (검색 비율·추이) | ⚠️ 개발자 콘솔 권한 추가 필요 |
+| **KIPRIS (특허정보)** | 관련 기술 특허 동향 | ⚠️ 키 등록 확인 필요 |
+| **공공데이터포털** | 창업 공고 실데이터 (`api_catalog` sync) | 🔧 배치 연동 (별도 sync 필요) |
+
+**Naver DataLab 권한 추가 방법:** [네이버 개발자 콘솔](https://developers.naver.com/apps/) → 앱 선택 → API 설정 → "DataLab(검색어트렌드)" 체크 → 저장
+
 ---
 
 ## 7. 기술적 접근 방식
@@ -184,7 +197,7 @@ Agent → LLMProvider → OpenAI / Anthropic
 | API Framework | FastAPI |
 | AI Orchestration | 자체 Multi-Agent Framework |
 | LLM | OpenAI GPT 계열 / Anthropic Claude (환경변수 선택) |
-| RAG | bizrag 어댑터 (SQLite Knowledge DB) |
+| RAG | bizrag 어댑터 + 외부 API Evidence Retriever (KOSIS·Naver DataLab·KIPRIS) |
 | Database | SQLite (개발) / PostgreSQL (프로덕션 예정) |
 | ORM | SQLAlchemy 2.0 (async) |
 
@@ -300,6 +313,11 @@ Codyssey_Final-Project_CEO/
 - [x] Docker Compose 배포 구성
 - [x] Vercel 배포 (Frontend) — `frontend/vercel.json` 설정, Render API URL 환경변수 주입
 - [x] Render 배포 (Backend) — `render.yaml` 설정, Python 3.12 고정, 헬스체크 엔드포인트 연결
+- [x] 외부 API Evidence Retriever 연결 (`backend/app/rag/external_retrievers.py`)
+  - KOSIS (통계청) — 시장 통계 Evidence 실시간 수집 ✅ 정상 작동
+  - Naver DataLab — 검색 트렌드 Evidence 수집 ⚠️ 개발자 콘솔 API 권한 추가 필요
+  - KIPRIS (특허정보) — 기술·특허 동향 Evidence 수집 ⚠️ 키 등록 확인 필요
+  - bizrag 없을 때 자동 fallback 연결, 실패 시 graceful 처리
 
 **남은 작업:**
 - [ ] 팀원 실제 Agent 통합 테스트
@@ -309,6 +327,8 @@ Codyssey_Final-Project_CEO/
 - [ ] Vercel 환경변수 `NEXT_PUBLIC_API_URL` 프로덕션 값 고정 확인
 - [ ] Render 무료 플랜 스핀다운 개선 (Cron Job 또는 유료 플랜 업그레이드 검토)
 - [ ] CI/CD 파이프라인 구성 (GitHub Actions → Vercel·Render 자동 배포)
+- [ ] Naver DataLab API 권한 활성화 (개발자 콘솔 → 앱 → "DataLab(검색어트렌드)" 체크)
+- [ ] KIPRIS API 키 등록 확인 및 재연결
 
 ---
 
