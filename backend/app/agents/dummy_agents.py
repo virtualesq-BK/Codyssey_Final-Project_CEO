@@ -83,37 +83,3 @@ class BusinessModelAgent(BaseAgent):
             recommendations=["수익 모델 명확화 후 단가 계산 필요"],
             confidence=0.4,
         )
-
-
-class FinancialAgent(BaseAgent):
-    async def _execute(self, idea: BusinessIdea) -> AgentResult:
-        return AgentResult(
-            agent_name=self.agent_name,
-            status=AgentStatus.SUCCESS,
-            summary="재무 분석 완료 (더미)",
-            findings=[
-                {"initial_investment": "미확정"},
-                {"break_even": "미확정"},
-                {"monthly_burn": "미확정"},
-            ],
-            evidence=[_dummy_evidence("재무 모델링 필요", "FinancialAgent")],
-            recommendations=["초기 투자비용과 월 운영비 추정 필요"],
-            confidence=0.3,
-        )
-
-
-class RiskAgent(BaseAgent):
-    async def _execute(self, idea: BusinessIdea) -> AgentResult:
-        return AgentResult(
-            agent_name=self.agent_name,
-            status=AgentStatus.SUCCESS,
-            summary="리스크 분석 완료 (더미)",
-            findings=[
-                {"market_risk": "시장 반응 불확실성"},
-                {"regulatory_risk": "규제 리스크 미확인"},
-                {"execution_risk": "팀 역량 확인 필요"},
-            ],
-            evidence=[_dummy_evidence("리스크 상세 분석 필요", "RiskAgent")],
-            recommendations=["핵심 리스크 Top3 도출 후 대응책 수립"],
-            confidence=0.4,
-        )
