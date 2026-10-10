@@ -1,4 +1,4 @@
-"""Customer and business model analysis using the shared architecture contracts."""
+"""공통 아키텍처 계약을 사용하는 고객 및 비즈니스 모델 분석 Agent."""
 from __future__ import annotations
 
 import json
@@ -13,8 +13,8 @@ from app.core.base_agent import BaseAgent
 from app.core.schemas import AgentResult, AgentStatus, BusinessIdea, Evidence
 
 logger = logging.getLogger(__name__)
-# Integration seam only: B's shared retriever must be adapted to this callable.
-# No retrieval implementation or invented evidence is provided here.
+# B팀의 Shared RAG 검색 인터페이스를 이 비동기 호출 형식에 맞춰 연결한다.
+# 실제 검색 구현은 B팀에서 제공하며, 이 모듈에서는 근거를 임의로 생성하지 않는다.
 EvidenceRetriever = Callable[[str], Awaitable[list[Evidence]]]
 
 
@@ -79,7 +79,7 @@ recommendations에 인터뷰, 가격 실험, 채널 실험 등 구체적인 검�
 
 
 def _normalize(value, evidence_count):
-    """Reject untraceable facts and strip invalid source references recursively."""
+    """출처를 추적할 수 없는 사실을 가설로 전환하고 잘못된 인용을 재귀적으로 제거한다."""
     downgraded = False
     if isinstance(value, dict):
         if "kind" in value:
@@ -115,7 +115,7 @@ class _AnalysisAgent(BaseAgent):
                 ), timeout=self.retrieval_timeout_sec)
                 evidence = [Evidence.model_validate(item) for item in retrieved]
             except Exception as exc:
-                logger.warning("[%s] retrieval failed: %s", self.agent_name, exc)
+                logger.warning("[%s] 근거 검색 실패: %s", self.agent_name, exc)
                 warnings.append("검색 실패: 추가 근거 수집 필요")
         prompt = json.dumps({"idea": idea.model_dump(mode="json"),
                              "customer_result": context,
@@ -124,7 +124,7 @@ class _AnalysisAgent(BaseAgent):
         output = await self.llm.generate_structured(prompt, response_model, system=SYSTEM)
         data = response_model.model_validate(output).model_dump(mode="json")
         downgraded = _normalize(data, len(evidence))
-        # Persona evidence describes needs, not proof of an interviewed person.
+        # 니즈에 대한 근거만으로 실제 인터뷰한 인물임을 확인할 수 없어 가설 Persona로 표시한다.
         for persona in data.get("personas", []):
             persona["basis"] = "hypothesis"
         if not evidence:

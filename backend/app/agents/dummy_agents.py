@@ -84,5 +84,5 @@ class RiskAgent(BaseAgent):
             confidence=0.4,
         )
 
-# Backwards compatible imports used by Orchestrator and existing callers.
+# Orchestrator와 기존 호출 코드의 가져오기 경로를 유지한다.
 from app.agents.business_agents import CustomerAgent, BusinessModelAgent
