@@ -4,6 +4,19 @@
 
 ---
 
+## 배포 링크
+
+| 서비스 | URL | 플랫폼 |
+|---|---|---|
+| **Frontend (프론트엔드)** | https://codyssey-final-project.vercel.app | Vercel |
+| **Backend API** | https://nadosajang-api.onrender.com | Render |
+| **API 문서 (Swagger)** | https://nadosajang-api.onrender.com/docs | Render |
+| **Health Check** | https://nadosajang-api.onrender.com/api/v1/health | Render |
+
+> Render 무료 플랜은 비활성 상태에서 스핀다운됩니다. 첫 요청 시 30~60초 지연이 발생할 수 있습니다.
+
+---
+
 ## 목차
 
 1. [프로젝트 개요](#1-프로젝트-개요)
@@ -187,11 +200,11 @@ Agent → LLMProvider → OpenAI / Anthropic
 
 ### 배포
 
-| 구분 | 기술 |
-|---|---|
-| 컨테이너화 | Docker + Docker Compose |
-| Backend | `http://backend:8000` (컨테이너 내부 통신) |
-| Frontend | `http://frontend:3000` → `/api/v1/*` 프록시 → 백엔드 |
+| 구분 | 기술 | URL |
+|---|---|---|
+| Frontend | Vercel (Next.js 자동 빌드·배포) | https://codyssey-final-project.vercel.app |
+| Backend | Render (Python Web Service, `render.yaml`) | https://nadosajang-api.onrender.com |
+| 로컬 개발 | Docker + Docker Compose | `http://localhost:3000` / `http://localhost:8000` |
 
 ### 공통 Schema (Pydantic)
 
@@ -285,11 +298,17 @@ Codyssey_Final-Project_CEO/
   - [x] 마이페이지 (통계 요약)
 - [x] Next.js API Routes 백엔드 프록시 (300초 타임아웃)
 - [x] Docker Compose 배포 구성
+- [x] Vercel 배포 (Frontend) — `frontend/vercel.json` 설정, Render API URL 환경변수 주입
+- [x] Render 배포 (Backend) — `render.yaml` 설정, Python 3.12 고정, 헬스체크 엔드포인트 연결
 
 **남은 작업:**
 - [ ] 팀원 실제 Agent 통합 테스트
 - [ ] Token usage DB 저장 연동
 - [ ] 전체 E2E 통합 테스트
+- [ ] Render → PostgreSQL 마이그레이션 (현재 SQLite 사용 중)
+- [ ] Vercel 환경변수 `NEXT_PUBLIC_API_URL` 프로덕션 값 고정 확인
+- [ ] Render 무료 플랜 스핀다운 개선 (Cron Job 또는 유료 플랜 업그레이드 검토)
+- [ ] CI/CD 파이프라인 구성 (GitHub Actions → Vercel·Render 자동 배포)
 
 ---
 
