@@ -1,4 +1,5 @@
 import json
+import asyncio
 
 import pytest
 
@@ -111,3 +112,74 @@ async def test_orchestrator_hands_customer_result_to_business_model():
     result = await orchestrator.run(idea())
     assert result.agent_results["BusinessModelAgent"].status == AgentStatus.PARTIAL
     assert result.decision_result is not None
+
+
+@pytest.mark.asyncio
+async def test_retrieval_timeout_returns_partial_instead_of_hanging():
+    async def retrieve(query):
+        await asyncio.sleep(10)
+        return []
+    agent = CustomerAgent(provider(customer_data()), evidence_retriever=retrieve,
+                          retrieval_timeout_sec=0.01)
+    result = await asyncio.wait_for(agent.run(idea()), timeout=1)
+    assert result.status == AgentStatus.PARTIAL
+    assert not result.evidence
+
+
+@pytest.mark.asyncio
+async def test_downgraded_fact_caps_confidence_even_with_other_evidence():
+    from app.core.schemas import Evidence
+    async def retrieve(query):
+        return [Evidence(title="Report", source="Research", content="Other data")]
+    data = customer_data()
+    data["primary_customer"] = claim(kind="fact", refs=[99])
+    result = await CustomerAgent(provider(data), evidence_retriever=retrieve).run(idea())
+    assert result.status == AgentStatus.PARTIAL
+    assert result.confidence <= 0.3
+
+
+@pytest.mark.asyncio
+async def test_shared_retriever_is_used_by_both_agents_and_customer_context_is_sent():
+    from app.agents.business_workflow import build_business_workflow
+    from app.agents.business_agents import CustomerProfile
+    from app.core.schemas import Evidence
+    queries = []
+    class InspectingProvider(MockProvider):
+        async def generate_structured(self, prompt, response_model, system=""):
+            payload = json.loads(prompt)
+            if response_model is CustomerProfile:
+                return response_model.model_validate(customer_data())
+            assert payload["customer_result"]["findings"][0]["customer_profile"]["personas"]
+            fields = response_model.model_fields["canvas"].annotation.model_fields
+            return response_model.model_validate({"summary": "Canvas", "canvas": {
+                key: [claim()] for key in fields}, "recommendations": ["Test"], "confidence": 0.8})
+    async def retrieve(query):
+        queries.append(query)
+        return [Evidence(title="Report", source="Research", content="Data")]
+    workflow = build_business_workflow(llm_provider=InspectingProvider(), evidence_retriever=retrieve)
+    result = await workflow.run(idea())
+    assert len(queries) == 2
+    assert queries[0] != queries[1]
+    assert result.agent_results["CustomerAgent"].evidence
+    assert result.agent_results["BusinessModelAgent"].evidence
+
+
+@pytest.mark.asyncio
+async def test_failed_customer_clears_prior_context():
+    from app.core.schemas import AgentResult
+    agent = BusinessModelAgent(MockProvider())
+    successful = await CustomerAgent(provider(customer_data())).run(idea())
+    agent.set_agent_results({"CustomerAgent": successful})
+    agent.set_agent_results({"CustomerAgent": AgentResult.failed("CustomerAgent", "offline")})
+    assert agent._customer_result is None
+    agent.set_agent_results({})
+    assert agent._customer_result is None
+
+
+@pytest.mark.asyncio
+async def test_workflow_cancellation_is_not_swallowed_as_retrieval_failure():
+    async def retrieve(query):
+        raise asyncio.CancelledError()
+    agent = CustomerAgent(provider(customer_data()), evidence_retriever=retrieve)
+    with pytest.raises(asyncio.CancelledError):
+        await agent.run(idea())

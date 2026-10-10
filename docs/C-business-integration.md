@@ -35,3 +35,33 @@ pending credentials and the shared retriever.
 Run tests from backend using `python -m pytest -q`. Tests use MockProvider;
 they verify output constraints, insufficient evidence, citation handling,
 retrieval failure and Customer-to-BusinessModel-to-Decision integration.
+
+## Connecting B later
+
+Use the composition helper after B publishes the actual interface:
+
+```python
+from app.agents.business_workflow import build_business_workflow
+
+# adapter: async (query: str) -> list[app.core.schemas.Evidence]
+# Implement this adapter against B's published API, preserving source metadata.
+workflow = build_business_workflow(evidence_retriever=adapter,
+                                   retrieval_timeout_sec=10.0)
+result = await workflow.run(idea)
+```
+
+The same adapter is used by both C agents. Each query identifies the agent;
+B can route Customer queries to customer research and BusinessModel queries
+to pricing/model benchmarks. The caller owns connection setup and cleanup.
+Retrieval times out after 10 seconds by default; errors/timeouts continue
+analysis as hypotheses with PARTIAL status. Downgraded facts also cap confidence
+at 0.3, even if unrelated sources were retrieved. LLM errors still use BaseAgent
+retry/failure handling. Async adapters must not perform blocking work in the
+event loop; use B's async API or an appropriate executor.
+
+Before integrating: check B's returned type, metadata and cancellation behavior;
+map documents to existing Evidence (never fabricate metadata); run the complete
+backend suite; then validate live LLM and RAG with locally configured keys.
+The API currently uses Orchestrator directly. Once B's adapter exists, the API
+composition can use build_business_workflow with that adapter. No automatic
+discovery, temporary RAG implementation or B-branch mutation is needed.

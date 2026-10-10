@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Literal
@@ -98,18 +99,20 @@ def _normalize(value, evidence_count):
 
 
 class _AnalysisAgent(BaseAgent):
-    def __init__(self, llm_provider=None, *, evidence_retriever: EvidenceRetriever | None = None):
+    def __init__(self, llm_provider=None, *, evidence_retriever: EvidenceRetriever | None = None,
+                 retrieval_timeout_sec: float = 10.0):
         super().__init__(llm_provider=llm_provider)
         self.evidence_retriever = evidence_retriever
+        self.retrieval_timeout_sec = retrieval_timeout_sec
 
     async def _analyze(self, idea, response_model, key, context=None):
         evidence = []
         warnings = []
         if self.evidence_retriever:
             try:
-                retrieved = await self.evidence_retriever(
+                retrieved = await asyncio.wait_for(self.evidence_retriever(
                     f"{self.agent_name} {idea.industry} {idea.customer} {idea.location} {idea.problem}"
-                )
+                ), timeout=self.retrieval_timeout_sec)
                 evidence = [Evidence.model_validate(item) for item in retrieved]
             except Exception as exc:
                 logger.warning("[%s] retrieval failed: %s", self.agent_name, exc)
@@ -128,7 +131,7 @@ class _AnalysisAgent(BaseAgent):
             warnings.append("근거 부족: 고객 및 가격 가설을 검증해야 합니다")
         if downgraded:
             warnings.append("근거 없는 Fact를 Hypothesis로 전환했습니다")
-        confidence = min(data["confidence"], 0.3) if not evidence else data["confidence"]
+        confidence = min(data["confidence"], 0.3) if warnings else data["confidence"]
         data["confidence"] = confidence
         return AgentResult(agent_name=self.agent_name,
                            status=AgentStatus.PARTIAL if warnings else AgentStatus.SUCCESS,
@@ -144,8 +147,9 @@ class CustomerAgent(_AnalysisAgent):
 
 
 class BusinessModelAgent(_AnalysisAgent):
-    def __init__(self, llm_provider=None, *, evidence_retriever=None):
-        super().__init__(llm_provider, evidence_retriever=evidence_retriever)
+    def __init__(self, llm_provider=None, *, evidence_retriever=None, retrieval_timeout_sec=10.0):
+        super().__init__(llm_provider, evidence_retriever=evidence_retriever,
+                         retrieval_timeout_sec=retrieval_timeout_sec)
         self._customer_result = None
 
     def set_agent_results(self, results: dict[str, AgentResult]) -> None:
