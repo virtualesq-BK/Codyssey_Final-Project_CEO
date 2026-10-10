@@ -8,7 +8,7 @@
 
 | 서비스 | URL | 플랫폼 |
 |---|---|---|
-| **Frontend (프론트엔드)** | https://codyssey-final-project.vercel.app | Vercel |
+| **Frontend (프론트엔드)** | https://codyssey-final-project-ceo-g9sg.vercel.app | Vercel |
 | **Backend API** | https://nadosajang-api.onrender.com | Render |
 | **API 문서 (Swagger)** | https://nadosajang-api.onrender.com/docs | Render |
 | **Health Check** | https://nadosajang-api.onrender.com/api/v1/health | Render |
@@ -202,7 +202,7 @@ Agent → LLMProvider → OpenAI / Anthropic
 
 | 구분 | 기술 | URL |
 |---|---|---|
-| Frontend | Vercel (Next.js 자동 빌드·배포) | https://codyssey-final-project.vercel.app |
+| Frontend | Vercel (Next.js 자동 빌드·배포) | https://codyssey-final-project-ceo-g9sg.vercel.app |
 | Backend | Render (Python Web Service, `render.yaml`) | https://nadosajang-api.onrender.com |
 | 로컬 개발 | Docker + Docker Compose | `http://localhost:3000` / `http://localhost:8000` |
 
