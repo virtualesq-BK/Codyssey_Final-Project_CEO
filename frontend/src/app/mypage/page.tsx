@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAnalyses, type SavedAnalysis } from "@/lib/firestore";
-
-const STORAGE_KEY = "nadosajang_ideas";
+import { type IdeaSummary, listIdeas } from "@/lib/ideaStore";
 
 const DECISION_LABEL: Record<string, string> = {
   GO: "GO", PIVOT: "PIVOT", VALIDATE_MORE: "VALIDATE MORE", STOP: "STOP",
@@ -16,41 +14,19 @@ const DECISION_COLOR: Record<string, string> = {
   GO: "#1A7A4A", PIVOT: "#856404", VALIDATE_MORE: "#2F5BD3", STOP: "#B42318",
 };
 
-function loadFromLocalStorage(): SavedAnalysis[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default function MyPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [ideas, setIdeas] = useState<SavedAnalysis[]>([]);
+  const [ideas, setIdeas] = useState<IdeaSummary[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
 
-    async function load() {
-      setDataLoading(true);
-      try {
-        if (user) {
-          const data = await getAnalyses(user.uid);
-          setIdeas(data);
-        } else {
-          setIdeas(loadFromLocalStorage());
-        }
-      } catch {
-        setIdeas(loadFromLocalStorage());
-      } finally {
-        setDataLoading(false);
-      }
-    }
-
-    load();
+    setDataLoading(true);
+    listIdeas(user)
+      .then(setIdeas)
+      .finally(() => setDataLoading(false));
   }, [user, authLoading]);
 
   const total = ideas.length;
@@ -162,15 +138,16 @@ export default function MyPage() {
           ) : ideas.length === 0 ? (
             <div className="text-center py-8 text-text-muted text-sm">
               아직 분석한 아이디어가 없습니다.{" "}
-              <Link href="/" style={{ color: "#2F5BD3" }}>지금 시작하기 →</Link>
+              <Link href="/ideas/new" style={{ color: "#2F5BD3" }}>지금 시작하기 →</Link>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               {ideas.slice(0, 5).map((idea) => (
-                <div
+                <Link
                   key={idea.id}
-                  className="flex items-center justify-between gap-3 py-3"
-                  style={{ borderBottom: "1px solid #F4F5F7" }}
+                  href={`/ideas/${idea.id}`}
+                  className="flex items-center justify-between gap-3 py-3 no-underline text-text"
+                  style={{ borderBottom: "1px solid #F4F5F7", textDecoration: "none" }}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span
@@ -188,7 +165,7 @@ export default function MyPage() {
                   <span className="text-xs text-text-muted shrink-0">
                     {new Date(idea.savedAt).toLocaleDateString("ko-KR")}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -197,7 +174,7 @@ export default function MyPage() {
         {/* 빠른 메뉴 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { href: "/", label: "AI 사업성 진단", desc: "새 아이디어 분석하기", icon: "🤖" },
+            { href: "/ideas/new", label: "AI 사업성 진단", desc: "새 아이디어 분석하기", icon: "🤖" },
             { href: "/programs", label: "공고 찾기", desc: "맞춤 창업 공고 탐색", icon: "📋" },
             { href: "/lounge", label: "스타트업라운지", desc: "창업 뉴스·리소스", icon: "🚀" },
           ].map((m) => (
