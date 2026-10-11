@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   activeNav?: string;
 }
 
 export default function Header({ activeNav }: HeaderProps) {
+  const router = useRouter();
+  const { user, loading, logout } = useAuth();
+
   const navItems = [
     { label: "공고 찾기", href: "/programs", key: "programs" },
     { label: "MY아이디어", href: "/ideas", key: "ideas" },
@@ -14,6 +19,11 @@ export default function Header({ activeNav }: HeaderProps) {
     { label: "스타트업라운지", href: "/lounge", key: "lounge" },
     { label: "마이페이지", href: "/mypage", key: "mypage" },
   ];
+
+  async function handleLogout() {
+    await logout();
+    router.push("/");
+  }
 
   return (
     <header className="bg-white border-b border-border sticky top-0 z-50">
@@ -58,12 +68,30 @@ export default function Header({ activeNav }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <span
-            className="text-xs px-2.5 py-1 rounded-full font-medium border"
-            style={{ color: "#8A909B", borderColor: "#D9DCE1" }}
-          >
-            샘플 데이터 모드
-          </span>
+          {!loading && (
+            user ? (
+              <>
+                <span className="text-sm font-medium" style={{ color: "#4A505B" }}>
+                  {user.displayName ?? user.email?.split("@")[0]}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-surface"
+                  style={{ border: "1px solid #D9DCE1", color: "#4A505B", background: "#fff", cursor: "pointer" }}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white no-underline"
+                style={{ background: "#2F5BD3", textDecoration: "none" }}
+              >
+                로그인
+              </Link>
+            )
+          )}
         </div>
       </div>
     </header>

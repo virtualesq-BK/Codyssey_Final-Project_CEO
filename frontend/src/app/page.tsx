@@ -5,6 +5,8 @@ import Header from "@/components/Header";
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
 import { analyze, type AnalyzeRequest, type AnalyzeResponse, type AgentStatus } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { saveAnalysis } from "@/lib/firestore";
 
 const IDEAS_STORAGE_KEY = "nadosajang_ideas";
 
@@ -75,6 +77,7 @@ const STEPS = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
   const [form, setForm] = useState<FormState>(INITIAL);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,10 +100,9 @@ export default function Home() {
       const res = await analyze(req);
       setResult(res);
       setElapsed(Date.now() - t0);
-      // localStorage에 결과 저장
       const dr = res.workflow_result.decision_result;
       if (dr) {
-        saveIdeaToStorage({
+        const ideaData = {
           id: res.idea_id,
           title: form.title,
           industry: form.industry,
@@ -108,7 +110,13 @@ export default function Home() {
           confidence: dr.confidence,
           summary: dr.summary,
           savedAt: new Date().toISOString(),
-        });
+        };
+        // localStorage에 저장 (비로그인 사용자 포함)
+        saveIdeaToStorage(ideaData);
+        // 로그인 사용자는 Firestore에도 저장
+        if (user) {
+          saveAnalysis(user.uid, ideaData).catch(() => {});
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

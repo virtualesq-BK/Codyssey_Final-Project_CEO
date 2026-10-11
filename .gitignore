@@ -12,3 +12,5 @@ venv/
 .mypy_cache/
 node_modules/
 .next/
+*.env.local
+*.tsbuildinfo

@@ -2,19 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAnalyses, type SavedAnalysis } from "@/lib/firestore";
 
 const STORAGE_KEY = "nadosajang_ideas";
-
-type SavedIdea = {
-  id: string;
-  title: string;
-  industry: string;
-  decision: string;
-  confidence: number;
-  summary: string;
-  savedAt: string;
-};
 
 const DECISION_LABEL: Record<string, string> = {
   GO: "GO", PIVOT: "PIVOT", VALIDATE_MORE: "VALIDATE MORE", STOP: "STOP",
@@ -23,15 +16,42 @@ const DECISION_COLOR: Record<string, string> = {
   GO: "#1A7A4A", PIVOT: "#856404", VALIDATE_MORE: "#2F5BD3", STOP: "#B42318",
 };
 
+function loadFromLocalStorage(): SavedAnalysis[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function MyPage() {
-  const [ideas, setIdeas] = useState<SavedIdea[]>([]);
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const [ideas, setIdeas] = useState<SavedAnalysis[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      setIdeas(raw ? JSON.parse(raw) : []);
-    } catch { setIdeas([]); }
-  }, []);
+    if (authLoading) return;
+
+    async function load() {
+      setDataLoading(true);
+      try {
+        if (user) {
+          const data = await getAnalyses(user.uid);
+          setIdeas(data);
+        } else {
+          setIdeas(loadFromLocalStorage());
+        }
+      } catch {
+        setIdeas(loadFromLocalStorage());
+      } finally {
+        setDataLoading(false);
+      }
+    }
+
+    load();
+  }, [user, authLoading]);
 
   const total = ideas.length;
   const avgConfidence = total > 0
@@ -42,6 +62,9 @@ export default function MyPage() {
     return acc;
   }, {});
   const topDecision = Object.entries(decisionCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  const displayName = user?.displayName ?? user?.email?.split("@")[0] ?? "예비 창업자";
+  const avatarLetter = displayName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
@@ -57,32 +80,49 @@ export default function MyPage() {
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shrink-0"
             style={{ background: "linear-gradient(135deg, #1B2B6B, #2F5BD3)" }}
           >
-            나
+            {avatarLetter}
           </div>
           <div>
-            <div className="font-bold text-xl">예비 창업자</div>
-            <div className="text-sm text-text-muted mt-0.5">나도사장 서비스 이용 중</div>
+            <div className="font-bold text-xl">{displayName}</div>
+            {user?.email && (
+              <div className="text-sm text-text-muted mt-0.5">{user.email}</div>
+            )}
+            <div className="text-xs text-text-muted mt-0.5">나도사장 서비스 이용 중</div>
           </div>
-          <div
-            className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ background: "#EEF2FD", color: "#2F5BD3" }}
-          >
-            샘플 데이터 모드
-          </div>
+          {!user && (
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-xs" style={{ color: "#8A909B" }}>로그인하면 분석 결과가 클라우드에 저장됩니다</span>
+              <button
+                onClick={() => router.push("/login")}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                style={{ background: "#2F5BD3", border: "none", cursor: "pointer" }}
+              >
+                로그인
+              </button>
+            </div>
+          )}
+          {user && (
+            <div
+              className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{ background: "#EEF2FD", color: "#2F5BD3" }}
+            >
+              클라우드 저장 활성
+            </div>
+          )}
         </div>
 
         {/* 통계 카드 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "총 분석 건수", value: `${total}건`, sub: "누적 AI 진단" },
+            { label: "총 분석 건수", value: dataLoading ? "…" : `${total}건`, sub: "누적 AI 진단" },
             {
               label: "평균 신뢰도",
-              value: total > 0 ? `${Math.round(avgConfidence * 100)}%` : "-",
+              value: dataLoading ? "…" : total > 0 ? `${Math.round(avgConfidence * 100)}%` : "-",
               sub: "전체 아이디어 평균",
             },
             {
               label: "주요 판정",
-              value: topDecision ? DECISION_LABEL[topDecision] ?? topDecision : "-",
+              value: dataLoading ? "…" : topDecision ? DECISION_LABEL[topDecision] ?? topDecision : "-",
               sub: "가장 많은 결과",
               color: topDecision ? DECISION_COLOR[topDecision] : undefined,
             },
@@ -117,8 +157,13 @@ export default function MyPage() {
               전체 보기 →
             </Link>
           </div>
-          {ideas.length === 0 ? (
-            <div className="text-center py-8 text-text-muted text-sm">아직 분석한 아이디어가 없습니다.</div>
+          {dataLoading ? (
+            <div className="text-center py-8 text-text-muted text-sm">불러오는 중…</div>
+          ) : ideas.length === 0 ? (
+            <div className="text-center py-8 text-text-muted text-sm">
+              아직 분석한 아이디어가 없습니다.{" "}
+              <Link href="/" style={{ color: "#2F5BD3" }}>지금 시작하기 →</Link>
+            </div>
           ) : (
             <div className="flex flex-col gap-3">
               {ideas.slice(0, 5).map((idea) => (
