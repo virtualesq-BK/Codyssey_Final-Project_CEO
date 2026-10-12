@@ -17,6 +17,16 @@
 
 ---
 
+## 주요 문서
+
+| 문서 | 링크 |
+|---|---|
+| **프로젝트 기획서** | [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) |
+| **기능 요구 명세서** | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) |
+| **Git 워크플로우** | [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) |
+
+---
+
 ## 목차
 
 1. [프로젝트 개요](#1-프로젝트-개요)

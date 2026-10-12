@@ -1,0 +1,355 @@
+# 나도사장 — 기능 요구 명세서
+
+> AI 기반 예비창업자 사업성 분석 서비스
+
+---
+
+## 1. 기능 요구사항 (Functional Requirements)
+
+### FR-01. 사업성 AI 분석 (핵심 기능)
+
+#### FR-01-1. 아이디어 입력
+- 사용자는 다음 6개 필드를 입력하여 분석을 요청할 수 있다.
+
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| `title` | string | ✅ | 사업 아이디어 제목 |
+| `problem` | string | ✅ | 해결하려는 문제 |
+| `customer` | string | ✅ | 타겟 고객 |
+| `solution` | string | ✅ | 제안 솔루션 |
+| `industry` | string | ✅ | 산업 분야 |
+| `location` | string | ✅ | 주요 사업 지역 |
+| `business_stage` | enum | — | 사업 단계 (기본값: `idea`) |
+
+#### FR-01-2. Multi-Agent 병렬 분석
+- 시스템은 입력된 아이디어를 7개 전문 에이전트에 전달하여 분석을 수행한다.
+- Phase 1 (병렬): MarketAgent, CustomerAgent, CompetitorAgent가 동시에 실행된다.
+- Phase 2 (순차): BusinessModelAgent가 Phase 1 결과를 바탕으로 실행된다.
+- Phase 3 (병렬): FinancialAgent, RiskAgent가 동시에 실행된다.
+- Phase 4 (순차): DecisionAgent가 모든 결과를 종합하여 최종 판정을 내린다.
+
+#### FR-01-3. 분석 결과 출력
+- 각 에이전트별 분석 요약, 신뢰도(confidence), 근거(evidence)를 카드 형태로 표시한다.
+- 종합 판정 배너에 GO / PIVOT / VALIDATE_MORE / STOP 중 하나를 표시한다.
+- SWOT 분석, 강점·약점, Action Plan을 구조화하여 제공한다.
+- 분석 결과 하단에 면책 고지(disclaimer)를 필수로 표시한다.
+
+#### FR-01-4. 에이전트 부분 실패 처리
+- 일부 에이전트 실패 시에도 성공한 에이전트의 결과로 `PARTIAL` 상태 응답을 반환한다.
+- 실패한 에이전트 항목은 `"분석 불가 / 오류 발생"` 메시지와 함께 표시한다.
+
+---
+
+### FR-02. 창업 지원 공고 검색
+
+#### FR-02-1. 공고 목록 조회
+- 사용자는 정부·지자체 창업 지원 공고 목록을 조회할 수 있다.
+- 기본 정렬: 마감일 오름차순
+
+#### FR-02-2. 필터링 및 검색
+- 마감 상태 필터: `모집중`, `마감임박(D-3)`, `마감`
+- 지역 필터: 서울, 경기, 전국 등
+- 분야 필터: 청년창업, 기술창업 등
+- 키워드 검색: 공고명·기관명 포함 검색
+
+#### FR-02-3. 공고 상세 정보
+- 공고 항목 클릭 시 사이드 패널 또는 상세 페이지를 통해 다음 정보를 표시한다.
+  - 기관명, 분야, 지역, 마감일, 지원 금액, 원문 링크
+
+---
+
+### FR-03. MY아이디어 이력 관리
+
+#### FR-03-1. 분석 결과 자동 저장
+- 분석 완료 후 결과를 자동으로 localStorage에 저장한다.
+- Firebase 로그인 사용자의 경우 Firestore에도 저장한다.
+
+#### FR-03-2. 이력 목록 조회
+- 저장된 분석 이력을 최신순으로 카드 목록 형태로 표시한다.
+- 각 카드에는 아이디어 제목, 분석 일시, 최종 판정(GO/PIVOT/VALIDATE/STOP)을 표시한다.
+
+#### FR-03-3. 이력 상세 조회
+- 특정 이력 선택 시 해당 분석의 전체 결과를 다시 조회할 수 있다.
+
+---
+
+### FR-04. 스타트업 라운지
+
+#### FR-04-1. 창업 정보 링크 제공
+- 창업 뉴스, 정부 창업 포털, 투자 정보, 교육 리소스를 카테고리별로 제공한다.
+- 외부 링크는 새 탭에서 열린다.
+
+---
+
+### FR-05. 마이페이지
+
+#### FR-05-1. 분석 통계 요약
+- 총 분석 횟수, 판정별 분포(GO/PIVOT/VALIDATE/STOP)를 수치로 표시한다.
+
+#### FR-05-2. 최근 아이디어 목록
+- 최근 5건의 분석 이력을 빠르게 확인할 수 있다.
+
+#### FR-05-3. 빠른 메뉴
+- 핵심 기능(AI 지원서, 공고 찾기)으로의 바로가기 링크를 제공한다.
+
+---
+
+### FR-06. 사용자 인증
+
+#### FR-06-1. Firebase 소셜 로그인
+- Google OAuth를 통한 로그인/로그아웃을 지원한다.
+- 로그인 시 Firestore 동기화가 활성화된다.
+- 비로그인 사용자도 localStorage 기반으로 서비스 이용이 가능하다.
+
+---
+
+## 2. 비기능 요구사항 (Non-Functional Requirements)
+
+### NFR-01. 성능
+
+| 항목 | 목표 |
+|---|---|
+| 분석 응답 시간 | 60초 이내 (Multi-Agent 병렬 실행 기준) |
+| 공고 목록 응답 시간 | 2초 이내 |
+| 페이지 최초 로딩 (LCP) | 3초 이내 |
+| API 타임아웃 | 300초 (Next.js API Routes) |
+
+### NFR-02. 가용성 및 신뢰성
+
+| 항목 | 요구사항 |
+|---|---|
+| 서비스 가용성 | 99% 이상 (월간 기준) |
+| 에이전트 부분 실패 | PARTIAL 상태로 나머지 결과 반환 (전체 실패 방지) |
+| LLM API 오류 | 자동 재시도 (retry) 후 fallback 메시지 반환 |
+| 외부 API 오류 | graceful degradation — 해당 Evidence 없이 분석 진행 |
+
+### NFR-03. 보안
+
+| 항목 | 요구사항 |
+|---|---|
+| API 키 관리 | 환경변수 전용 관리, 코드·Git 커밋 금지 |
+| `.env` 파일 | `.gitignore` 등록 필수 |
+| CORS | Backend는 Frontend 도메인만 허용 |
+| 사용자 데이터 | 분석 결과 외 개인 식별 정보 수집 없음 |
+| HTTPS | 모든 서비스 HTTPS 강제 (Vercel·Render 기본 적용) |
+
+### NFR-04. 유지보수성
+
+| 항목 | 요구사항 |
+|---|---|
+| LLM 교체 | 환경변수 변경만으로 OpenAI ↔ Anthropic 전환 가능 |
+| 에이전트 확장 | BaseAgent 상속으로 신규 에이전트 추가 가능 |
+| 스키마 변경 | schemas.py 변경 시 전 팀원 공지 및 영향 범위 검토 |
+| 코드 일관성 | Pydantic 모델로 모든 에이전트 간 데이터 타입 보장 |
+
+### NFR-05. 접근성 및 UX
+
+| 항목 | 요구사항 |
+|---|---|
+| 반응형 지원 | 모바일(320px) ~ 데스크탑(1920px) 모두 지원 |
+| 로딩 상태 | 분석 진행 중 스피너 및 단계 표시 |
+| 에러 메시지 | 사용자가 이해할 수 있는 한국어 오류 메시지 표시 |
+| 면책 고지 | 분석 결과 하단에 항상 표시 |
+
+### NFR-06. 배포 및 운영
+
+| 항목 | 요구사항 |
+|---|---|
+| CI/CD | Git 푸시 → 자동 빌드·배포 (Vercel·Render) |
+| 헬스체크 | `/api/v1/health` 엔드포인트 상시 운영 |
+| 로그 | 에이전트별 실행 시간, 토큰 사용량 기록 |
+| 스핀다운 대응 | Render 무료 플랜 스핀다운 시 첫 요청 지연 안내 표시 |
+
+---
+
+## 3. 시스템 아키텍처 설계
+
+### 3.1 전체 아키텍처 다이어그램
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      사용자 브라우저                          │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │           Next.js 14 (App Router) — Vercel          │   │
+│  │                                                     │   │
+│  │  Pages: / · /programs · /ideas · /lounge · /mypage  │   │
+│  │  Components: Header · AgentResultCard · DecisionBanner│  │
+│  │  State: React useState + localStorage + Firestore   │   │
+│  │                                                     │   │
+│  │  Next.js API Routes (서버사이드 프록시, 300s timeout) │   │
+│  │    /api/v1/analyze  →  Backend POST /api/v1/analyze  │   │
+│  │    /api/v1/programs →  Backend GET  /api/v1/programs │   │
+│  │    /api/v1/health   →  Backend GET  /api/v1/health   │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                              │ HTTPS
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│              FastAPI — Python 3.11 — Render                 │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                 OrchestratorAgent                    │  │
+│  │                                                      │  │
+│  │  Phase 1 (parallel)                                  │  │
+│  │    MarketAgent ─── CustomerAgent ─── CompetitorAgent │  │
+│  │                                                      │  │
+│  │  Phase 2 (sequential)                                │  │
+│  │    BusinessModelAgent                                │  │
+│  │                                                      │  │
+│  │  Phase 3 (parallel)                                  │  │
+│  │    FinancialAgent ──────────── RiskAgent             │  │
+│  │                                                      │  │
+│  │  Phase 4 (sequential)                                │  │
+│  │    DecisionAgent → GO/PIVOT/VALIDATE_MORE/STOP       │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────┐  ┌───────────────────────────────────┐   │
+│  │  SQLAlchemy  │  │         LLMProvider               │   │
+│  │  SQLite/PG   │  │  OpenAI GPT / Anthropic Claude    │   │
+│  └──────────────┘  └───────────────────────────────────┘   │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Evidence Retriever (RAG)                │  │
+│  │   bizrag 어댑터  ·  KOSIS  ·  DataLab  ·  KIPRIS   │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┼──────────────────┐
+          ▼                   ▼                  ▼
+    OpenAI API         Anthropic API      Firebase/Firestore
+    (LLM)              (LLM)              (Auth + DB)
+          │
+    ┌─────┴──────────────────────┐
+    ▼           ▼               ▼
+  KOSIS       Naver           KIPRIS
+  (통계청)   DataLab         (특허정보)
+```
+
+### 3.2 데이터 모델
+
+#### BusinessIdea (입력)
+```python
+class BusinessIdea(BaseModel):
+    title: str
+    problem: str
+    customer: str
+    solution: str
+    industry: str
+    location: str
+    business_stage: str = "idea"
+```
+
+#### Evidence (근거 단위)
+```python
+class Evidence(BaseModel):
+    source: str        # 출처 (KOSIS, DataLab, 웹검색 등)
+    content: str       # 근거 내용
+    url: Optional[str] # 원문 링크
+    retrieved_at: datetime
+```
+
+#### AgentResult (에이전트 출력)
+```python
+class AgentResult(BaseModel):
+    agent_name: str
+    status: Literal["success", "partial", "failed"]
+    summary: str
+    confidence: float          # 0.0 ~ 1.0
+    evidence: List[Evidence]
+    raw_output: Optional[dict]
+```
+
+#### DecisionResult (최종 판정)
+```python
+class DecisionResult(BaseModel):
+    summary: str
+    strengths: List[str]
+    weaknesses: List[str]
+    opportunities: List[str]
+    threats: List[str]
+    action_plan: List[str]
+    decision: Literal["GO", "PIVOT", "VALIDATE_MORE", "STOP"]
+    confidence: float
+    disclaimer: str
+```
+
+#### WorkflowResult (API 응답)
+```python
+class WorkflowResult(BaseModel):
+    idea_id: str
+    status: Literal["success", "partial", "failed"]
+    agent_results: Dict[str, AgentResult]
+    decision_result: Optional[DecisionResult]
+    elapsed_seconds: float
+    token_usage: Optional[dict]
+```
+
+### 3.3 API 엔드포인트 명세
+
+#### POST /api/v1/analyze
+| 항목 | 내용 |
+|---|---|
+| 설명 | 사업 아이디어 Multi-Agent 분석 요청 |
+| Request | `BusinessIdea` JSON |
+| Response | `WorkflowResult` JSON |
+| 타임아웃 | 300초 |
+| 오류 | 422 (유효성 검사 실패), 500 (서버 오류) |
+
+#### GET /api/v1/programs
+| 항목 | 내용 |
+|---|---|
+| 설명 | 창업 지원 공고 목록 조회 |
+| Query Params | `status`, `region`, `category`, `q` |
+| Response | `{ total: int, items: List[Program] }` |
+| 캐시 | 1시간 (공고 데이터 변경 주기 고려) |
+
+#### GET /api/v1/health
+| 항목 | 내용 |
+|---|---|
+| 설명 | 서비스 상태 확인 |
+| Response | `{ status: "ok", service: "나도사장 API" }` |
+
+### 3.4 보안 설계
+
+```
+환경변수 (.env)
+  OPENAI_API_KEY        ← LLM 호출
+  ANTHROPIC_API_KEY     ← LLM 호출 (대안)
+  LLM_PROVIDER          ← "openai" | "anthropic"
+  LLM_MODEL             ← 모델명
+  KOSIS_API_KEY         ← 통계청 API
+  NAVER_CLIENT_ID       ← DataLab API
+  KIPRIS_API_KEY        ← 특허정보 API
+  FIREBASE_*            ← Firebase Admin SDK
+
+  → .gitignore 등록 필수
+  → CI/CD는 Secret Manager / 플랫폼 환경변수에서 주입
+```
+
+### 3.5 에러 처리 전략
+
+| 오류 유형 | 처리 방식 |
+|---|---|
+| LLM API 타임아웃 | 3회 자동 재시도 후 `"분석 오류"` 메시지 반환 |
+| 외부 API (KOSIS 등) 오류 | Evidence 없이 LLM 자체 판단으로 대체, 로그 기록 |
+| 에이전트 부분 실패 | `PARTIAL` 상태로 나머지 결과 정상 반환 |
+| DB 연결 오류 | 분석은 정상 진행, 저장만 실패 (로그 기록) |
+| 프론트엔드 API 타임아웃 | 300초 후 "분석 시간 초과" 안내 메시지 표시 |
+
+---
+
+## 4. 제약사항 (Constraints)
+
+| 항목 | 제약 |
+|---|---|
+| 개발 기간 | 4주 (총 20일) |
+| 팀 규모 | 5명 |
+| 예산 | LLM API 비용 최소화 (Mock 모드 개발 병행) |
+| 근거 원칙 | 임의의 시장 규모·재무 수치 생성 금지 |
+| 면책 고지 | 모든 분석 결과에 "의사결정 지원 도구" 면책 표시 필수 |
+| 데이터 보존 | 비로그인 사용자 데이터는 localStorage에만 저장 (서버 미전송) |
+
+---
+
+*본 문서는 Codyssey Final Project 기능 요구 명세서입니다.*
