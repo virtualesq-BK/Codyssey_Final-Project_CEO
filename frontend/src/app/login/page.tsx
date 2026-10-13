@@ -7,6 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type Mode = "login" | "signup";
 
+// 로그인 후 돌아갈 곳 (?next=/ideas/...). 다른 사이트로 튀지 않게 내부 경로만 허용
+function nextPath() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, signUp, signInWithGoogle } = useAuth();
@@ -29,7 +35,7 @@ export default function LoginPage() {
         if (!displayName.trim()) throw new Error("이름을 입력해 주세요.");
         await signUp(email, password, displayName.trim());
       }
-      router.push("/");
+      router.push(nextPath());
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(translateFirebaseError(msg));
@@ -43,7 +49,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.push("/");
+      router.push(nextPath());
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(translateFirebaseError(msg));

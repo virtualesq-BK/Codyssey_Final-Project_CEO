@@ -5,7 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
-import { type IdeaSummary, listIdeas } from "@/lib/ideaStore";
+import { displayTitle } from "@/lib/idea";
+import { listIdeas } from "@/lib/ideaStore";
+
+/** 마이페이지 통계는 판정이 나온 아이디어만 센다 */
+type IdeaSummary = {
+  id: string;
+  title: string;
+  industry: string;
+  decision: string;
+  confidence: number;
+  savedAt: string;
+};
 
 const DECISION_LABEL: Record<string, string> = {
   GO: "GO", PIVOT: "PIVOT", VALIDATE_MORE: "VALIDATE MORE", STOP: "STOP",
@@ -25,7 +36,25 @@ export default function MyPage() {
 
     setDataLoading(true);
     listIdeas(user)
-      .then(setIdeas)
+      .then((all) =>
+        setIdeas(
+          all.flatMap((i) =>
+            i.latestReport?.decision
+              ? [
+                  {
+                    id: i.id,
+                    title: displayTitle(i),
+                    industry: i.profile.industry,
+                    decision: i.latestReport.decision,
+                    confidence: i.latestReport.confidence ?? 0,
+                    savedAt: i.latestReport.createdAt,
+                  },
+                ]
+              : [],
+          ),
+        ),
+      )
+      .catch(() => setIdeas([]))
       .finally(() => setDataLoading(false));
   }, [user, authLoading]);
 

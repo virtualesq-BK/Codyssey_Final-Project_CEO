@@ -1,11 +1,20 @@
-import type { IdeaDetail } from "@/lib/ideaStore";
+/**
+ * 비로그인용 브라우저 저장소. 로그인하면 ideaStore가 여기 있는 아이디어를 계정으로 옮긴다.
+ */
+import type { AnalyzeRequest, AnalyzeResponse } from "@/lib/api";
+import type { Idea, IdeaReport } from "@/lib/idea";
 
-const STORAGE_KEY = "nadosajang_ideas";
-// 목록은 가볍게 유지하고, 분석 결과 전체는 아이디어별 키에 따로 저장
-const DETAIL_KEY_PREFIX = "nadosajang_idea_detail_";
+const IDEAS_KEY = "nadosajang_ideas_v2";
+const REPORTS_KEY_PREFIX = "nadosajang_reports_";
 const MAX_IDEAS = 20;
 
-export type SavedIdea = {
+// 구조 개편 전 키 — 읽기만 하고 지우지 않는다
+const LEGACY_IDEAS_KEY = "nadosajang_ideas";
+const LEGACY_DETAIL_KEY_PREFIX = "nadosajang_idea_detail_";
+const LEGACY_MIGRATED_KEY = "nadosajang_v2_migrated";
+
+/** 구조 개편 전 목록 한 줄 */
+export type LegacyIdea = {
   id: string;
   title: string;
   industry: string;
@@ -15,48 +24,75 @@ export type SavedIdea = {
   savedAt: string;
 };
 
-export function saveIdeaToStorage(idea: SavedIdea, detail?: IdeaDetail) {
+/** 구조 개편 전 상세 */
+export interface LegacyDetail {
+  input: AnalyzeRequest;
+  response: AnalyzeResponse;
+  elapsedMs?: number;
+}
+
+function read<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const list: SavedIdea[] = raw ? JSON.parse(raw) : [];
-    const filtered = list.filter((i) => i.id !== idea.id);
-    filtered.unshift(idea);
-    // 목록에서 밀려난 아이디어의 상세도 함께 정리
-    filtered.slice(MAX_IDEAS).forEach((i) => localStorage.removeItem(DETAIL_KEY_PREFIX + i.id));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered.slice(0, MAX_IDEAS)));
-    if (detail) {
-      localStorage.setItem(DETAIL_KEY_PREFIX + idea.id, JSON.stringify(detail));
-    }
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function write(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {}
 }
 
-export function loadIdeasFromStorage(): SavedIdea[] {
+function remove(key: string) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+    localStorage.removeItem(key);
+  } catch {}
 }
 
-export function loadIdeaDetailFromStorage(id: string): IdeaDetail | null {
-  try {
-    const raw = localStorage.getItem(DETAIL_KEY_PREFIX + id);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+export function loadLocalIdeas(): Idea[] {
+  return read<Idea[]>(IDEAS_KEY, []);
 }
 
-export function deleteIdeaFromStorage(id: string): SavedIdea[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const list: SavedIdea[] = raw ? JSON.parse(raw) : [];
-    const updated = list.filter((i) => i.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    localStorage.removeItem(DETAIL_KEY_PREFIX + id);
-    return updated;
-  } catch {
-    return [];
-  }
+export function saveLocalIdea(idea: Idea) {
+  const list = loadLocalIdeas().filter((i) => i.id !== idea.id);
+  list.unshift(idea);
+  // 목록에서 밀려난 아이디어의 보고서도 함께 정리
+  list.slice(MAX_IDEAS).forEach((i) => remove(REPORTS_KEY_PREFIX + i.id));
+  write(IDEAS_KEY, list.slice(0, MAX_IDEAS));
+}
+
+export function deleteLocalIdea(id: string) {
+  write(
+    IDEAS_KEY,
+    loadLocalIdeas().filter((i) => i.id !== id),
+  );
+  remove(REPORTS_KEY_PREFIX + id);
+}
+
+export function loadLocalReports(ideaId: string): IdeaReport[] {
+  return read<IdeaReport[]>(REPORTS_KEY_PREFIX + ideaId, []);
+}
+
+export function saveLocalReport(ideaId: string, report: IdeaReport) {
+  const reports = loadLocalReports(ideaId).filter((r) => r.id !== report.id);
+  write(REPORTS_KEY_PREFIX + ideaId, [report, ...reports]);
+}
+
+export function clearLocalIdeas() {
+  loadLocalIdeas().forEach((i) => remove(REPORTS_KEY_PREFIX + i.id));
+  remove(IDEAS_KEY);
+}
+
+/** 예전 키에 남은 분석 기록. 한 번 꺼내면 다시 꺼내지 않는다 */
+export function takeLegacyLocalIdeas(): { summary: LegacyIdea; detail: LegacyDetail | null }[] {
+  if (read<boolean>(LEGACY_MIGRATED_KEY, false)) return [];
+  const legacy = read<LegacyIdea[]>(LEGACY_IDEAS_KEY, []).map((summary) => ({
+    summary,
+    detail: read<LegacyDetail | null>(LEGACY_DETAIL_KEY_PREFIX + summary.id, null),
+  }));
+  write(LEGACY_MIGRATED_KEY, true);
+  return legacy;
 }
