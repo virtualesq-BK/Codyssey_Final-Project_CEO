@@ -6,13 +6,37 @@ import Header from "@/components/Header";
 import StatusPill from "@/components/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
 import { DECISION_META, type Idea, displayTitle, effectiveStatus } from "@/lib/idea";
-import { deleteIdea as removeIdea, listIdeas } from "@/lib/ideaStore";
+import { createMemo, deleteIdea as removeIdea, listIdeas } from "@/lib/ideaStore";
 
 export default function IdeasPage() {
   const { user, loading: authLoading } = useAuth();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [memo, setMemo] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [memoError, setMemoError] = useState<string | null>(null);
+
+  // 홈 등에서 ?memo=로 넘어온 한 줄 메모 이어받기
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get("memo");
+    if (fromLink) setMemo(fromLink);
+  }, []);
+
+  async function addMemo() {
+    if (!memo.trim() || saving) return;
+    setSaving(true);
+    setMemoError(null);
+    try {
+      const idea = await createMemo(user, memo);
+      setIdeas((prev) => [idea, ...prev]);
+      setMemo("");
+    } catch (err) {
+      setMemoError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (authLoading) return;
@@ -35,20 +59,52 @@ export default function IdeasPage() {
       <Header activeNav="ideas" />
 
       <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
-          <div>
-            <div className="text-sm font-semibold mb-1" style={{ color: "#2F5BD3" }}>MY아이디어</div>
-            <h1 className="text-3xl font-bold m-0">내 아이디어</h1>
-            <p className="text-text-secondary mt-2 mb-0">메모부터 보고서까지, 단계와 상관없이 모두 모아뒀어요.</p>
-          </div>
-          <Link
-            href="/ideas/new"
-            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white no-underline"
-            style={{ background: "#2F5BD3", textDecoration: "none" }}
-          >
-            + 새 아이디어 메모
-          </Link>
+        <div className="mb-6">
+          <div className="text-sm font-semibold mb-1" style={{ color: "#2F5BD3" }}>MY아이디어</div>
+          <h1 className="text-3xl font-bold m-0">내 아이디어</h1>
+          <p className="text-text-secondary mt-2 mb-0">메모부터 보고서까지, 단계와 상관없이 모두 모아뒀어요.</p>
         </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            addMemo();
+          }}
+          className="mb-8 bg-white rounded-2xl p-4 flex gap-3 items-end"
+          style={{ border: "1px solid #E8EAEE" }}
+        >
+          <label className="flex-1 flex flex-col gap-1.5 text-sm font-semibold">
+            새 아이디어 메모
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              onKeyDown={(e) => {
+                // Enter로 저장, Shift+Enter는 줄바꿈. 한글 조합 중 Enter는 무시
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  addMemo();
+                }
+              }}
+              placeholder="떠오른 아이디어를 한 줄로 적어두세요 (Enter로 저장)"
+              rows={1}
+              className="rounded-xl px-4 py-3 font-normal text-sm resize-y focus:outline-none leading-relaxed"
+              style={{ border: "1.5px solid #D9DCE1", minHeight: 48 }}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={saving || !memo.trim()}
+            className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50 shrink-0"
+            style={{ background: "#2F5BD3", border: "none", cursor: "pointer" }}
+          >
+            {saving ? "저장 중…" : "메모 추가"}
+          </button>
+        </form>
+        {memoError && (
+          <div className="-mt-5 mb-8 rounded-xl p-3 text-sm" style={{ background: "#FDECEA", color: "#B42318" }}>
+            메모를 저장하지 못했어요: {memoError}
+          </div>
+        )}
 
         {!authLoading && !user && ideas.length > 0 && (
           <div
@@ -75,15 +131,8 @@ export default function IdeasPage() {
           >
             <div>
               <div className="font-bold text-lg mb-2">아직 아이디어가 없어요</div>
-              <div className="text-text-secondary text-sm">떠오른 아이디어를 한 줄로 메모해 두세요.</div>
+              <div className="text-text-secondary text-sm">위 칸에 떠오른 아이디어를 한 줄로 메모해 두세요.</div>
             </div>
-            <Link
-              href="/ideas/new"
-              className="px-6 py-3 rounded-xl font-bold text-sm text-white no-underline"
-              style={{ background: "#2F5BD3", textDecoration: "none" }}
-            >
-              아이디어 메모하기
-            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

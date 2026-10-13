@@ -167,7 +167,7 @@ export default function MyPage() {
           ) : ideas.length === 0 ? (
             <div className="text-center py-8 text-text-muted text-sm">
               아직 분석한 아이디어가 없습니다.{" "}
-              <Link href="/ideas/new" style={{ color: "#2F5BD3" }}>지금 시작하기 →</Link>
+              <Link href="/ideas" style={{ color: "#2F5BD3" }}>지금 시작하기 →</Link>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -203,7 +203,7 @@ export default function MyPage() {
         {/* 빠른 메뉴 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { href: "/ideas/new", label: "AI 사업성 진단", desc: "새 아이디어 분석하기", icon: "🤖" },
+            { href: "/ideas", label: "AI 사업성 진단", desc: "새 아이디어 분석하기", icon: "🤖" },
             { href: "/programs", label: "공고 찾기", desc: "맞춤 창업 공고 탐색", icon: "📋" },
             { href: "/lounge", label: "스타트업라운지", desc: "창업 뉴스·리소스", icon: "🚀" },
           ].map((m) => (

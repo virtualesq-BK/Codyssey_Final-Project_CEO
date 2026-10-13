@@ -43,14 +43,14 @@ export default function Home() {
 
           <div className="flex gap-3 flex-wrap">
             <Link
-              href="/ideas/new"
+              href="/ideas"
               className="px-6 py-3 rounded-xl font-bold text-base transition-all hover:opacity-90 no-underline"
               style={{ background: "#fff", color: "#2F5BD3", textDecoration: "none" }}
             >
               아이디어 메모하기
             </Link>
             <Link
-              href="/ideas/new"
+              href="/ideas"
               className="px-6 py-3 rounded-xl font-bold text-base border transition-all hover:bg-white/10 no-underline"
               style={{ borderColor: "rgba(255,255,255,0.4)", color: "#fff", textDecoration: "none" }}
             >
@@ -124,7 +124,7 @@ export default function Home() {
 
         <div className="flex justify-center mt-10">
           <Link
-            href="/ideas/new"
+            href="/ideas"
             className="px-8 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
             style={{ background: "#2F5BD3", textDecoration: "none" }}
           >
