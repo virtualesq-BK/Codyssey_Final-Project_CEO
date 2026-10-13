@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
-import StatusPill from "@/components/StatusPill";
+import IdeaCard from "@/components/IdeaCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { DECISION_META, type Idea, displayTitle, effectiveStatus } from "@/lib/idea";
+import { type Idea, displayTitle } from "@/lib/idea";
 import { createMemo, deleteIdea as removeIdea, listIdeas } from "@/lib/ideaStore";
 
 export default function IdeasPage() {
@@ -16,6 +16,9 @@ export default function IdeasPage() {
   const [memo, setMemo] = useState("");
   const [saving, setSaving] = useState(false);
   const [memoError, setMemoError] = useState<string | null>(null);
+  // 동작 버튼이 열린 카드 (한 번에 하나)
+  const [openId, setOpenId] = useState<string | null>(null);
+  const closeCard = useCallback(() => setOpenId(null), []);
 
   // 홈 등에서 ?memo=로 넘어온 한 줄 메모 이어받기
   useEffect(() => {
@@ -136,72 +139,17 @@ export default function IdeasPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {ideas.map((idea) => {
-              const { status } = effectiveStatus(idea);
-              const decision = idea.latestReport?.decision ? DECISION_META[idea.latestReport.decision] : null;
-              const title = displayTitle(idea);
-              // 이름이 없으면 메모가 제목이 되므로 본문에서 반복하지 않는다
-              const body = idea.profile.oneLiner || idea.latestReport?.summary || (idea.memo.trim() !== title ? idea.memo : "");
-              return (
-                <Link
-                  key={idea.id}
-                  href={`/ideas/${idea.id}`}
-                  className="bg-white rounded-2xl p-6 flex flex-col gap-4 no-underline text-text hover:shadow-sm transition-shadow"
-                  style={{ border: "1px solid #E8EAEE", textDecoration: "none" }}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <StatusPill status={status} />
-                      {idea.profileChangedSinceReport && (
-                        <span className="text-xs" style={{ color: "#B45309" }}>
-                          프로필 수정됨
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        // 카드 링크로 이동하지 않고 삭제만
-                        e.preventDefault();
-                        deleteIdea(idea);
-                      }}
-                      className="text-text-muted text-sm hover:text-danger"
-                      style={{ background: "none", border: "none", cursor: "pointer" }}
-                      title="삭제"
-                      aria-label={`${displayTitle(idea)} 삭제`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div>
-                    <div className="font-bold text-base mb-1">{title}</div>
-                    {idea.profile.industry && (
-                      <div className="text-xs text-text-muted">
-                        {idea.profile.industry} · {idea.profile.location}
-                      </div>
-                    )}
-                  </div>
-
-                  {body && (
-                    <p className="text-sm text-text-secondary leading-relaxed m-0 line-clamp-3">{body}</p>
-                  )}
-
-                  <div
-                    className="mt-auto pt-3 flex items-center justify-between"
-                    style={{ borderTop: "1px solid #E8EAEE" }}
-                  >
-                    <span className="text-xs font-semibold" style={{ color: decision?.color ?? "#8A909B" }}>
-                      {idea.latestReport
-                        ? `보고서 v${idea.latestReport.version} · ${decision?.label ?? "판정 없음"}`
-                        : "보고서 전"}
-                    </span>
-                    <span className="text-xs text-text-muted">
-                      {new Date(idea.updatedAt).toLocaleDateString("ko-KR")}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+            {ideas.map((idea) => (
+              <IdeaCard
+                key={idea.id}
+                idea={idea}
+                open={openId === idea.id}
+                loggedIn={!!user}
+                onToggle={() => setOpenId((prev) => (prev === idea.id ? null : idea.id))}
+                onClose={closeCard}
+                onDelete={() => deleteIdea(idea)}
+              />
+            ))}
           </div>
         )}
       </div>
