@@ -49,3 +49,17 @@ async def test_mock_cycles_responses():
     assert r1 == "a"
     assert r2 == "b"
     assert r3 == "a"
+
+
+def test_parse_structured_tolerates_text_around_json():
+    # 실제로 모델이 JSON 앞에 문장을 붙여 BusinessModelAgent가 3번 연속 실패했던 형태
+    from pydantic import BaseModel
+
+    from app.core.llm_provider import _parse_structured
+
+    class Out(BaseModel):
+        summary: str
+
+    assert _parse_structured('분석 결과입니다.\n{"summary": "ok"}\n이상.', Out).summary == "ok"
+    assert _parse_structured('```json\n{"summary": "fenced"}\n```', Out).summary == "fenced"
+    assert _parse_structured('{"summary": "plain"}', Out).summary == "plain"

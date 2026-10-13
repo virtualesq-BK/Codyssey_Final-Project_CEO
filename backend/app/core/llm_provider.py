@@ -28,6 +28,23 @@ def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     return (input_tokens / 1000 * in_rate) + (output_tokens / 1000 * out_rate)
 
 
+def _parse_structured(raw: str, response_model: Type[T]) -> T:
+    """구조화 응답 파싱. 코드블록을 벗기고, 그래도 안 되면 JSON 앞뒤에 붙은 설명을 잘라 다시 시도한다
+    (모델이 JSON 앞에 문장을 한 줄 붙이는 경우가 있어 재시도가 반복 실패했음)"""
+    text = raw.strip()
+    if text.startswith("```"):
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+    try:
+        return response_model.model_validate_json(text.strip())
+    except Exception:
+        start, end = raw.find("{"), raw.rfind("}")
+        if start != -1 and end > start:
+            return response_model.model_validate_json(raw[start : end + 1])
+        return response_model.model_validate_json(raw)
+
+
 class LLMProvider(ABC):
     """공통 LLM 인터페이스"""
 
@@ -109,20 +126,11 @@ class OpenAIProvider(LLMProvider):
 
         schema = response_model.model_json_schema()
         sys_msg = (system + "\n\n" if system else "") + (
-            f"반드시 다음 JSON 스키마에 맞춰 응답하라:\n{json.dumps(schema, ensure_ascii=False)}"
+            "반드시 다음 JSON 스키마에 맞는 JSON 객체 하나만 출력하라. JSON 앞뒤에 다른 말을 붙이지 마라:\n"
+            f"{json.dumps(schema, ensure_ascii=False)}"
         )
         raw = await self.generate(prompt, system=sys_msg)
-        # JSON 파싱 시도
-        try:
-            # 코드블록 제거
-            text = raw.strip()
-            if text.startswith("```"):
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            return response_model.model_validate_json(text.strip())
-        except Exception:
-            return response_model.model_validate_json(raw)
+        return _parse_structured(raw, response_model)
 
 
 class AnthropicProvider(LLMProvider):
@@ -135,7 +143,8 @@ class AnthropicProvider(LLMProvider):
         t0 = time.monotonic()
         kwargs: dict[str, Any] = dict(
             model=self.model,
-            max_tokens=4096,
+            # 4096이면 BusinessModelAgent 같은 큰 스키마 응답이 중간에 잘려 JSON이 깨졌음
+            max_tokens=12000,
             messages=[{"role": "user", "content": prompt}],
         )
         if system:
@@ -160,18 +169,11 @@ class AnthropicProvider(LLMProvider):
 
         schema = response_model.model_json_schema()
         sys_msg = (system + "\n\n" if system else "") + (
-            f"반드시 다음 JSON 스키마에 맞춰 응답하라:\n{json.dumps(schema, ensure_ascii=False)}"
+            "반드시 다음 JSON 스키마에 맞는 JSON 객체 하나만 출력하라. JSON 앞뒤에 다른 말을 붙이지 마라:\n"
+            f"{json.dumps(schema, ensure_ascii=False)}"
         )
         raw = await self.generate(prompt, system=sys_msg)
-        try:
-            text = raw.strip()
-            if text.startswith("```"):
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            return response_model.model_validate_json(text.strip())
-        except Exception:
-            return response_model.model_validate_json(raw)
+        return _parse_structured(raw, response_model)
 
 
 class MockProvider(LLMProvider):
