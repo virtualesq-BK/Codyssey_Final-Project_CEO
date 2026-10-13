@@ -66,6 +66,127 @@ sources:
     countries: [KOR, USA, JPN, CHN, VNM, IDN, THA, DEU, GBR, IND]
     # indicators: 생략 시 인구·GDP·1인당GDP·가계소비·인터넷이용률·도시화율·고령인구·물가
 
+  # ── 한국은행 ECOS ────────────────────────────────────────────────────
+  # 표마다 최근 history개 시점을 다시 받아 시계열로 저장 + 분류별 요약 문서(최신값·직전·전년 대비) 생성
+  #   items:   분류 위치별 코드 ('?'=전체, 목록이면 조합마다 호출). 생략 시 전체
+  #   doc_by:  요약 문서를 나눌 분류 위치 (예: 2 → CSI 분류(전체·남자·40세미만…)마다 문서 1개)
+  #   change:  diff(지수·비율, 차이) | pct(금액, 증감률)
+  # 다른 표 찾기: 카탈로그 문서 검색 또는 MCP 도구 bok_find_tables / bok_table_items
+  bok:
+    enabled: true
+    catalog_cadence: monthly
+    tables:
+      - id: csi
+        name: 소비자동향조사
+        stat_code: 511Y002
+        cycle: M
+        cadence: weekly
+        history: 60
+        doc_by: 2
+        note: CSI는 100보다 크면 '좋아질 것' 응답이 '나빠질 것'보다 많다는 뜻. 소비자심리지수(CCSI)는 장기평균=100 기준
+        keywords: [소비심리, 소비자심리, 소비자 신뢰, 소비 전망, 지출 전망, 경기 체감, CSI]
+      - id: bsi_actual
+        name: 기업경기조사(실적)
+        stat_code: 512Y013
+        cycle: M
+        cadence: weekly
+        history: 60
+        doc_by: 1
+        note: BSI는 100보다 크면 '좋다/증가' 응답 기업이 더 많다는 뜻. 기업심리지수(CBSI)는 장기평균=100 기준
+        keywords: [기업심리, 경기 체감, 업황, 매출 실적, 채산성, 자금사정, BSI]
+      - id: bsi_outlook
+        name: 기업경기조사(전망)
+        stat_code: 512Y014
+        cycle: M
+        cadence: weekly
+        history: 60
+        doc_by: 1
+        note: 다음 달 전망 BSI. 100보다 크면 '좋아질 것' 응답 기업이 더 많다는 뜻
+        keywords: [기업심리, 경기 전망, 업황 전망, 매출 전망, BSI]
+      - id: bsi_industry_actual
+        name: 업종별 기업경기조사(실적)
+        stat_code: 512Y007
+        cycle: M
+        cadence: weekly
+        history: 36
+        doc_by: 2
+        note: 세부 업종별 BSI. 100보다 크면 '좋다/증가' 응답 기업이 더 많다는 뜻
+        keywords: [업종 경기, 업황, 매출 실적, 채산성, 기업심리, BSI]
+      - id: bsi_industry_outlook
+        name: 업종별 기업경기조사(전망)
+        stat_code: 512Y008
+        cycle: M
+        cadence: weekly
+        history: 36
+        doc_by: 2
+        note: 세부 업종별 다음 달 전망 BSI
+        keywords: [업종 경기, 업황 전망, 매출 전망, 기업심리, BSI]
+      - id: news_sentiment
+        name: 뉴스심리지수
+        stat_code: 523Y001
+        cycle: D                  # ECOS는 일간·월간만 제공 → 일간을 받아 주간 평균을 만든다
+        weekly: true
+        cadence: weekly
+        history: 800              # 일 수
+        note: 경제 기사 감성을 지수화한 실험적 통계. 100보다 크면 장기평균보다 긍정적. 주간 값은 일간 지수의 평균(수집기에서 계산)
+        keywords: [뉴스 심리, 경제 심리, 경기 분위기, 언론 감성, NSI]
+      - id: fsa_q_growth
+        name: 기업경영분석(분기) 성장성
+        stat_code: 502Y001
+        cycle: Q
+        cadence: weekly
+        history: 20
+        doc_by: 1
+        note: 외감기업 대상. 단위 %
+        keywords: [매출 증가율, 성장성, 업종 매출, 재무지표]
+      - id: fsa_q_profit
+        name: 기업경영분석(분기) 손익
+        stat_code: 502Y002
+        cycle: Q
+        cadence: weekly
+        history: 20
+        doc_by: 1
+        note: 외감기업 대상. 단위 %
+        keywords: [영업이익률, 수익성, 이익률, 이자보상비율, 업종 수익성, 재무지표]
+      - id: fsa_a_growth
+        name: 기업경영분석(연간) 성장성
+        stat_code: 501Y005
+        cycle: A
+        cadence: weekly
+        history: 8
+        doc_by: 1
+        note: 전수(비금융 영리법인) 기준 업종×기업규모별. 단위 %
+        keywords: [매출 증가율, 성장성, 업종 매출, 중소기업, 소기업, 재무지표]
+      - id: fsa_a_profit
+        name: 기업경영분석(연간) 손익
+        stat_code: 501Y006
+        cycle: A
+        cadence: weekly
+        history: 8
+        # 계정항목 35개 중 사업성 판단에 쓰는 것만: 매출액세전순이익률·영업이익률·매출원가·인건비·재료비·이자보상비율·손익분기점률·연구개발비
+        items: ["?", "?", ["6091", "611", "612", "616", "617", "627", "6284", "615"]]
+        doc_by: 1
+        note: 전수(비금융 영리법인) 기준 업종×기업규모별. 단위 %
+        keywords: [영업이익률, 수익성, 원가율, 인건비 비중, 손익분기점, 업종 수익성, 중소기업, 소기업, 재무지표]
+      - id: hh_consumption_nominal
+        name: 가계의 목적별 최종소비지출(명목)
+        stat_code: 200Y142
+        cycle: Q
+        cadence: weekly
+        history: 24
+        change: pct
+        note: 국민계정 원계열 명목, 단위 십억원. 원계열이라 직전 분기보다 전년동기 대비로 볼 것
+        keywords: [가계 소비, 소비지출, 소비 시장 규모, 품목별 소비, 국민계정]
+      - id: hh_consumption_real
+        name: 가계의 목적별 최종소비지출(실질)
+        stat_code: 200Y143
+        cycle: Q
+        cadence: weekly
+        history: 24
+        change: pct
+        note: 국민계정 원계열 실질(물가 변동 제거), 단위 십억원. 전년동기 대비로 볼 것
+        keywords: [가계 소비, 소비지출, 실질 소비, 소비 시장 규모, 품목별 소비, 국민계정]
+
   # ── 공공데이터포털: 파일데이터 자동변환 API ───────────────────────────
   # 데이터셋 ID만 적으면 최신 버전을 자동으로 찾아 '새 버전만' 적재합니다.
   # ⚠ 데이터셋마다 data.go.kr 페이지에서 [활용신청]을 눌러야 합니다 (즉시 승인, 반영 1~2시간)

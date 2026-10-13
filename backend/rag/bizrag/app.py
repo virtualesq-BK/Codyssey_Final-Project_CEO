@@ -80,11 +80,12 @@ class App:
             log(f"  ▶ {job.source}/{job.name} ({job.cadence}) — {job.description}")
             run_id = self.store.start_run(job.source, job.name)
             try:
-                n = job.run()
+                out = job.run()  # 저장 건수, 또는 (건수, 메모) — 예: (0, "새 공표 없음")
+                n, note = out if isinstance(out, tuple) else (out, "")
                 self.store.conn.commit()
-                self.store.finish_run(run_id, "ok", n, why)
-                log(f"    ✓ {n}건 저장")
-                results.append({"job": f"{job.source}/{job.name}", "status": "ok", "items": n})
+                self.store.finish_run(run_id, "ok", n, f"{why} | {note}" if note else why)
+                log(f"    ✓ {n}건 저장" + (f" — {note}" if note else ""))
+                results.append({"job": f"{job.source}/{job.name}", "status": "ok", "items": n, "note": note})
             except ApiError as e:
                 self.store.conn.rollback()
                 self.store.finish_run(run_id, "error", 0, str(e))

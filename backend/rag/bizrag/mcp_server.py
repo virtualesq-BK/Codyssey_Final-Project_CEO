@@ -13,10 +13,11 @@ from .knowledge import Knowledge
 
 INSTRUCTIONS = """사업 아이디어 평가용 지식 DB.
 1) inventory로 무엇이 쌓였는지 본다.
-2) search_knowledge(문서: 법령 조문, 특허, 통계표 카탈로그, 소비자 피해 요약)와
-   get_series(시계열: 네이버 지수, KOSIS, World Bank)로 저장된 근거를 먼저 찾는다.
-3) 부족할 때만 naver_*/kosis_*/law_*/patent_search/worldbank_indicator로 새로 수집한다(결과는 DB에 누적).
+2) search_knowledge(문서: 법령 조문, 특허, 통계표 카탈로그, 소비자 피해 요약, 한국은행 경제지표 요약)와
+   get_series(시계열: 네이버 지수, KOSIS, 한국은행, World Bank)로 저장된 근거를 먼저 찾는다.
+3) 부족할 때만 naver_*/kosis_*/bok_*/law_*/patent_search/worldbank_indicator로 새로 수집한다(결과는 DB에 누적).
 주의: 네이버 지수는 같은 query_sig 안에서만 비교 가능한 상대값이다. 검색 관심도를 구매 의사로 단정하지 말 것.
+한국은행 CSI·BSI·뉴스심리지수는 100 기준 심리지표이고, 기업경영분석은 업종 평균이라 개별 창업 수익성과 다를 수 있다.
 답변에는 각 근거의 source·기간·수집시각을 밝힌다."""
 
 
@@ -38,7 +39,8 @@ def build(k: Knowledge | None = None):
     @server.tool()
     def get_series(dataset: str | None = None, series_contains: str | None = None,
                    source: str | None = None, query_sig: str | None = None) -> dict:
-        """저장된 시계열 조회. dataset 예: datalab_search, shop_category, kosis:101/DT_xxx, wb:NY.GDP.MKTP.CD, agg:3040720."""
+        """저장된 시계열 조회. dataset 예: datalab_search, shop_category, kosis:101/DT_xxx, bok:511Y002, wb:NY.GDP.MKTP.CD, agg:3040720.
+        한국은행(bok:*)은 query_sig가 주기(M·Q·A·D, 뉴스심리지수 주간 평균은 W)."""
         return k.get_series(dataset, series_contains, source, query_sig)
 
     @server.tool()
@@ -68,6 +70,22 @@ def build(k: Knowledge | None = None):
                           obj: dict | None = None, itm_id: str = "ALL") -> dict:
         """KOSIS 통계표 최근 n시점 수집 → get_series로 조회. 한 번 조회한 표는 월간 자동 갱신 대상이 된다."""
         return k.kosis_fetch_table(org_id, tbl_id, prd_se, recent, obj, itm_id)
+
+    @server.tool()
+    def bok_find_tables(query: str, limit: int = 20):
+        """한국은행 ECOS 통계표 이름 검색 (공백으로 나눈 단어가 모두 들어간 표). 예: "소비자동향", "기업경영분석 손익"."""
+        return k.bok_find_tables(query, limit)
+
+    @server.tool()
+    def bok_table_items(stat_code: str):
+        """ECOS 통계표의 분류·항목 코드와 주기별 수록기간 (bok_fetch_table의 items를 정할 때)."""
+        return k.bok_table_items(stat_code)
+
+    @server.tool()
+    def bok_fetch_table(stat_code: str, cycle: str, items: list[str] | None = None, recent: int = 24) -> dict:
+        """ECOS 통계표 최근 n시점 수집 → get_series(dataset="bok:<stat_code>")로 조회.
+        cycle: A 연·Q 분기·M 월·D 일. items: 분류 1~4 코드, "?"=전체 (예: ["?", "99988"])."""
+        return k.bok_fetch_table(stat_code, cycle, items, recent)
 
     @server.tool()
     def law_search(query: str):

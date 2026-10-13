@@ -52,6 +52,59 @@ RELIEF_ROWS = ([{"물품명": "헬스장", "청구이유": "계약해제"} for _
                [{"물품명": "무선이어폰", "청구이유": "품질"} for _ in range(4)])
 
 
+def ecos_periods(cycle, start, end):
+    from datetime import date, timedelta
+    if cycle == "A":
+        return [str(y) for y in range(int(start), int(end) + 1)]
+    if cycle == "Q":
+        a, b = int(start[:4]) * 4 + int(start[5]) - 1, int(end[:4]) * 4 + int(end[5]) - 1
+        return [f"{i // 4}Q{i % 4 + 1}" for i in range(a, b + 1)]
+    if cycle == "M":
+        a, b = int(start[:4]) * 12 + int(start[4:]) - 1, int(end[:4]) * 12 + int(end[4:]) - 1
+        return [f"{i // 12}{i % 12 + 1:02d}" for i in range(a, b + 1)]
+    d0 = date(int(start[:4]), int(start[4:6]), int(start[6:]))
+    d1 = date(int(end[:4]), int(end[4:6]), int(end[6:]))
+    return [(d0 + timedelta(days=i)).strftime("%Y%m%d") for i in range((d1 - d0).days + 1)]
+
+
+ECOS_ITEMS = [[("FMAA", "현재생활형편CSI 1)"), ("FMBB", "향후경기전망CSI")],
+              [("99988", "전 산 업"), ("B1004", "60-70세")]]
+ECOS_LATEST: dict[str, str] = {}  # 테스트에서 '공표된 최신 시점'을 바꿔 볼 때 사용
+
+
+def ecos_response(url):
+    """ecos.bok.or.kr/api/{서비스}/{키}/json/kr/{시작}/{끝}/... 형식을 흉내 낸다."""
+    path = url.split("/api/", 1)[1].replace("?", "/?")  # '?'(전체)는 경로 구분자로 취급
+    service, key, _, _, s, e, *rest = [x for x in path.split("/") if x != ""]
+    if key == "bad":
+        return FakeResp(body={"RESULT": {"CODE": "INFO-100", "MESSAGE": "인증키가 유효하지 않습니다."}})
+    if service == "StatisticTableList":
+        rows = [{"P_STAT_CODE": "*", "STAT_CODE": "0000000436", "STAT_NAME": "6.2. 소비자동향조사", "SRCH_YN": "N"},
+                {"P_STAT_CODE": "0000000436", "STAT_CODE": "511Y002", "STAT_NAME": "6.2.1. 소비자동향조사(전국, 월)",
+                 "CYCLE": "M", "SRCH_YN": "Y", "ORG_NAME": "한국은행"}]
+    elif service == "StatisticSearch":
+        code, cycle, f, t, *items = rest
+        rows = []
+        for p in ecos_periods(cycle, f, t):
+            for c1, n1 in ECOS_ITEMS[0]:
+                for c2, n2 in ECOS_ITEMS[1]:
+                    if len(items) > 0 and items[0] not in ("?", c1) or len(items) > 1 and items[1] not in ("?", c2):
+                        continue
+                    v = None if c2 == "B1004" and p == f else str(90 + int(p[-1]) + (5 if c1 == "FMBB" else 0))
+                    rows.append({"STAT_CODE": code, "STAT_NAME": f"{code} 표", "ITEM_CODE1": c1, "ITEM_NAME1": n1,
+                                 "ITEM_CODE2": c2, "ITEM_NAME2": n2, "UNIT_NAME": "%" if cycle == "A" else None,
+                                 "TIME": p, "DATA_VALUE": v})
+    else:  # StatisticItemList: 주기별 최신 공표 시점(END_TIME) — 가짜 데이터는 현재 시점까지 있음
+        from bizrag.connectors.bok import period_range
+        rows = [{"GRP_NAME": "CSI코드", "ITEM_CODE": c, "ITEM_NAME": n, "CYCLE": cy,
+                 "END_TIME": ECOS_LATEST.get(cy) or period_range(cy, 1)[1]}
+                for c, n in ECOS_ITEMS[0] for cy in ("A", "Q", "M", "D")]
+    s, e = int(s), int(e)
+    if not rows:
+        return FakeResp(body={"RESULT": {"CODE": "INFO-200", "MESSAGE": "해당하는 데이터가 없습니다."}})
+    return FakeResp(body={service: {"list_total_count": len(rows), "row": rows[s - 1: e]}})
+
+
 class Router:
     """URL 패턴 → 가짜 응답."""
 
@@ -61,6 +114,8 @@ class Router:
     def request(self, method, url, **kw):
         self.calls.append((method, url, kw))
         p = kw.get("params") or {}
+        if "ecos.bok.or.kr" in url:
+            return ecos_response(url)
         if "naverapihub" in url:
             h = kw.get("headers") or {}
             if not (h.get("X-NCP-APIGW-API-KEY-ID") and h.get("X-NCP-APIGW-API-KEY")):
@@ -143,7 +198,7 @@ class Base(unittest.TestCase):
         self.env_backup = dict(os.environ)
         os.environ.update({
             "NAVER_CLIENT_ID": "id", "NAVER_CLIENT_SECRET": "sec", "KOSIS_API_KEY": "k",
-            "LAW_OC": "me", "KIPRIS_API_KEY": "k%2B1", "DATA_GO_KR_SERVICE_KEY": "dk",
+            "LAW_OC": "me", "KIPRIS_API_KEY": "k%2B1", "DATA_GO_KR_SERVICE_KEY": "dk", "BOK_API_KEY": "bk",
         })
         from bizrag.app import App
         from bizrag.connectors import Http
@@ -175,7 +230,7 @@ class TestTextIndex(unittest.TestCase):
 class TestCheck(Base):
     def test_check_all_ok(self):
         res = {r.source: r for r in self.app.check()}
-        for name in ("naver", "kosis", "law", "kipris", "worldbank", "datagokr"):
+        for name in ("naver", "kosis", "bok", "law", "kipris", "worldbank", "datagokr"):
             self.assertTrue(res[name].ok, f"{name}: {res[name].message}")
 
     def test_missing_and_bad_keys(self):
@@ -289,6 +344,107 @@ class TestOnDemand(Base):
         app = App(self.tmp, store=self.app.store, http=self.app.connectors["naver"].http)
         out = Knowledge(app).naver_search_trend({"텀블러": ["텀블러"]})
         self.assertEqual(out["kind"], "missing_key")
+
+
+class TestBok(Base):
+    def table(self, stat_code):
+        return [t for t in self.app.connectors["bok"].tables if t["stat_code"] == stat_code][0]
+
+    def test_monthly_table_docs_and_search(self):
+        bok = self.app.connectors["bok"]
+        n, _ = bok.sync_table(self.table("511Y002"))
+        self.assertGreater(n, 0)
+        rows = self.app.store.get_series(dataset="bok:511Y002", series_like="60-70세")
+        self.assertTrue(rows and all(r["value"] is not None for r in rows))  # 빈 값은 저장 안 함
+        self.assertEqual(rows[0]["query_sig"], "M")
+        self.assertIn("현재생활형편CSI | 60-70세", {r["series_key"] for r in rows})  # 각주 번호 제거
+        hits = self.app.store.search("60대 소비심리", sources=["bok"])
+        self.assertIn("60-70세", hits[0]["title"])
+        body = self.app.store.conn.execute(
+            "SELECT body FROM documents WHERE original_id='511Y002:M:전산업'").fetchone()[0]  # '전 산 업' 정리
+        self.assertIn("전년동월", body)
+        self.assertIn("관련어: 소비심리", body)
+
+    def searches(self):
+        return [c[1] for c in self.router.calls if "StatisticSearch" in c[1]]
+
+    def test_skip_when_no_new_release_then_incremental(self):
+        from bizrag.connectors.bok import OVERLAP, shift_period
+        bok, t = self.app.connectors["bok"], self.table("511Y002")
+        n1, note1 = bok.sync_table(t)
+        self.assertIn("최초", note1)
+        before = len(self.searches())
+        n2, note2 = bok.sync_table(t)  # 새 공표 없음 → 데이터 호출 없이 기존 RAG 유지
+        self.assertEqual((n2, len(self.searches())), (0, before))
+        self.assertIn("새 공표 없음", note2)
+        # 최근 2개월이 DB에 없는 상황 = 새 공표가 2개월치 생김 → 마지막 저장 시점 3개월 전부터만 받음
+        p1 = bok.stored_range("511Y002", "M")[1]
+        stored_last = shift_period(p1, "M", -2)
+        self.app.store.conn.execute("DELETE FROM observations WHERE dataset='bok:511Y002' AND period>?",
+                                    (stored_last,))
+        n3, note3 = bok.sync_table(t)
+        self.assertIn("증분", note3)
+        self.assertIn(f"/M/{shift_period(stored_last, 'M', -OVERLAP['M'])}/", self.searches()[-1])
+        self.assertEqual(bok.stored_range("511Y002", "M")[1], p1)
+        self.assertLess(n3, n1)
+
+    def test_on_demand_uses_db_when_up_to_date(self):
+        from bizrag.knowledge import Knowledge
+        self.app.connectors["bok"].sync_table(self.table("511Y002"))
+        before = len(self.searches())
+        r = Knowledge(self.app).bok_fetch_table("511Y002", "M", ["?", "99988"], 6)
+        self.assertTrue(r["from"].startswith("DB"))
+        self.assertEqual((r["series_count"], len(self.searches())), (2, before))
+        ECOS_LATEST["M"] = "209912"  # 새 공표가 있으면 API로 받음
+        try:
+            r2 = Knowledge(self.app).bok_fetch_table("511Y002", "M", ["?", "99988"], 7)
+        finally:
+            ECOS_LATEST.clear()
+        self.assertNotIn("from", r2)
+        self.assertEqual(len(self.searches()), before + 1)
+
+    def test_daily_to_weekly(self):
+        bok = self.app.connectors["bok"]
+        bok.sync_table(self.table("523Y001"))
+        weekly = self.app.store.get_series(dataset="bok:523Y001", query_sig="W", limit=5000)
+        daily = self.app.store.get_series(dataset="bok:523Y001", query_sig="D", limit=50000)
+        self.assertTrue(weekly and len(weekly) < len(daily))
+        self.assertRegex(weekly[0]["period"], r"^\d{4}-W\d{2}$")
+        doc = self.app.store.search("뉴스심리 주간", sources=["bok"], doc_types=["econ_indicator"])[0]
+        self.assertIn("52주 전", doc["text"])
+
+    def test_annual_item_combos_and_paging(self):
+        from bizrag.connectors import bok as bokmod
+        bok = self.app.connectors["bok"]
+        old, bokmod.PAGE = bokmod.PAGE, 3
+        try:
+            bok.sync_table({"stat_code": "501Y006", "cycle": "A", "history": 3, "doc_by": 2,
+                            "items": ["?", ["99988", "B1004"]]})
+        finally:
+            bokmod.PAGE = old
+        calls = [c[1] for c in self.router.calls if "StatisticSearch" in c[1]]
+        self.assertTrue(any(c.endswith("/?/99988") for c in calls) and any(c.endswith("/?/B1004") for c in calls))
+        body = self.app.store.conn.execute(
+            "SELECT body FROM documents WHERE original_id='501Y006:A:전산업'").fetchone()[0]
+        self.assertIn("전년", body)
+        self.assertNotIn("전년동", body)  # 연간은 '직전'과 '전년'을 중복 표기하지 않음
+
+    def test_catalog_on_demand_and_errors(self):
+        from bizrag.knowledge import Knowledge
+        k = Knowledge(self.app)
+        self.assertEqual(self.app.connectors["bok"].sync_catalog()[0], 1)
+        self.assertEqual(self.app.connectors["bok"].sync_catalog()[0], 0)  # 바뀐 표가 없으면 재색인 안 함
+        self.assertIn("분류경로: 6.2. 소비자동향조사", self.app.store.search("소비자동향조사")[0]["text"])
+        self.assertEqual(k.bok_find_tables("소비자동향")[0]["stat_code"], "511Y002")
+        r = k.bok_fetch_table("511Y002", "M", ["?", "99988"], 3)
+        self.assertEqual(r["series_count"], 2)
+        self.assertEqual(k.bok_fetch_table("511Y002", "M", ["?", "99988"], 3).get("_cache"), "hit")
+        os.environ["BOK_API_KEY"] = "bad"
+        from bizrag.app import App
+        app = App(self.tmp, store=self.app.store, http=self.app.connectors["naver"].http)
+        res = {r.source: r for r in app.check()}["bok"]
+        self.assertEqual(res.kind, "auth")
+        self.assertNotIn("bad", res.message)  # 키가 오류 메시지에 노출되지 않음
 
 
 class TestInbox(Base):

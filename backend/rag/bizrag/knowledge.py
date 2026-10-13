@@ -87,6 +87,18 @@ class Knowledge:
         return self.app.get("kosis").fetch_table(org_id, tbl_id, prd_se, recent, obj, itm_id)
 
     @_safe
+    def bok_find_tables(self, query: str, limit: int = 20) -> Any:
+        return self.app.get("bok").find_tables(query, limit)
+
+    @_safe
+    def bok_table_items(self, stat_code: str) -> Any:
+        return self.app.get("bok").items(stat_code)
+
+    @_safe
+    def bok_fetch_table(self, stat_code: str, cycle: str, items: list[str] | None = None, recent: int = 24) -> dict:
+        return self.app.get("bok").fetch_table(stat_code, cycle, items, recent)
+
+    @_safe
     def law_search(self, query: str) -> Any:
         return self.app.get("law").search_laws(query)
 
