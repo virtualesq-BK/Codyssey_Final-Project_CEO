@@ -89,8 +89,8 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
   return (
     <article
       ref={ref}
-      className="relative bg-white rounded-2xl overflow-hidden h-[232px] transition-shadow hover:shadow-sm"
-      style={{ border: "1px solid #E8EAEE" }}
+      className="relative bg-white rounded-3xl shadow-card overflow-hidden h-[232px] transition-shadow hover:shadow-sm"
+      style={{ border: "1px solid #E6E7EA" }}
     >
       {/* 카드 전체를 덮는 투명 버튼 — 눌러서 동작 버튼을 연다 */}
       <button
@@ -135,8 +135,8 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
 
         {body && <p className="text-sm text-text-secondary leading-relaxed m-0 line-clamp-2">{body}</p>}
 
-        <div className="mt-auto pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #E8EAEE" }}>
-          <span className="text-xs font-semibold" style={{ color: decision?.color ?? "#8A909B" }}>
+        <div className="mt-auto pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #E6E7EA" }}>
+          <span className="text-xs font-semibold" style={{ color: decision?.color ?? "#808080" }}>
             {idea.latestReport
               ? `보고서 v${idea.latestReport.version} · ${decision?.label ?? "판정 없음"}`
               : "보고서 전"}
@@ -169,7 +169,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
                   key={a.label}
                   aria-disabled="true"
                   className={circle}
-                  style={{ background: "rgba(255,255,255,0.7)", color: "#5A606B", cursor: "not-allowed" }}
+                  style={{ background: "rgba(255,255,255,0.7)", color: "#535768", cursor: "not-allowed" }}
                 >
                   {inner}
                 </span>
@@ -182,7 +182,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
                 key={a.label}
                 href={href}
                 className={`${circle} hover:scale-105`}
-                style={{ background: "#fff", color: "#1F3F9E", textDecoration: "none" }}
+                style={{ background: "#fff", color: "#4B4BD9", textDecoration: "none" }}
               >
                 {inner}
               </Link>

@@ -21,7 +21,7 @@ type Program = {
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   "모집중": { bg: "#E6F9F0", text: "#1A7A4A" },
   "마감임박(D-3)": { bg: "#FFF3CD", text: "#856404" },
-  "마감": { bg: "#F4F5F7", text: "#8A909B" },
+  "마감": { bg: "#F5F6F8", text: "#808080" },
 };
 
 const REGIONS = ["전체", "전국", "서울", "경기", "부산", "인천", "대구", "대전", "광주"];
@@ -62,31 +62,31 @@ export default function ProgramsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
+    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
       <Header activeNav="programs" />
 
       <div className="max-w-[1200px] mx-auto px-6 py-10">
         <div className="mb-8">
-          <div className="text-sm font-semibold mb-1" style={{ color: "#2F5BD3" }}>창업 공고 찾기</div>
+          <div className="text-sm font-semibold mb-1" style={{ color: "#6161FF" }}>창업 공고 찾기</div>
           <h1 className="text-3xl font-bold m-0">내게 맞는 공고를 찾아보세요</h1>
           <p className="text-text-secondary mt-2 mb-0">정부·지자체 창업 지원 프로그램을 한눈에</p>
         </div>
 
         {/* 검색 바 */}
-        <form onSubmit={handleSearch} className="bg-white rounded-2xl p-5 mb-6 flex gap-3 flex-wrap" style={{ border: "1px solid #E8EAEE" }}>
+        <form onSubmit={handleSearch} className="bg-white rounded-3xl shadow-card p-5 mb-6 flex gap-3 flex-wrap" style={{ border: "1px solid #E6E7EA" }}>
           <input
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="공고명, 기관명 검색"
-            className="flex-1 min-w-[200px] h-11 rounded-xl px-4 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #D9DCE1" }}
+            className="flex-1 min-w-[200px] h-11 rounded-md px-4 text-sm focus:outline-none"
+            style={{ border: "1.5px solid #DDDFEB" }}
           />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="h-11 rounded-xl px-3 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #D9DCE1" }}
+            className="h-11 rounded-md px-3 text-sm focus:outline-none"
+            style={{ border: "1.5px solid #DDDFEB" }}
           >
             <option value="전체">전체 상태</option>
             <option value="모집중">모집중</option>
@@ -96,23 +96,23 @@ export default function ProgramsPage() {
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="h-11 rounded-xl px-3 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #D9DCE1" }}
+            className="h-11 rounded-md px-3 text-sm focus:outline-none"
+            style={{ border: "1.5px solid #DDDFEB" }}
           >
             {REGIONS.map((r) => <option key={r}>{r}</option>)}
           </select>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="h-11 rounded-xl px-3 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #D9DCE1" }}
+            className="h-11 rounded-md px-3 text-sm focus:outline-none"
+            style={{ border: "1.5px solid #DDDFEB" }}
           >
             {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
           </select>
           <button
             type="submit"
-            className="h-11 px-6 rounded-xl text-sm font-bold text-white"
-            style={{ background: "#2F5BD3" }}
+            className="h-11 px-6 rounded-full text-sm font-bold text-white"
+            style={{ background: "#6161FF" }}
           >
             검색
           </button>
@@ -134,9 +134,9 @@ export default function ProgramsPage() {
                     <div
                       key={p.id}
                       onClick={() => setSelected(p)}
-                      className="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md transition-shadow"
+                      className="bg-white rounded-3xl shadow-card p-5 cursor-pointer hover:shadow-md transition-shadow"
                       style={{
-                        border: selected?.id === p.id ? "2px solid #2F5BD3" : "1px solid #E8EAEE",
+                        border: selected?.id === p.id ? "2px solid #6161FF" : "1px solid #E6E7EA",
                       }}
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -158,7 +158,7 @@ export default function ProgramsPage() {
                         <div className="text-right shrink-0">
                           <div className="text-xs text-text-muted">마감일</div>
                           <div className="text-sm font-semibold">{p.ends_on}</div>
-                          <div className="text-xs font-bold mt-1" style={{ color: "#2F5BD3" }}>{p.amount}</div>
+                          <div className="text-xs font-bold mt-1" style={{ color: "#6161FF" }}>{p.amount}</div>
                         </div>
                       </div>
                     </div>
@@ -171,15 +171,15 @@ export default function ProgramsPage() {
           {/* 상세 패널 */}
           {selected && (
             <div
-              className="w-80 shrink-0 bg-white rounded-2xl p-6 self-start sticky top-20 flex flex-col gap-4"
-              style={{ border: "1px solid #E8EAEE" }}
+              className="w-80 shrink-0 bg-white rounded-3xl shadow-card p-6 self-start sticky top-20 flex flex-col gap-4"
+              style={{ border: "1px solid #E6E7EA" }}
             >
               <div className="flex items-center justify-between">
                 <span
                   className="text-xs font-bold px-2 py-0.5 rounded-full"
                   style={{
-                    background: STATUS_COLOR[selected.deadline_status]?.bg ?? "#F4F5F7",
-                    color: STATUS_COLOR[selected.deadline_status]?.text ?? "#8A909B",
+                    background: STATUS_COLOR[selected.deadline_status]?.bg ?? "#F5F6F8",
+                    color: STATUS_COLOR[selected.deadline_status]?.text ?? "#808080",
                   }}
                 >
                   {selected.deadline_status}
@@ -201,7 +201,7 @@ export default function ProgramsPage() {
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-text-muted">지원금액</span>
-                  <span className="font-semibold" style={{ color: "#2F5BD3" }}>{selected.amount}</span>
+                  <span className="font-semibold" style={{ color: "#6161FF" }}>{selected.amount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">접수기간</span>
@@ -231,8 +231,8 @@ export default function ProgramsPage() {
                 href={selected.detail_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center h-11 rounded-xl font-bold text-sm text-white"
-                style={{ background: "#2F5BD3", textDecoration: "none" }}
+                className="flex items-center justify-center h-11 rounded-full font-bold text-sm text-white"
+                style={{ background: "#6161FF", textDecoration: "none" }}
               >
                 공고 상세 보기 →
               </a>

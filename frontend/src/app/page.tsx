@@ -11,13 +11,13 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
+    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
       <Header activeNav="analyze" />
 
       {/* Hero Section */}
       <section
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1B2B6B 0%, #2F5BD3 60%, #5B8EF5 100%)" }}
+        style={{ background: "linear-gradient(135deg, #4B4BD9 0%, #6161FF 60%, #8181FF 100%)" }}
       >
         <div className="max-w-[1200px] mx-auto px-6 py-20 flex flex-col items-start gap-6">
           <div
@@ -33,7 +33,7 @@ export default function Home() {
 
           <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight m-0">
             아이디어 한 줄에서<br />
-            <span style={{ color: "#A5C4FF" }}>지원서 재료까지</span>
+            <span style={{ color: "#DBDBFF" }}>지원서 재료까지</span>
           </h1>
 
           <p className="text-lg text-white/70 max-w-xl m-0 leading-relaxed">
@@ -44,14 +44,14 @@ export default function Home() {
           <div className="flex gap-3 flex-wrap">
             <Link
               href="/ideas"
-              className="px-6 py-3 rounded-xl font-bold text-base transition-all hover:opacity-90 no-underline"
-              style={{ background: "#fff", color: "#2F5BD3", textDecoration: "none" }}
+              className="px-6 py-3 rounded-full font-bold text-base transition-all hover:opacity-90 no-underline"
+              style={{ background: "#fff", color: "#6161FF", textDecoration: "none" }}
             >
               아이디어 메모하기
             </Link>
             <Link
               href="/ideas"
-              className="px-6 py-3 rounded-xl font-bold text-base border transition-all hover:bg-white/10 no-underline"
+              className="px-6 py-3 rounded-full font-bold text-base border transition-all hover:bg-white/10 no-underline"
               style={{ borderColor: "rgba(255,255,255,0.4)", color: "#fff", textDecoration: "none" }}
             >
               샘플 결과 보기
@@ -84,7 +84,7 @@ export default function Home() {
         />
         <div
           className="absolute bottom-[-40px] right-[15%] w-40 h-40 rounded-full opacity-10"
-          style={{ background: "#A5C4FF" }}
+          style={{ background: "#DBDBFF" }}
         />
       </section>
 
@@ -99,12 +99,12 @@ export default function Home() {
           {STEPS.map((s, i) => (
             <div
               key={s.step}
-              className="bg-white rounded-2xl p-5 flex flex-col gap-3 relative"
-              style={{ border: "1px solid #E8EAEE" }}
+              className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-3 relative"
+              style={{ border: "1px solid #E6E7EA" }}
             >
               {i < STEPS.length - 1 && (
                 <div
-                  className="hidden lg:block absolute top-[28px] right-[-12px] z-10 text-[#D9DCE1] font-bold"
+                  className="hidden lg:block absolute top-[28px] right-[-12px] z-10 text-[#DDDFEB] font-bold"
                   style={{ fontSize: 18 }}
                 >
                   →
@@ -112,7 +112,7 @@ export default function Home() {
               )}
               <span
                 className="text-xs font-bold px-2.5 py-1 rounded-full self-start"
-                style={{ background: "#EEF2FD", color: "#2F5BD3" }}
+                style={{ background: "#E7ECFF", color: "#6161FF" }}
               >
                 STEP {s.step}
               </span>
@@ -125,8 +125,8 @@ export default function Home() {
         <div className="flex justify-center mt-10">
           <Link
             href="/ideas"
-            className="px-8 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
-            style={{ background: "#2F5BD3", textDecoration: "none" }}
+            className="px-8 py-3.5 rounded-full font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
+            style={{ background: "#6161FF", textDecoration: "none" }}
           >
             지금 무료로 시작하기
           </Link>
@@ -134,7 +134,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-border bg-white mt-16">
-        <div className="max-w-[1200px] mx-auto px-6 py-6 text-xs" style={{ color: "#8A909B" }}>
+        <div className="max-w-[1200px] mx-auto px-6 py-6 text-xs" style={{ color: "#808080" }}>
           나도사장 · AI 분석 결과는 의사결정 지원 목적이며 사업 성공을 보장하지 않습니다.
         </div>
       </footer>

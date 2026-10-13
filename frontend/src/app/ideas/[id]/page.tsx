@@ -33,7 +33,7 @@ import {
   updateIdea,
 } from "@/lib/ideaStore";
 
-const card = "bg-white border border-border rounded-2xl p-8 flex flex-col gap-5";
+const card = "bg-white border border-border rounded-3xl p-8 flex flex-col gap-5";
 
 // 인터뷰 화면을 보여줄 상태 (프로필 만들다 실패한 경우 포함)
 function inInterview(status: IdeaStatus, failedStage: IdeaStatus | null) {
@@ -127,7 +127,7 @@ export default function IdeaDetailPage() {
 
   if (loading || !idea || !draft) {
     return (
-      <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
+      <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
         <Header activeNav="ideas" />
         <main className="max-w-[1200px] mx-auto px-6 py-12">
           <section className={`${card} items-center text-center`}>
@@ -139,7 +139,7 @@ export default function IdeaDetailPage() {
                 <div className="text-text-secondary text-sm">
                   {error ?? "삭제됐거나 다른 계정·브라우저에 저장된 아이디어일 수 있어요."}
                 </div>
-                <Link href="/ideas" className="text-sm font-semibold" style={{ color: "#2F5BD3" }}>
+                <Link href="/ideas" className="text-sm font-semibold" style={{ color: "#6161FF" }}>
                   MY아이디어로 ›
                 </Link>
               </>
@@ -243,7 +243,7 @@ export default function IdeaDetailPage() {
   handlersRef.current = { beginInterview, startProfile, diagnose, canDiagnose };
 
   return (
-    <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
+    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
       <Header activeNav="ideas" />
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col gap-8">
@@ -259,7 +259,7 @@ export default function IdeaDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <StatusPill status={status} />
             {current.profile.industry && (
-              <span className="text-sm font-semibold" style={{ color: "#2F5BD3" }}>
+              <span className="text-sm font-semibold" style={{ color: "#6161FF" }}>
                 {current.profile.industry} · {current.profile.location}
               </span>
             )}
@@ -282,8 +282,8 @@ export default function IdeaDetailPage() {
         {/* 메모 */}
         {atProfile || atInterview ? (
           current.memo && (
-            <section className="bg-white border border-border rounded-2xl px-6 py-4 text-sm">
-              <span className="font-semibold mr-2" style={{ color: "#5A606B" }}>
+            <section className="bg-white border border-border rounded-3xl shadow-card px-6 py-4 text-sm">
+              <span className="font-semibold mr-2" style={{ color: "#535768" }}>
                 처음 메모
               </span>
               <span className="text-text-secondary whitespace-pre-wrap">{current.memo}</span>
@@ -297,22 +297,22 @@ export default function IdeaDetailPage() {
               onChange={(e) => setMemoDraft(e.target.value)}
               rows={4}
               aria-label="메모"
-              className="rounded-xl p-4 text-sm resize-y focus:outline-none leading-relaxed"
-              style={{ border: "1.5px solid #D9DCE1" }}
+              className="rounded-md p-4 text-sm resize-y focus:outline-none leading-relaxed"
+              style={{ border: "1.5px solid #DDDFEB" }}
             />
             <div className="flex gap-3 flex-wrap items-center">
               <button
                 type="button"
                 onClick={saveMemo}
                 disabled={busy || memoDraft.trim() === current.memo}
-                className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
-                style={{ border: "1.5px solid #D9DCE1", color: "#4A505B", cursor: "pointer" }}
+                className="min-h-[44px] px-5 rounded-full text-sm font-semibold bg-white disabled:opacity-50"
+                style={{ border: "1.5px solid #DDDFEB", color: "#535768", cursor: "pointer" }}
               >
                 메모 저장
               </button>
             </div>
 
-            <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E8EAEE" }}>
+            <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E6E7EA" }}>
               <div className="font-semibold">다음 단계 · 인터뷰</div>
               <p className="text-sm text-text-secondary m-0 leading-relaxed">
                 AI 인터뷰어와 대화하며 아이디어를 구체화하고, 그 내용으로 아이템 프로필을 만들어요.
@@ -323,8 +323,8 @@ export default function IdeaDetailPage() {
                     type="button"
                     onClick={beginInterview}
                     disabled={busy || !memoDraft.trim()}
-                    className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                    style={{ background: "#2F5BD3", border: "none", cursor: "pointer" }}
+                    className="min-h-[48px] px-6 rounded-full font-bold text-sm text-white disabled:opacity-60"
+                    style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
                   >
                     {busy ? "첫 질문 준비 중…" : "인터뷰 시작"}
                   </button>
@@ -333,7 +333,7 @@ export default function IdeaDetailPage() {
                     onClick={startProfile}
                     disabled={busy || !memoDraft.trim()}
                     className="text-sm underline disabled:opacity-50"
-                    style={{ background: "none", border: "none", color: "#5A606B", cursor: "pointer" }}
+                    style={{ background: "none", border: "none", color: "#535768", cursor: "pointer" }}
                   >
                     인터뷰 없이 직접 작성
                   </button>
@@ -341,8 +341,8 @@ export default function IdeaDetailPage() {
               ) : (
                 <Link
                   href={loginHref}
-                  className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
-                  style={{ background: "#2F5BD3", textDecoration: "none" }}
+                  className="self-start min-h-[48px] px-6 rounded-full font-bold text-sm text-white no-underline inline-flex items-center"
+                  style={{ background: "#6161FF", textDecoration: "none" }}
                 >
                   로그인하고 인터뷰 시작
                 </Link>
@@ -364,7 +364,7 @@ export default function IdeaDetailPage() {
                   type="button"
                   onClick={makeProfile}
                   disabled={busy}
-                  className="min-h-[40px] px-4 rounded-lg text-sm font-semibold bg-white"
+                  className="min-h-[40px] px-4 rounded-full text-sm font-semibold bg-white"
                   style={{ border: "1px solid #B42318", color: "#B42318", cursor: "pointer" }}
                 >
                   다시 만들기
@@ -394,14 +394,14 @@ export default function IdeaDetailPage() {
             </div>
 
             {current.interview && current.interview.messages.length > 0 && (
-              <details className="rounded-xl px-4 py-3 text-sm" style={{ background: "#F4F5F7" }}>
-                <summary className="cursor-pointer font-semibold" style={{ color: "#4A505B" }}>
+              <details className="rounded-xl px-4 py-3 text-sm" style={{ background: "#F5F6F8" }}>
+                <summary className="cursor-pointer font-semibold" style={{ color: "#535768" }}>
                   인터뷰 기록 보기 · AI가 이 대화로 프로필 초안을 채웠어요
                 </summary>
                 <div className="mt-3 flex flex-col gap-2 leading-relaxed">
                   {current.interview.messages.map((m, i) => (
                     <p key={i} className="m-0 whitespace-pre-wrap">
-                      <b style={{ color: m.role === "user" ? "#2F5BD3" : "#5A606B" }}>
+                      <b style={{ color: m.role === "user" ? "#6161FF" : "#535768" }}>
                         {m.role === "user" ? "나" : "인터뷰어"}
                       </b>{" "}
                       {m.content}
@@ -422,15 +422,15 @@ export default function IdeaDetailPage() {
             {status === "diagnosing" ? (
               <DiagnosingNotice />
             ) : (
-              <div className="border-t pt-5 flex gap-3 flex-wrap items-center" style={{ borderColor: "#E8EAEE" }}>
+              <div className="border-t pt-5 flex gap-3 flex-wrap items-center" style={{ borderColor: "#E6E7EA" }}>
                 {user ? (
                   <>
                     <button
                       type="button"
                       onClick={saveDraft}
                       disabled={busy || !profileDirty}
-                      className="min-h-[48px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
-                      style={{ border: "1.5px solid #D9DCE1", color: "#4A505B", cursor: "pointer" }}
+                      className="min-h-[48px] px-5 rounded-full text-sm font-semibold bg-white disabled:opacity-50"
+                      style={{ border: "1.5px solid #DDDFEB", color: "#535768", cursor: "pointer" }}
                     >
                       프로필 저장
                     </button>
@@ -438,8 +438,8 @@ export default function IdeaDetailPage() {
                       type="button"
                       onClick={diagnose}
                       disabled={!canDiagnose}
-                      className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-50"
-                      style={{ background: "#2F5BD3", border: "none", cursor: "pointer" }}
+                      className="min-h-[48px] px-6 rounded-full font-bold text-sm text-white disabled:opacity-50"
+                      style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
                     >
                       {hasReport ? "보고서 새로 작성하기 (유료)" : "분석하기 (유료)"}
                     </button>
@@ -452,7 +452,7 @@ export default function IdeaDetailPage() {
                     </span>
                   </>
                 ) : (
-                  <Link href={loginHref} className="text-sm font-semibold" style={{ color: "#2F5BD3" }}>
+                  <Link href={loginHref} className="text-sm font-semibold" style={{ color: "#6161FF" }}>
                     로그인하면 프로필을 고치고 분석할 수 있어요 ›
                   </Link>
                 )}
@@ -475,12 +475,12 @@ export default function IdeaDetailPage() {
                       role="tab"
                       aria-selected={r.id === selectedReportId}
                       onClick={() => setSelectedReportId(r.id)}
-                      className="min-h-[36px] px-3 rounded-lg text-xs font-semibold"
+                      className="min-h-[36px] px-3 rounded-full text-xs font-semibold"
                       style={{
                         cursor: "pointer",
-                        border: "1px solid #D9DCE1",
-                        background: r.id === selectedReportId ? "#2F5BD3" : "#fff",
-                        color: r.id === selectedReportId ? "#fff" : "#4A505B",
+                        border: "1px solid #DDDFEB",
+                        background: r.id === selectedReportId ? "#6161FF" : "#fff",
+                        color: r.id === selectedReportId ? "#fff" : "#535768",
                       }}
                     >
                       v{r.version} · {new Date(r.createdAt).toLocaleDateString("ko-KR")}
@@ -495,7 +495,7 @@ export default function IdeaDetailPage() {
             ) : (
               current.latestReport && (
                 // 구조 개편 전 요약만 저장된 기록
-                <section className="bg-white border border-border rounded-2xl p-8 flex flex-col gap-3">
+                <section className="bg-white border border-border rounded-3xl shadow-card p-8 flex flex-col gap-3">
                   <div className="font-bold">
                     {current.latestReport.decision
                       ? DECISION_META[current.latestReport.decision].label
@@ -548,9 +548,9 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
             aria-current={active ? "step" : undefined}
             className="rounded-xl px-4 py-3 text-sm font-semibold"
             style={{
-              background: active ? "#EEF2FD" : "#fff",
-              color: active ? "#2F5BD3" : done ? "#0F7B6C" : "#8A909B",
-              border: `1px solid ${active ? "#2F5BD3" : "#E8EAEE"}`,
+              background: active ? "#E7ECFF" : "#fff",
+              color: active ? "#6161FF" : done ? "#0F7B6C" : "#808080",
+              border: `1px solid ${active ? "#6161FF" : "#E6E7EA"}`,
             }}
           >
             {done ? "✓ " : `${i + 1}. `}
@@ -569,12 +569,12 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
 
 function DiagnosingNotice() {
   return (
-    <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E8EAEE" }}>
+    <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E6E7EA" }}>
       <div className="font-semibold">6개 분야를 진단하고 있어요</div>
       <p className="text-sm text-text-secondary m-0">보통 1~3분 걸려요. 지금은 이 화면을 닫지 말아주세요.</p>
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs text-center">
         {AGENT_ORDER.map((a) => (
-          <div key={a} className="rounded-lg p-2 animate-pulse" style={{ background: "#EEF2FD", color: "#2F5BD3" }}>
+          <div key={a} className="rounded-lg p-2 animate-pulse" style={{ background: "#E7ECFF", color: "#6161FF" }}>
             {a.replace("Agent", "")}
           </div>
         ))}
@@ -589,20 +589,20 @@ function ReportView({ report }: { report: IdeaReport }) {
   return (
     <>
       <div
-        className="rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap"
-        style={{ background: STATUS_BG[wf.status] ?? "#F4F5F7" }}
+        className="rounded-3xl p-5 flex items-center justify-between gap-4 flex-wrap"
+        style={{ background: STATUS_BG[wf.status] ?? "#F5F6F8" }}
       >
         <div>
           <span className="font-semibold">
             v{report.version} · {STATUS_TEXT[wf.status] ?? wf.status}
           </span>
           {report.elapsedMs && (
-            <span className="text-sm ml-3" style={{ color: "#8A909B" }}>
+            <span className="text-sm ml-3" style={{ color: "#808080" }}>
               소요 {(report.elapsedMs / 1000).toFixed(1)}초
             </span>
           )}
         </div>
-        <div className="text-xs" style={{ color: "#8A909B" }}>
+        <div className="text-xs" style={{ color: "#808080" }}>
           {new Date(report.createdAt).toLocaleString("ko-KR")} 작성
         </div>
       </div>
