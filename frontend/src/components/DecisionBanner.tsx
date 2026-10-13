@@ -5,8 +5,8 @@ import type { DecisionResult } from "@/lib/api";
 const DECISION_CONFIG = {
   GO: {
     label: "GO · 진행 권장",
-    color: "#2F5BD3",
-    bg: "#EEF2FD",
+    color: "#6161FF",
+    bg: "#E7ECFF",
     desc: "근거가 충분하고 리스크가 관리 가능합니다. 다음 단계로 진행하세요.",
   },
   PIVOT: {
@@ -38,7 +38,7 @@ export default function DecisionBanner({ result }: Props) {
 
   return (
     <section
-      className="rounded-2xl p-7 flex flex-col gap-5"
+      className="rounded-3xl p-7 flex flex-col gap-5"
       style={{ background: cfg.bg, border: `2px solid ${cfg.color}40` }}
     >
       <div className="flex items-center justify-between flex-wrap gap-3">

@@ -13,9 +13,9 @@ export const STATUS_BG: Record<AgentStatus, string> = {
   success: "#F0FFF4",
   partial: "#FFF7EB",
   failed: "#FDECEA",
-  running: "#F4F5F7",
-  pending: "#F4F5F7",
-  skipped: "#F4F5F7",
+  running: "#F5F6F8",
+  pending: "#F5F6F8",
+  skipped: "#F5F6F8",
 };
 
 export const STATUS_TEXT: Record<string, string> = {
