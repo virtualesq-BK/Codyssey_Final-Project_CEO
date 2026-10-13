@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
+import InterviewPanel from "@/components/InterviewPanel";
 import ProfileEditor from "@/components/ProfileEditor";
 import StatusPill from "@/components/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,9 +22,23 @@ import {
   effectiveStatus,
   missingFields,
 } from "@/lib/idea";
-import { getIdea, listReports, runDiagnosis, saveProfile, updateIdea } from "@/lib/ideaStore";
+import {
+  answerInterview,
+  finishInterview,
+  getIdea,
+  listReports,
+  runDiagnosis,
+  saveProfile,
+  startInterview,
+  updateIdea,
+} from "@/lib/ideaStore";
 
 const card = "bg-white border border-border rounded-2xl p-8 flex flex-col gap-5";
+
+// 인터뷰 화면을 보여줄 상태 (프로필 만들다 실패한 경우 포함)
+function inInterview(status: IdeaStatus, failedStage: IdeaStatus | null) {
+  return status === "interviewing" || status === "profiling" || (status === "failed" && failedStage === "profiling");
+}
 
 // 보고서 단계까지 온 아이디어인지 (진단 중 실패 포함)
 function reachedProfile(status: IdeaStatus, failedStage: IdeaStatus | null) {
@@ -61,6 +76,42 @@ export default function IdeaDetailPage() {
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, [id, user, authLoading]);
+
+  // MY아이디어 카드 버튼에서 넘어온 동작(?action=)과 위치(#profile·#report)를 한 번만 처리한다.
+  // 동작 함수는 아래 렌더에서 만들어지므로 ref로 최신 것을 넘겨받는다
+  const handlersRef = useRef<{
+    beginInterview: () => void;
+    startProfile: () => void;
+    diagnose: () => void;
+    canDiagnose: boolean;
+  } | null>(null);
+  const actionHandled = useRef(false);
+
+  useEffect(() => {
+    if (loading || !idea || actionHandled.current) return;
+    actionHandled.current = true;
+    const action = new URLSearchParams(window.location.search).get("action");
+    let target = window.location.hash.slice(1);
+    // 새로고침 때 다시 실행되지 않도록 주소에서 action을 지운다
+    if (action) window.history.replaceState(null, "", `/ideas/${idea.id}${window.location.hash}`);
+
+    const h = handlersRef.current;
+    const { status } = effectiveStatus(idea);
+    if (h && user) {
+      if (action === "interview" && status === "memo") h.beginInterview();
+      else if (action === "write" && (status === "memo" || status === "interviewing")) h.startProfile();
+      else if (action === "diagnose") {
+        if (h.canDiagnose) h.diagnose();
+        else {
+          target = "profile";
+          setError("필수 칸(*)을 채운 뒤 '분석하기'를 눌러주세요.");
+        }
+      }
+    }
+    if (target) {
+      setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    }
+  }, [loading, idea, user]);
 
   async function run(task: () => Promise<void>) {
     setBusy(true);
@@ -102,6 +153,7 @@ export default function IdeaDetailPage() {
   const current = idea;
   const { status, failedStage } = effectiveStatus(current);
   const atProfile = reachedProfile(status, failedStage);
+  const atInterview = inInterview(status, failedStage) && !!current.interview;
   const profileDirty = JSON.stringify(draft) !== JSON.stringify(current.profile);
   const missing = missingFields(draft);
   const hasReport = current.reportCount > 0 || current.latestReport !== null;
@@ -113,7 +165,36 @@ export default function IdeaDetailPage() {
       setIdea(await updateIdea(user, current, { memo: memoDraft.trim() }));
     });
 
-  // 2단계(인터뷰·1차 분석) 전까지는 메모에서 바로 프로필 작성으로 넘어간다
+  const beginInterview = () =>
+    run(async () => {
+      const saved =
+        memoDraft.trim() !== current.memo ? await updateIdea(user, current, { memo: memoDraft.trim() }) : current;
+      setIdea(await startInterview(user, saved));
+    });
+
+  // 실패하면 InterviewPanel이 입력을 남겨두도록 에러를 다시 던진다
+  const sendAnswer = async (answer: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      setIdea(await answerInterview(user, current, answer));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const makeProfile = () =>
+    run(async () => {
+      setIdea({ ...current, status: "profiling", statusChangedAt: new Date().toISOString() });
+      const next = await finishInterview(user, current);
+      setIdea(next);
+      setDraft(next.profile);
+    });
+
+  // 인터뷰 없이 프로필을 바로 채우는 길 (LLM이 안 될 때 대비)
   const startProfile = () =>
     run(async () => {
       const name = current.profile.name || memoDraft.trim().split("\n")[0].slice(0, 40);
@@ -131,7 +212,14 @@ export default function IdeaDetailPage() {
       setIdea(await saveProfile(user, current, draft));
     });
 
-  const diagnose = () =>
+  // 유료 분석이라 시작 전에 한 번 묻는다 (버튼·카드에서 넘어온 경우 모두)
+  const diagnose = () => {
+    const again = hasReport ? "보고서를 새로 작성할까요?" : "상세분석을 시작할까요?";
+    if (!confirm(`${again}\n\n시장·고객·경쟁·수익·재무·위험 6개 분야를 근거와 함께 진단해요 (유료).\n보통 1~3분 걸려요.`)) return;
+    return runDiagnose();
+  };
+
+  const runDiagnose = () =>
     run(async () => {
       const saved = profileDirty ? await saveProfile(user, current, draft) : current;
       setIdea({ ...saved, status: "diagnosing", statusChangedAt: new Date().toISOString() });
@@ -151,6 +239,8 @@ export default function IdeaDetailPage() {
     status !== "diagnosing" &&
     missing.length === 0 &&
     (!hasReport || current.profileChangedSinceReport || profileDirty || status === "failed");
+
+  handlersRef.current = { beginInterview, startProfile, diagnose, canDiagnose };
 
   return (
     <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
@@ -190,7 +280,7 @@ export default function IdeaDetailPage() {
         )}
 
         {/* 메모 */}
-        {atProfile ? (
+        {atProfile || atInterview ? (
           current.memo && (
             <section className="bg-white border border-border rounded-2xl px-6 py-4 text-sm">
               <span className="font-semibold mr-2" style={{ color: "#5A606B" }}>
@@ -228,20 +318,26 @@ export default function IdeaDetailPage() {
                 AI 인터뷰어와 대화하며 아이디어를 구체화하고, 그 내용으로 아이템 프로필을 만들어요.
               </p>
               {user ? (
-                <>
-                  <p className="text-xs m-0" style={{ color: "#6B3FA0" }}>
-                    인터뷰는 준비 중이에요. 지금은 프로필을 직접 채워서 진행할 수 있어요.
-                  </p>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={beginInterview}
+                    disabled={busy || !memoDraft.trim()}
+                    className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
+                    style={{ background: "#2F5BD3", border: "none", cursor: "pointer" }}
+                  >
+                    {busy ? "첫 질문 준비 중…" : "인터뷰 시작"}
+                  </button>
                   <button
                     type="button"
                     onClick={startProfile}
                     disabled={busy || !memoDraft.trim()}
-                    className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                    style={{ background: "#2F5BD3", border: "none", cursor: "pointer" }}
+                    className="text-sm underline disabled:opacity-50"
+                    style={{ background: "none", border: "none", color: "#5A606B", cursor: "pointer" }}
                   >
-                    프로필 직접 작성하기
+                    인터뷰 없이 직접 작성
                   </button>
-                </>
+                </div>
               ) : (
                 <Link
                   href={loginHref}
@@ -255,9 +351,39 @@ export default function IdeaDetailPage() {
           </section>
         )}
 
+        {/* 딥 인터뷰 → 1차 분석 */}
+        {atInterview && current.interview && (
+          <>
+            {status === "failed" && (
+              <div
+                className="rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
+                style={{ background: "#FDECEA", color: "#B42318" }}
+              >
+                <span>프로필을 만들지 못했어요. {current.errorMessage ?? "중간에 끊겼어요."}</span>
+                <button
+                  type="button"
+                  onClick={makeProfile}
+                  disabled={busy}
+                  className="min-h-[40px] px-4 rounded-lg text-sm font-semibold bg-white"
+                  style={{ border: "1px solid #B42318", color: "#B42318", cursor: "pointer" }}
+                >
+                  다시 만들기
+                </button>
+              </div>
+            )}
+            <InterviewPanel
+              interview={current.interview}
+              onAnswer={sendAnswer}
+              onFinish={makeProfile}
+              busy={busy}
+              locked={status !== "interviewing"}
+            />
+          </>
+        )}
+
         {/* 아이템 프로필 + 상세 진단 */}
         {atProfile && (
-          <section className={card}>
+          <section id="profile" className={`${card} scroll-mt-20`}>
             <div className="flex items-baseline justify-between gap-3 flex-wrap">
               <h2 className="text-lg font-bold m-0">아이템 프로필</h2>
               {current.profileChangedSinceReport && (
@@ -266,6 +392,24 @@ export default function IdeaDetailPage() {
                 </span>
               )}
             </div>
+
+            {current.interview && current.interview.messages.length > 0 && (
+              <details className="rounded-xl px-4 py-3 text-sm" style={{ background: "#F4F5F7" }}>
+                <summary className="cursor-pointer font-semibold" style={{ color: "#4A505B" }}>
+                  인터뷰 기록 보기 · AI가 이 대화로 프로필 초안을 채웠어요
+                </summary>
+                <div className="mt-3 flex flex-col gap-2 leading-relaxed">
+                  {current.interview.messages.map((m, i) => (
+                    <p key={i} className="m-0 whitespace-pre-wrap">
+                      <b style={{ color: m.role === "user" ? "#2F5BD3" : "#5A606B" }}>
+                        {m.role === "user" ? "나" : "인터뷰어"}
+                      </b>{" "}
+                      {m.content}
+                    </p>
+                  ))}
+                </div>
+              </details>
+            )}
 
             <ProfileEditor value={draft} onChange={setDraft} readOnly={!user || status === "diagnosing"} />
 
@@ -319,7 +463,7 @@ export default function IdeaDetailPage() {
 
         {/* 분석 보고서 (버전별) */}
         {hasReport && (
-          <section className="flex flex-col gap-5">
+          <section id="report" className="flex flex-col gap-5 scroll-mt-20">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <h2 className="text-xl font-bold m-0">분석 보고서</h2>
               {reports.length > 1 && (

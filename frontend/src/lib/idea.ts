@@ -2,7 +2,7 @@
  * 아이디어 한 건의 모양과 상태 규칙.
  * 메모 → 인터뷰 → (1차 분석) → 아이템 프로필 → (상세 진단) → 분석 보고서
  */
-import type { AnalyzeRequest, AnalyzeResponse, Decision } from "@/lib/api";
+import type { AnalyzeRequest, AnalyzeResponse, Coverage, Decision, InterviewMessage, InterviewSlot } from "@/lib/api";
 
 export type IdeaStatus =
   | "memo"
@@ -45,10 +45,36 @@ export interface ReportSummary {
   createdAt: string;
 }
 
+/** 딥 인터뷰 진행 기록. 중간에 나가도 이어서 할 수 있게 매 턴 저장한다 */
+export interface IdeaInterview {
+  messages: InterviewMessage[];
+  covered: Coverage;
+  quickReplies: string[];
+  done: boolean;
+}
+
+export const INTERVIEW_SLOTS: { key: InterviewSlot; label: string }[] = [
+  { key: "idea", label: "아이디어 · 해결하려는 것" },
+  { key: "customer", label: "고객 · 문제를 본 장면" },
+  { key: "alternative", label: "지금 쓰는 대안" },
+  { key: "payer", label: "돈 낼 사람 · 수익 생각" },
+  { key: "context", label: "분야 · 시작 지역" },
+];
+
+export const EMPTY_COVERAGE: Coverage = {
+  idea: "empty",
+  customer: "empty",
+  alternative: "empty",
+  payer: "empty",
+  context: "empty",
+};
+
 export interface Idea {
   id: string;
   status: IdeaStatus;
   memo: string;
+  /** 구조 개편 직후 문서에는 없을 수 있다 */
+  interview?: IdeaInterview | null;
   profile: IdeaProfile;
   /** status가 failed일 때 어느 단계에서 실패했는지 */
   failedStage: IdeaStatus | null;
@@ -142,6 +168,7 @@ export function newIdea(id: string, memo: string): Idea {
     id,
     status: "memo",
     memo,
+    interview: null,
     profile: { ...EMPTY_PROFILE },
     failedStage: null,
     errorMessage: null,

@@ -4,10 +4,18 @@
  * 비로그인: 브라우저 localStorage (메모 단계까지만 쓰인다)
  */
 import type { User } from "firebase/auth";
-import { analyze, type Decision } from "@/lib/api";
+import {
+  analyze,
+  type Decision,
+  type InterviewMessage,
+  type InterviewTurn,
+  interviewDraftProfile,
+  interviewNext,
+} from "@/lib/api";
 import {
   EMPTY_PROFILE,
   type Idea,
+  type IdeaInterview,
   type IdeaProfile,
   type IdeaReport,
   newIdea,
@@ -186,6 +194,64 @@ export async function saveProfile(user: User | null, idea: Idea, profile: IdeaPr
 export async function deleteIdea(user: User | null, id: string) {
   if (user) await deleteIdeaFS(user.uid, id);
   else deleteLocalIdea(id);
+}
+
+function withTurn(messages: InterviewMessage[], turn: InterviewTurn): IdeaInterview {
+  return {
+    messages: [...messages, { role: "assistant", content: turn.message }],
+    covered: turn.covered,
+    quickReplies: turn.quick_replies,
+    done: turn.done,
+  };
+}
+
+/** 인터뷰 시작 — 첫 질문을 받아 '인터뷰 중'으로 */
+export async function startInterview(user: User | null, idea: Idea): Promise<Idea> {
+  const turn = await interviewNext(idea.memo, []);
+  return updateIdea(user, idea, {
+    status: "interviewing",
+    failedStage: null,
+    errorMessage: null,
+    interview: withTurn([], turn),
+  });
+}
+
+/** 답변을 보내고 다음 질문을 받는다. 실패하면 저장하지 않고 에러를 던진다 (입력은 화면에 남음) */
+export async function answerInterview(user: User | null, idea: Idea, answer: string): Promise<Idea> {
+  const interview = idea.interview;
+  if (!interview) throw new Error("인터뷰가 시작되지 않았어요.");
+  const messages: InterviewMessage[] = [...interview.messages, { role: "user", content: answer.trim() }];
+  const turn = await interviewNext(idea.memo, messages, interview.covered);
+  return updateIdea(user, idea, { interview: withTurn(messages, turn) });
+}
+
+/** 인터뷰 마치기 → 1차 분석(LLM)으로 프로필 초안 → '프로필' 상태 */
+export async function finishInterview(user: User | null, idea: Idea): Promise<Idea> {
+  const messages = idea.interview?.messages ?? [];
+  const current = await updateIdea(user, idea, { status: "profiling", failedStage: null, errorMessage: null });
+  let draft;
+  try {
+    draft = await interviewDraftProfile(current.memo, messages);
+  } catch (err) {
+    return updateIdea(user, current, {
+      status: "failed",
+      failedStage: "profiling",
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
+  }
+  return updateIdea(user, current, {
+    status: "profile",
+    profile: {
+      name: draft.name || current.profile.name || current.memo.split("\n")[0].slice(0, 40),
+      oneLiner: draft.one_liner,
+      industry: draft.industry,
+      location: draft.location || EMPTY_PROFILE.location,
+      customer: draft.customer,
+      problem: draft.problem,
+      solution: draft.solution,
+      revenueModel: draft.revenue_model,
+    },
+  });
 }
 
 /** 상세 진단 실행 → 새 버전 보고서 저장. 실패하면 실패 상태로 남긴다 */
