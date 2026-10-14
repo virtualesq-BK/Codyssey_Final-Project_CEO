@@ -106,7 +106,7 @@ export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg:
   profiling: { label: "프로필 만드는 중", color: "#5B59E0", bg: "#F0F0FF" },
   profile: { label: "프로필", color: "#5B59E0", bg: "#E6E6FF" },
   diagnosing: { label: "진단 중", color: "#5B59E0", bg: "#F0F0FF" },
-  report: { label: "보고서", color: "#FFFFFF", bg: "#2F2B4A" },
+  report: { label: "보고서", color: "#FFFFFF", bg: "#7270FF" },
   failed: { label: "실패", color: "#B42318", bg: "#FEF2F2" },
 };
 

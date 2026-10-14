@@ -268,9 +268,6 @@ export default function ProfileWorkspace(props: Props) {
       <main className="min-w-0 flex flex-col gap-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <div className="text-xs mb-1" style={{ color: iron }}>
-              아이템 프로필 · {fromInterview ? "인터뷰로 자동 생성" : "직접 작성"} · 모든 문서의 원본
-            </div>
             <h1 className="text-3xl font-bold m-0 tracking-tight" style={{ color: ink }}>
               {displayTitle(idea)}
             </h1>
@@ -682,7 +679,7 @@ function DiagnosisCard({
             type="button"
             onClick={onOpenReport}
             className="min-h-[48px] rounded-xl text-sm font-bold text-white"
-            style={{ background: "#2F2B4A", border: "none", cursor: "pointer" }}
+            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
           >
             진단 전체 보기 ›
           </button>
