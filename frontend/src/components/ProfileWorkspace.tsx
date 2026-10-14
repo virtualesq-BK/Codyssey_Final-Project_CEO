@@ -510,20 +510,29 @@ function RowValue({ value }: { field?: keyof IdeaProfile; value: string }) {
 function Plain({ value }: { value: string }) {
   // "· 기능1\n· 기능2"처럼 목록으로 온 값만 칩으로 보여준다
   const parts = value.trim().startsWith("·") ? value.split(/\s*·\s+/).filter((t) => t.trim()) : [];
+  // "(AI 추정)" 뒤 문장(마침표·줄바꿈까지)만 보라색 점선 밑줄로 — 글 중간에 배지를 넣지 않는다
   const highlight = (t: string) =>
-    t.split(/(\(미확인\)|\(AI 추정\))/).map((x, i) =>
-      x === "(미확인)" ? (
-        <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md mx-0.5" style={{ background: "#FFF7EB", color: "#B45309" }}>
-          미확인
-        </span>
-      ) : x === "(AI 추정)" ? (
-        <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md mr-1" style={{ background: "#EDDFF7", color: "#6B3FA0" }}>
-          AI 추정
-        </span>
-      ) : (
-        <span key={i}>{x}</span>
-      ),
-    );
+    t.split(/(\(AI 추정\)\s*[^.!?\n]*[.!?]?|\(미확인\))/).map((x, i) => {
+      if (x === "(미확인)") {
+        return (
+          <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md mx-0.5" style={{ background: "#FFF7EB", color: "#B45309" }}>
+            미확인
+          </span>
+        );
+      }
+      if (x.startsWith("(AI 추정)")) {
+        return (
+          <span
+            key={i}
+            title="보라색 밑줄은 AI가 추정한 내용이에요"
+            style={{ color: "#6B3FA0", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
+          >
+            {x.replace(/^\(AI 추정\)\s*/, "")}
+          </span>
+        );
+      }
+      return <span key={i}>{x}</span>;
+    });
   if (parts.length >= 2) {
     return (
       <div className="flex flex-wrap gap-1.5">
@@ -573,9 +582,15 @@ function SourceBadge({
     );
   }
   return (
-    <span className={base} style={{ background: fromInterview ? "#EDDFF7" : "#F5F6F8", color: fromInterview ? "#6B3FA0" : "#535768" }}>
+    row.value.includes("(AI 추정)") ? (
+      <span className={base} title="보라색 밑줄은 AI가 추정한 내용이에요" style={{ background: "#EDDFF7", color: "#6B3FA0" }}>
+        AI 추정 포함
+      </span>
+    ) : (
+    <span className={base} style={{ background: fromInterview ? "#E7ECFF" : "#F5F6F8", color: fromInterview ? "#4B4BD9" : "#535768" }}>
       {fromInterview ? "인터뷰 · AI" : "직접 입력"}
     </span>
+    )
   );
 }
 
