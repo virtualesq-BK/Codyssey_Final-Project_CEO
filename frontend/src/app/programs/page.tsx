@@ -67,7 +67,7 @@ export default function ProgramsPage() {
 
       <div className="max-w-[1200px] mx-auto px-6 py-10">
         <div className="mb-8">
-          <div className="text-sm font-semibold mb-1" style={{ color: "#7270FF" }}>창업 공고 찾기</div>
+          <div className="text-sm font-semibold mb-1" style={{ color: "#6B7280" }}>창업 공고 찾기</div>
           <h1 className="text-3xl font-bold m-0">내게 맞는 공고를 찾아보세요</h1>
           <p className="text-text-secondary mt-2 mb-0">정부·지자체 창업 지원 프로그램을 한눈에</p>
         </div>
@@ -136,7 +136,7 @@ export default function ProgramsPage() {
                       onClick={() => setSelected(p)}
                       className="bg-white rounded-lg shadow-card p-5 cursor-pointer hover:shadow-md transition-shadow"
                       style={{
-                        border: selected?.id === p.id ? "2px solid #7270FF" : "1px solid #E5E7EB",
+                        border: selected?.id === p.id ? "2px solid #2F2B4A" : "1px solid #E5E7EB",
                       }}
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -158,7 +158,7 @@ export default function ProgramsPage() {
                         <div className="text-right shrink-0">
                           <div className="text-xs text-text-muted">마감일</div>
                           <div className="text-sm font-semibold">{p.ends_on}</div>
-                          <div className="text-xs font-bold mt-1" style={{ color: "#7270FF" }}>{p.amount}</div>
+                          <div className="text-xs font-bold mt-1" style={{ color: "#2F2B4A" }}>{p.amount}</div>
                         </div>
                       </div>
                     </div>
@@ -201,7 +201,7 @@ export default function ProgramsPage() {
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-text-muted">지원금액</span>
-                  <span className="font-semibold" style={{ color: "#7270FF" }}>{selected.amount}</span>
+                  <span className="font-semibold" style={{ color: "#2F2B4A" }}>{selected.amount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">접수기간</span>

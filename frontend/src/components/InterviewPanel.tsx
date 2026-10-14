@@ -74,7 +74,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               <div
                 key={i}
                 className="self-end max-w-[80%] px-4 py-3 text-sm leading-relaxed text-white whitespace-pre-wrap"
-                style={{ background: "#7270FF", borderRadius: "16px 4px 16px 16px" }}
+                style={{ background: "#2F2B4A", borderRadius: "16px 4px 16px 16px" }}
               >
                 {m.content}
               </div>
@@ -136,7 +136,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               type="submit"
               disabled={disabled || !answer.trim()}
               className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+              style={{ background: "#2F2B4A", border: "none", cursor: "pointer" }}
             >
               보내기
             </button>
@@ -155,7 +155,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
           <div className="h-1.5 rounded-full my-1" style={{ background: "#E5E7EB" }}>
             <div
               className="h-1.5 rounded-full transition-all"
-              style={{ width: `${(doneCount / INTERVIEW_SLOTS.length) * 100}%`, background: "#7270FF" }}
+              style={{ width: `${(doneCount / INTERVIEW_SLOTS.length) * 100}%`, background: "#2F2B4A" }}
             />
           </div>
           <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
@@ -171,7 +171,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3" style={{ border: "2px solid #7270FF" }}>
+        <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3" style={{ border: "1px solid #E5E7EB" }}>
           <button
             type="button"
             onClick={onFinish}

@@ -133,7 +133,7 @@ export default function IdeaDetailPage() {
                 <div className="text-text-secondary text-sm">
                   {error ?? "삭제됐거나 다른 계정·브라우저에 저장된 아이디어일 수 있어요."}
                 </div>
-                <Link href="/ideas" className="text-sm font-semibold" style={{ color: "#7270FF" }}>
+                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#2F2B4A" }}>
                   MY아이디어로 ›
                 </Link>
               </>
@@ -283,7 +283,7 @@ export default function IdeaDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <StatusPill status={status} />
             {current.profile.industry && (
-              <span className="text-sm font-semibold" style={{ color: "#7270FF" }}>
+              <span className="text-sm font-semibold" style={{ color: "#4B5563" }}>
                 {current.profile.industry} · {current.profile.location}
               </span>
             )}
@@ -441,9 +441,9 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
             aria-current={active ? "step" : undefined}
             className="rounded-xl px-4 py-3 text-sm font-semibold"
             style={{
-              background: active ? "#F0F0FF" : "#fff",
-              color: active ? "#7270FF" : done ? "#2F2B4A" : "#6B7280",
-              border: `1px solid ${active ? "#7270FF" : "#E5E7EB"}`,
+              background: active ? "#F3F4F6" : "#fff",
+              color: active ? "#1C1A2C" : done ? "#2F2B4A" : "#6B7280",
+              border: `1px solid ${active ? "#2F2B4A" : "#E5E7EB"}`,
             }}
           >
             {done ? "✓ " : `${i + 1}. `}

@@ -122,7 +122,7 @@ export default function ProfileWorkspace(props: Props) {
         </h2>
         <div className="flex items-center gap-2">
           {s.badge && (
-            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
               {s.badge}
             </span>
           )}
@@ -246,7 +246,7 @@ export default function ProfileWorkspace(props: Props) {
               key={i.id}
               href={`/ideas/${i.id}`}
               className="rounded-lg px-3 py-3 no-underline flex flex-col gap-1.5"
-              style={{ background: active ? "#F0F0FF" : "transparent", textDecoration: "none", color: ink }}
+              style={{ background: active ? "#F3F4F6" : "transparent", textDecoration: "none", color: ink }}
             >
               <span className="text-sm font-semibold leading-snug line-clamp-2">{displayTitle(i)}</span>
               <span className="self-start">
@@ -258,7 +258,7 @@ export default function ProfileWorkspace(props: Props) {
         <Link
           href="/ideas"
           className="mt-2 rounded-lg py-3 text-center text-sm font-semibold no-underline"
-          style={{ border: "1.5px dashed #7270FF", color: "#7270FF", textDecoration: "none" }}
+          style={{ border: "1.5px dashed #D9DBDA", color: "#4B5563", textDecoration: "none" }}
         >
           + 새 아이디어
         </Link>
@@ -287,8 +287,13 @@ export default function ProfileWorkspace(props: Props) {
             )}
             <Link
               href="/programs"
-              className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white no-underline inline-flex items-center"
-              style={{ background: "#7270FF", textDecoration: "none" }}
+              className="min-h-[44px] px-5 rounded-xl text-sm font-bold no-underline inline-flex items-center"
+              // 보고서가 나온 뒤의 다음 할 일이라 그때만 강조색
+              style={
+                latest
+                  ? { background: "#7270FF", color: "#fff", textDecoration: "none" }
+                  : { background: "#fff", border: "1px solid #D9DBDA", color: "#2F2B4A", textDecoration: "none" }
+              }
             >
               이 아이템으로 공고 찾기
             </Link>
@@ -314,8 +319,8 @@ export default function ProfileWorkspace(props: Props) {
               style={{
                 background: "none",
                 border: "none",
-                borderBottom: `2px solid ${tab === key ? "#7270FF" : "transparent"}`,
-                color: tab === key ? "#7270FF" : slate,
+                borderBottom: `2px solid ${tab === key ? "#2F2B4A" : "transparent"}`,
+                color: tab === key ? "#1C1A2C" : slate,
                 cursor: "pointer",
               }}
             >
@@ -344,7 +349,7 @@ export default function ProfileWorkspace(props: Props) {
                     className="bg-white rounded-lg p-6 max-w-[360px] w-full flex flex-col items-center gap-3 text-center"
                     style={{ border: "1px solid #E5E7EB" }}
                   >
-                    <span className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#F0F0FF" }}>
+                    <span className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#F3F4F6" }}>
                       <LockIcon />
                     </span>
                     <b className="text-base" style={{ color: ink }}>
@@ -358,8 +363,8 @@ export default function ProfileWorkspace(props: Props) {
                         type="button"
                         onClick={onDiagnose}
                         disabled={!canDiagnose}
-                        className="min-h-[44px] px-6 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                        style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+                        className="min-h-[44px] px-6 rounded-xl text-sm font-bold bg-white disabled:opacity-50"
+                        style={{ border: "1px solid #2F2B4A", color: "#2F2B4A", cursor: "pointer" }}
                       >
                         상세분석하기 (유료)
                       </button>
@@ -390,7 +395,7 @@ export default function ProfileWorkspace(props: Props) {
                     style={{
                       cursor: "pointer",
                       border: "1px solid #E5E7EB",
-                      background: r.id === selectedReport?.id ? "#7270FF" : "#fff",
+                      background: r.id === selectedReport?.id ? "#2F2B4A" : "#fff",
                       color: r.id === selectedReport?.id ? "#fff" : slate,
                     }}
                   >
@@ -427,7 +432,7 @@ export default function ProfileWorkspace(props: Props) {
               </p>
               {idea.interview.messages.map((m, i) => (
                 <p key={i} className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
-                  <b style={{ color: m.role === "user" ? "#7270FF" : slate }}>{m.role === "user" ? "나" : "인터뷰어"}</b>{" "}
+                  <b style={{ color: m.role === "user" ? "#1C1A2C" : slate }}>{m.role === "user" ? "나" : "인터뷰어"}</b>{" "}
                   {m.content}
                 </p>
               ))}
@@ -490,7 +495,7 @@ export default function ProfileWorkspace(props: Props) {
           </div>
           <Link href="/programs" className="flex justify-between no-underline" style={{ color: slate, textDecoration: "none" }}>
             <span>맞춤 공고 추천</span>
-            <span style={{ color: "#7270FF" }}>보기 ›</span>
+            <span className="underline" style={{ color: "#2F2B4A" }}>보기 ›</span>
           </Link>
         </div>
       </aside>
@@ -522,7 +527,7 @@ function Plain({ value }: { value: string }) {
           <span
             key={i}
             title="보라색 밑줄은 AI가 추정한 내용이에요"
-            style={{ color: "#5B59E0", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
+            style={{ color: "#2F2B4A", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
           >
             {x.replace(/^\(AI 추정\)\s*/, "")}
           </span>
@@ -580,11 +585,11 @@ function SourceBadge({
   }
   return (
     row.value.includes("(AI 추정)") ? (
-      <span className={base} title="보라색 밑줄은 AI가 추정한 내용이에요" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
+      <span className={base} title="보라색 밑줄은 AI가 추정한 내용이에요" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
         AI 추정 포함
       </span>
     ) : (
-    <span className={base} style={{ background: fromInterview ? "#F0F0FF" : "#F3F4F6", color: fromInterview ? "#5B59E0" : "#4B5563" }}>
+    <span className={base} style={{ background: fromInterview ? "#F3F4F6" : "#F3F4F6", color: fromInterview ? "#2F2B4A" : "#4B5563" }}>
       {fromInterview ? "인터뷰 · AI" : "직접 입력"}
     </span>
     )
@@ -641,7 +646,7 @@ function DiagnosisCard({
           </p>
           <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
             {AGENT_ORDER.map((a) => (
-              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
+              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
                 {AGENT_LABELS[a] ?? a}
               </span>
             ))}
@@ -664,7 +669,7 @@ function DiagnosisCard({
           {[
             ["가장 강한 점", dr.strengths[0], "#F9FAFB", "#2F2B4A"],
             ["가장 큰 약점", dr.weaknesses[0], "#F9FAFB", "#2F2B4A"],
-            ["지금 할 일", dr.action_plan[0], "#F0F0FF", "#5B59E0"],
+            ["지금 할 일", dr.action_plan[0], "#F3F4F6", "#2F2B4A"],
           ]
             .filter(([, text]) => text)
             .map(([title, text, bg, fg]) => (
@@ -678,8 +683,8 @@ function DiagnosisCard({
           <button
             type="button"
             onClick={onOpenReport}
-            className="min-h-[48px] rounded-xl text-sm font-bold text-white"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            className="min-h-[48px] rounded-xl text-sm font-bold bg-white"
+            style={{ border: "1px solid #D9DBDA", color: "#2F2B4A", cursor: "pointer" }}
           >
             진단 전체 보기 ›
           </button>
@@ -714,7 +719,7 @@ function DiagnosisCard({
         </div>
       )}
       {!loggedIn && (
-        <Link href={`/login?next=/ideas/${idea.id}`} className="text-sm font-semibold" style={{ color: "#7270FF" }}>
+        <Link href={`/login?next=/ideas/${idea.id}`} className="text-sm font-semibold underline" style={{ color: "#2F2B4A" }}>
           로그인하면 고치고 분석할 수 있어요 ›
         </Link>
       )}
@@ -732,7 +737,7 @@ function EmptyCard({ text }: { text: string }) {
 
 function LockIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7270FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>

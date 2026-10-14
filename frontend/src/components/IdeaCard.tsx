@@ -182,7 +182,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
                 key={a.label}
                 href={href}
                 className={`${circle} hover:scale-105`}
-                style={{ background: "#fff", color: "#5B59E0", textDecoration: "none" }}
+                style={{ background: "#fff", color: "#2F2B4A", textDecoration: "none" }}
               >
                 {inner}
               </Link>

@@ -6,7 +6,7 @@ const DECISION_CONFIG = {
   GO: {
     label: "GO · 진행 권장",
     color: "#7270FF",
-    bg: "#F0F0FF",
+    bg: "#F3F4F6",
     desc: "근거가 충분하고 리스크가 관리 가능합니다. 다음 단계로 진행하세요.",
   },
   PIVOT: {

@@ -185,7 +185,7 @@ export default function LoginPage() {
             )}
 
             {notice && (
-              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
+              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
                 {notice}
               </div>
             )}

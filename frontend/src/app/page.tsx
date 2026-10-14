@@ -92,7 +92,7 @@ export default function Home() {
               )}
               <span
                 className="text-xs font-bold px-2.5 py-1 rounded self-start"
-                style={{ background: "#F0F0FF", color: "#7270FF" }}
+                style={{ background: "#F3F4F6", color: "#4B5563" }}
               >
                 STEP {s.step}
               </span>

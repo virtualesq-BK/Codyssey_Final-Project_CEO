@@ -44,7 +44,7 @@ export default function Header({ activeNav }: HeaderProps) {
 
         <span
           className="text-xs px-2 py-0.5 rounded font-medium"
-          style={{ background: "#F0F0FF", color: "#7270FF" }}
+          style={{ background: "#F3F4F6", color: "#4B5563" }}
         >
           창업자판 사람인
         </span>
@@ -56,9 +56,9 @@ export default function Header({ activeNav }: HeaderProps) {
               href={item.href}
               className="no-underline font-medium px-3 py-1.5 rounded-xl transition-colors"
               style={{
-                color: activeNav === item.key ? "#7270FF" : "#4B5563",
+                color: activeNav === item.key ? "#1C1A2C" : "#4B5563",
                 fontWeight: activeNav === item.key ? 700 : 500,
-                background: activeNav === item.key ? "#F0F0FF" : "transparent",
+                background: activeNav === item.key ? "#F3F4F6" : "transparent",
                 textDecoration: "none",
               }}
             >
@@ -85,8 +85,8 @@ export default function Header({ activeNav }: HeaderProps) {
             ) : (
               <Link
                 href="/login"
-                className="text-xs px-3 py-1.5 rounded-xl font-semibold text-white no-underline"
-                style={{ background: "#7270FF", textDecoration: "none" }}
+                className="text-xs px-3 py-1.5 rounded-xl font-semibold no-underline bg-white"
+                style={{ border: "1px solid #E5E7EB", color: "#2F2B4A", textDecoration: "none" }}
               >
                 로그인
               </Link>

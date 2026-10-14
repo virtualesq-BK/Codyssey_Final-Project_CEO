@@ -99,21 +99,21 @@ export interface IdeaReport {
   createdAt: string;
 }
 
-// 상태 배지: 색조는 violet 하나만 쓰고 진하기로 단계를 나눈다 (레퍼런스: 다른 색조 금지)
-export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg: string }> = {
-  memo: { label: "메모", color: "#4B5563", bg: "#F3F4F6" },
-  interviewing: { label: "인터뷰 중", color: "#5B59E0", bg: "#F0F0FF" },
-  profiling: { label: "프로필 만드는 중", color: "#5B59E0", bg: "#F0F0FF" },
-  profile: { label: "프로필", color: "#5B59E0", bg: "#E6E6FF" },
-  diagnosing: { label: "진단 중", color: "#5B59E0", bg: "#F0F0FF" },
-  report: { label: "보고서", color: "#FFFFFF", bg: "#7270FF" },
-  failed: { label: "실패", color: "#B42318", bg: "#FEF2F2" },
+// 상태 배지: 모두 회색 바탕, 앞의 점 색으로 단계를 구분 (강조색은 '보고서' 점에만)
+export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg: string; dot: string }> = {
+  memo: { label: "메모", color: "#4B5563", bg: "#F3F4F6", dot: "#D1D5DB" },
+  interviewing: { label: "인터뷰 중", color: "#2F2B4A", bg: "#F3F4F6", dot: "#9CA3AF" },
+  profiling: { label: "프로필 만드는 중", color: "#2F2B4A", bg: "#F3F4F6", dot: "#9CA3AF" },
+  profile: { label: "프로필", color: "#2F2B4A", bg: "#F3F4F6", dot: "#4B5563" },
+  diagnosing: { label: "진단 중", color: "#2F2B4A", bg: "#F3F4F6", dot: "#9CA3AF" },
+  report: { label: "보고서", color: "#1C1A2C", bg: "#F3F4F6", dot: "#7270FF" },
+  failed: { label: "실패", color: "#B42318", bg: "#FEF2F2", dot: "#B42318" },
 };
 
 export const DECISION_META: Record<Decision, { label: string; color: string }> = {
   GO: { label: "GO", color: "#1A7A4A" },
   PIVOT: { label: "PIVOT", color: "#856404" },
-  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#7270FF" },
+  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#4B5563" },
   STOP: { label: "STOP", color: "#B42318" },
 };
 
