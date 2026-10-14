@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import ReportView from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
@@ -16,7 +17,7 @@ import {
   displayTitle,
   effectiveStatus,
 } from "@/lib/idea";
-import { listIdeas } from "@/lib/ideaStore";
+import { deleteIdea, listIdeas } from "@/lib/ideaStore";
 import { type ProfileRow, isUnknown, profileFieldRows, reportRows, updateRow } from "@/lib/profileRows";
 
 type Tab = "overview" | "report" | "interview";
@@ -52,9 +53,11 @@ export default function ProfileWorkspace(props: Props) {
   const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose } = props;
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
+  // 프로필 전체를 한 번에 고친다: 편집 모드 + 칸별 초안
+  const [editing, setEditing] = useState(false);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  const router = useRouter();
 
   // 카드의 '보고서 보기'(#report)로 들어오면 보고서 탭부터
   useEffect(() => {
@@ -94,19 +97,34 @@ export default function ProfileWorkspace(props: Props) {
     .filter((r) => isUnknown(r.value))
     .map((r) => r.label);
 
-  async function save(row: ProfileRow) {
+  const editableRows = sections.filter((s) => !s.fromReport).flatMap((s) => s.rows).filter((r) => r.field);
+  // 사용자가 직접 고치면 확인된 내용이므로 AI 추정·미확인 표시를 지운다
+  const cleaned = (v: string) => v.replace(/\((미확인|AI 추정)\)\s*/g, "").trim();
+
+  async function removeProfile() {
+    if (!confirm(`'${displayTitle(idea)}'을(를) 삭제할까요? 보고서도 함께 지워져요.`)) return;
+    await deleteIdea(user, idea.id).catch(() => {});
+    router.push("/ideas");
+  }
+
+  function startEdit() {
+    setTab("overview");
+    setDrafts(Object.fromEntries(editableRows.map((r) => [r.id, cleaned(r.value)])));
+    setEditing(true);
+  }
+
+  async function saveAll() {
+    // 바뀐 칸만 반영 — 손대지 않은 칸의 AI 추정 표시는 그대로 둔다
+    const next = editableRows.reduce(
+      (acc, r) => (drafts[r.id] !== undefined && drafts[r.id] !== cleaned(r.value) ? updateRow(acc, r, drafts[r.id]) : acc),
+      p,
+    );
     try {
-      await onSaveProfile(updateRow(p, row, editValue));
-      setEditing(null);
+      if (next !== p) await onSaveProfile(next);
+      setEditing(false);
     } catch {
       // 실패하면 고치던 내용을 그대로 둔다
     }
-  }
-
-  function startEdit(row: ProfileRow) {
-    setEditing(row.id);
-    // 사용자가 직접 고치면 확인된 내용이므로 AI 추정·미확인 표시를 지운다
-    setEditValue(row.value.replace(/\((미확인|AI 추정)\)\s*/g, "").trim());
   }
 
   const renderSection = (s: Section, sectionLocked: boolean) => (
@@ -136,11 +154,13 @@ export default function ProfileWorkspace(props: Props) {
 
       {s.rows.map((r) => {
         const empty = isUnknown(r.value);
-        const isEditing = editing === r.id;
+        const isEditing = editing && !!r.field && !sectionLocked && !s.fromReport;
+        const editValue = drafts[r.id] ?? "";
+        const setEditValue = (v: string) => setDrafts((d) => ({ ...d, [r.id]: v }));
         return (
           <div
             key={r.id}
-            className="grid gap-x-4 gap-y-2 py-4 grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_110px_64px] items-start"
+            className="grid gap-x-4 gap-y-2 py-4 pl-4 grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_110px] items-start"
             style={{ borderBottom: `1px solid ${line}` }}
           >
             <div className="text-sm font-semibold" style={{ color: sectionLocked ? iron : ink }}>
@@ -155,10 +175,9 @@ export default function ProfileWorkspace(props: Props) {
                   {r.hint} — 상세분석 결과가 여기에 들어가요. 근거 자료와 함께 정리돼요.
                 </span>
               ) : isEditing ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col">
                   {r.field === "location" ? (
                     <select
-                      autoFocus
                       value={editValue || "전국"}
                       onChange={(e) => setEditValue(e.target.value)}
                       aria-label={r.label}
@@ -171,35 +190,15 @@ export default function ProfileWorkspace(props: Props) {
                     </select>
                   ) : (
                   <textarea
-                    autoFocus
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     aria-label={r.label}
                     placeholder={r.hint}
-                    rows={Math.min(10, Math.max(3, editValue.split("\n").length + 1, Math.ceil(editValue.length / 45)))}
+                    rows={Math.min(10, Math.max(2, editValue.split("\n").length + 1, Math.ceil(editValue.length / 45)))}
                     className="rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed"
                     style={{ border: "1.5px solid #7270FF" }}
                   />
                   )}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => save(r)}
-                      disabled={busy}
-                      className="min-h-[36px] px-4 rounded-xl text-xs font-bold text-white disabled:opacity-50"
-                      style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
-                    >
-                      저장
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(null)}
-                      className="min-h-[36px] px-4 rounded-xl text-xs font-semibold bg-white"
-                      style={{ border: "1px solid #E5E7EB", color: slate, cursor: "pointer" }}
-                    >
-                      취소
-                    </button>
-                  </div>
                 </div>
               ) : empty && !r.value.includes("(미확인)") ? (
                 <span>{s.fromReport ? "이번 분석에서 나오지 않았어요" : "미입력"}</span>
@@ -210,19 +209,6 @@ export default function ProfileWorkspace(props: Props) {
 
             <div>
               {!sectionLocked && <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} empty={empty} />}
-            </div>
-
-            <div className="md:text-right">
-              {r.field && canEdit && !isEditing && !sectionLocked && (
-                <button
-                  type="button"
-                  onClick={() => startEdit(r)}
-                  className="min-h-[36px] px-3 rounded-xl text-xs font-semibold bg-white"
-                  style={{ border: "1px solid #E5E7EB", color: ink, cursor: "pointer" }}
-                >
-                  {empty ? "입력" : "수정"}
-                </button>
-              )}
             </div>
           </div>
         );
@@ -301,7 +287,8 @@ export default function ProfileWorkspace(props: Props) {
         </div>
 
         {/* 탭 */}
-        <div className="flex gap-1 border-b" style={{ borderColor: line }} role="tablist">
+        <div className="flex items-center gap-1 border-b" style={{ borderColor: line }}>
+          <div className="flex gap-1" role="tablist">
           {(
             [
               ["overview", "프로필", null],
@@ -328,6 +315,53 @@ export default function ProfileWorkspace(props: Props) {
               {count !== null && <span className="ml-1.5 text-xs" style={{ color: iron }}>{count}</span>}
             </button>
           ))}
+          </div>
+
+          {canEdit && (
+            <div className="ml-auto flex gap-2 pb-1.5">
+              {editing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(false)}
+                    disabled={busy}
+                    className="min-h-[36px] px-4 rounded-xl text-xs font-semibold bg-white"
+                    style={{ border: "1px solid #E5E7EB", color: slate, cursor: "pointer" }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveAll}
+                    disabled={busy}
+                    className="min-h-[36px] px-4 rounded-xl text-xs font-bold text-white disabled:opacity-50"
+                    style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+                  >
+                    모두 저장
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="min-h-[36px] px-4 rounded-xl text-xs font-semibold bg-white"
+                    style={{ border: "1px solid #E5E7EB", color: ink, cursor: "pointer" }}
+                  >
+                    프로필 수정
+                  </button>
+                  <button
+                    type="button"
+                    onClick={removeProfile}
+                    className="min-h-[36px] px-4 rounded-xl text-xs font-semibold bg-white"
+                    style={{ border: "1px solid #E5E7EB", color: "#B42318", cursor: "pointer" }}
+                  >
+                    프로필 삭제
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {error && (

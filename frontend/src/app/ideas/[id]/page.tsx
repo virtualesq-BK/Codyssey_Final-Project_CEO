@@ -15,6 +15,7 @@ import {
   type IdeaStatus,
   STATUS_META,
   INTERVIEW_MAX_QUESTIONS,
+  EMPTY_COVERAGE,
   displayTitle,
   effectiveStatus,
   missingFields,
@@ -56,6 +57,8 @@ export default function IdeaDetailPage() {
   const [draft, setDraft] = useState<IdeaProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  // 첫 질문을 받는 동안에도 메모 화면을 거치지 않고 바로 인터뷰 창을 띄운다
+  const [startingInterview, setStartingInterview] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -148,7 +151,7 @@ export default function IdeaDetailPage() {
   const current = idea;
   const { status, failedStage } = effectiveStatus(current);
   const atProfile = reachedProfile(status, failedStage);
-  const atInterview = inInterview(status, failedStage) && !!current.interview;
+  const atInterview = (inInterview(status, failedStage) && !!current.interview) || startingInterview;
   const profileDirty = JSON.stringify(draft) !== JSON.stringify(current.profile);
   const missing = missingFields(draft);
   const hasReport = current.reportCount > 0 || current.latestReport !== null;
@@ -159,12 +162,14 @@ export default function IdeaDetailPage() {
       setIdea(await updateIdea(user, current, { memo: memoDraft.trim() }));
     });
 
-  const beginInterview = () =>
-    run(async () => {
+  const beginInterview = () => {
+    setStartingInterview(true);
+    return run(async () => {
       const saved =
         memoDraft.trim() !== current.memo ? await updateIdea(user, current, { memo: memoDraft.trim() }) : current;
       setIdea(await startInterview(user, saved));
-    });
+    }).finally(() => setStartingInterview(false));
+  };
 
   // 실패하면 InterviewPanel이 입력을 남겨두도록 에러를 다시 던진다
   const sendAnswer = async (answer: string) => {
@@ -379,6 +384,14 @@ export default function IdeaDetailPage() {
         )}
 
         {/* 딥 인터뷰 → 1차 분석 */}
+        {startingInterview && !current.interview && (
+          <InterviewPanel
+            interview={{ messages: [], covered: EMPTY_COVERAGE, quickReplies: [], done: false }}
+            onAnswer={async () => {}}
+            onFinish={() => {}}
+            busy
+          />
+        )}
         {atInterview && current.interview && (
           <>
             {status === "failed" && (
