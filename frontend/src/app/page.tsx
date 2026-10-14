@@ -14,9 +14,32 @@ export default function Home() {
     <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header />
 
-      {/* Hero Section — 흰 바탕에 잉크 글자, 강조는 한 단어만 violet (레퍼런스: 차분한 도구형) */}
-      <section className="bg-white border-b" style={{ borderColor: "#E5E7EB" }}>
-        <div className="max-w-[1200px] mx-auto px-6 py-20 flex flex-col items-start gap-6">
+      {/* Hero Section — 오른쪽에 회의 사진, 왼쪽은 흰 그라데이션으로 덮어 글자를 읽기 쉽게 */}
+      {/* 사진: Redd Francisco / Unsplash (Unsplash License) */}
+      <section
+        className="relative bg-white border-b overflow-hidden"
+        style={{
+          borderColor: "#E5E7EB",
+          backgroundImage: "url(/images/hero-meeting.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "right center",
+        }}
+      >
+        {/* 넓은 화면: 왼쪽만 흰색으로 덮고 오른쪽은 사진이 보이게 / 좁은 화면: 글자가 사진 위에 오므로 전체를 옅게 덮는다 */}
+        <div
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          aria-hidden="true"
+          style={{
+            background:
+              "linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.95) 36%, rgba(255,255,255,0.55) 58%, rgba(255,255,255,0) 85%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none md:hidden"
+          aria-hidden="true"
+          style={{ background: "rgba(255,255,255,0.88)" }}
+        />
+        <div className="relative max-w-[1200px] mx-auto px-6 py-20 flex flex-col items-start gap-6">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
             style={{ background: "#F3F4F6", color: "#4B5563" }}
