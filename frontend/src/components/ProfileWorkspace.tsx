@@ -24,7 +24,6 @@ type Tab = "overview" | "report" | "interview";
 interface Section {
   no: number;
   title: string;
-  question: string;
   badge: string;
   rows: ProfileRow[];
   /** 상세분석에서 채워지는 섹션 */
@@ -80,7 +79,6 @@ export default function ProfileWorkspace(props: Props) {
     {
       no: 1,
       title: "기본",
-      question: "공고 분야·단계 매칭",
       badge: "",
       rows: [
         ...fieldRows(p, "name", "이름", true),
@@ -92,26 +90,23 @@ export default function ProfileWorkspace(props: Props) {
     {
       no: 2,
       title: "문제 · 고객",
-      question: "누가, 얼마나 아픈가",
       badge: "P 문제인식",
       rows: [...fieldRows(p, "customer", "고객 정의", true), ...fieldRows(p, "problem", "고객 문제 정의", true)],
     },
     {
       no: 3,
       title: "해결 · 솔루션",
-      question: "무엇으로, 왜 우리인가",
       badge: "S 실현가능성",
       rows: fieldRows(p, "solution", "문제 해결 방법", true),
     },
     {
       no: 4,
       title: "수익 모델",
-      question: "누가, 얼마를, 어떻게 내나",
       badge: "S 비즈니스 모델",
       rows: fieldRows(p, "revenueModel", "수익 모델", false),
     },
-    { no: 5, title: "시장", question: "돈 낼 곳이 얼마나 있나", badge: "P 목표시장", rows: fromReport.market, fromReport: true },
-    { no: 6, title: "경쟁", question: "왜 우리여야 하나", badge: "S 차별성", rows: fromReport.competition, fromReport: true },
+    { no: 5, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true },
+    { no: 6, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true },
   ];
 
   const filled = (rows: ProfileRow[]) => rows.filter((r) => !isUnknown(r.value)).length;
@@ -244,9 +239,6 @@ export default function ProfileWorkspace(props: Props) {
                     <h2 className="text-base font-bold m-0" style={{ color: ink }}>
                       {s.no} · {s.title}
                     </h2>
-                    <span className="text-xs" style={{ color: iron }}>
-                      {s.question}
-                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     {s.badge && (
