@@ -17,7 +17,7 @@ import {
   effectiveStatus,
 } from "@/lib/idea";
 import { listIdeas } from "@/lib/ideaStore";
-import { type ProfileRow, isUnknown, profileFieldRows, reportRows, subParts, updateRow } from "@/lib/profileRows";
+import { type ProfileRow, isUnknown, profileFieldRows, reportRows, updateRow } from "@/lib/profileRows";
 
 type Tab = "overview" | "report" | "interview";
 
@@ -87,25 +87,12 @@ export default function ProfileWorkspace(props: Props) {
     { no: 6, title: "재무", badge: "S 자금 소요", rows: fromReport.finance, fromReport: true },
     { no: 7, title: "리스크", badge: "", rows: fromReport.risk, fromReport: true },
   ];
-  const [tagEditing, setTagEditing] = useState(false);
-  const [tagDraft, setTagDraft] = useState({ industry: p.industry, location: p.location });
-
-  async function saveTags() {
-    try {
-      await onSaveProfile({ ...p, industry: tagDraft.industry.trim(), location: tagDraft.location });
-      setTagEditing(false);
-    } catch {
-      // 에러 문구는 상위에서 보여준다
-    }
-  }
-
   const filled = (rows: ProfileRow[]) => rows.filter((r) => !isUnknown(r.value)).length;
   const toFill = sections
     .filter((s) => !s.fromReport)
     .flatMap((s) => s.rows)
     .filter((r) => isUnknown(r.value))
-    .map((r) => r.label)
-    .concat(p.industry.trim() ? [] : ["분야 태그"]);
+    .map((r) => r.label);
 
   async function save(row: ProfileRow) {
     try {
@@ -169,6 +156,20 @@ export default function ProfileWorkspace(props: Props) {
                 </span>
               ) : isEditing ? (
                 <div className="flex flex-col gap-2">
+                  {r.field === "location" ? (
+                    <select
+                      autoFocus
+                      value={editValue || "전국"}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      aria-label={r.label}
+                      className="h-10 rounded-md px-3 text-sm bg-white focus:outline-none self-start"
+                      style={{ border: "1.5px solid #6161FF" }}
+                    >
+                      {REGIONS.map((x) => (
+                        <option key={x}>{x}</option>
+                      ))}
+                    </select>
+                  ) : (
                   <textarea
                     autoFocus
                     value={editValue}
@@ -179,6 +180,7 @@ export default function ProfileWorkspace(props: Props) {
                     className="rounded-md p-3 text-sm resize-y focus:outline-none leading-relaxed"
                     style={{ border: "1.5px solid #6161FF" }}
                   />
+                  )}
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -272,75 +274,6 @@ export default function ProfileWorkspace(props: Props) {
             <h1 className="text-3xl font-bold m-0 tracking-tight" style={{ color: ink }}>
               {displayTitle(idea)}
             </h1>
-            {/* 분야·지역 태그 — 상세분석 검색어와 공고 매칭에 쓰인다 */}
-            {tagEditing ? (
-              <div className="mt-3 flex gap-2 flex-wrap items-center">
-                <input
-                  value={tagDraft.industry}
-                  onChange={(e) => setTagDraft((d) => ({ ...d, industry: e.target.value }))}
-                  aria-label="분야"
-                  placeholder="분야 (예: 에듀테크)"
-                  className="h-9 rounded-md px-3 text-sm focus:outline-none"
-                  style={{ border: "1.5px solid #6161FF" }}
-                />
-                <select
-                  value={tagDraft.location}
-                  onChange={(e) => setTagDraft((d) => ({ ...d, location: e.target.value }))}
-                  aria-label="시작 지역"
-                  className="h-9 rounded-md px-3 text-sm bg-white focus:outline-none"
-                  style={{ border: "1.5px solid #DDDFEB" }}
-                >
-                  {REGIONS.map((x) => (
-                    <option key={x}>{x}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={saveTags}
-                  disabled={busy || !tagDraft.industry.trim()}
-                  className="min-h-[36px] px-4 rounded-full text-xs font-bold text-white disabled:opacity-50"
-                  style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
-                >
-                  저장
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTagEditing(false)}
-                  className="min-h-[36px] px-4 rounded-full text-xs font-semibold bg-white"
-                  style={{ border: "1px solid #DDDFEB", color: slate, cursor: "pointer" }}
-                >
-                  취소
-                </button>
-              </div>
-            ) : (
-              <div className="mt-2 flex gap-1.5 flex-wrap items-center">
-                {p.industry ? (
-                  <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
-                    #{p.industry}
-                  </span>
-                ) : (
-                  <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: "#FCD0F8", color: "#B42318" }}>
-                    분야 미입력 *
-                  </span>
-                )}
-                <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: "#F5F6F8", color: slate }}>
-                  #{p.location || "전국"}
-                </span>
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTagDraft({ industry: p.industry, location: p.location || "전국" });
-                      setTagEditing(true);
-                    }}
-                    className="text-xs underline"
-                    style={{ background: "none", border: "none", color: iron, cursor: "pointer" }}
-                  >
-                    태그 수정
-                  </button>
-                )}
-              </div>
-            )}
           </div>
           <div className="flex gap-2 flex-wrap">
             {user && status !== "diagnosing" && (
@@ -568,22 +501,9 @@ export default function ProfileWorkspace(props: Props) {
   );
 }
 
-/** 칸 하나: "키: 값" 구조면 작은 소제목으로 나눠 보여준다 */
-function RowValue({ field, value }: { field?: keyof IdeaProfile; value: string }) {
-  const parts = field ? subParts(field, value) : null;
-  if (!parts) return <Plain value={value} />;
-  return (
-    <div className="flex flex-col gap-2.5">
-      {parts.map((part, i) => (
-        <div key={i}>
-          <div className="text-[11px] font-semibold mb-0.5" style={{ color: "#808080" }}>
-            {part.label}
-          </div>
-          <Plain value={part.value} />
-        </div>
-      ))}
-    </div>
-  );
+/** 칸 하나는 소제목 없이 그대로 풀어서 보여준다 */
+function RowValue({ value }: { field?: keyof IdeaProfile; value: string }) {
+  return <Plain value={value} />;
 }
 
 /** "· "로 시작하는 목록은 칩으로, "— 한계:"는 줄을 나눠 보여준다 */

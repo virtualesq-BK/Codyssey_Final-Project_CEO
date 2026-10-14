@@ -103,15 +103,17 @@ export function profileFieldRows(profile: IdeaProfile) {
   return {
     item: [
       row("name", "이름", true, "아이템 이름"),
-      row("oneLiner", "한줄 소개", false, "[첫 공략 고객]을 위한 [카테고리]. [기존 대안]과 달리 [차별점]."),
+      row("oneLiner", "한줄 소개", false, "누구를 위한 어떤 서비스인지, 기존 대안과 무엇이 다른지 한 문장으로"),
+      row("industry", "분야", true, "예: 에듀테크, 반려동물"),
+      row("location", "지역", false, "처음 시작할 지역"),
     ],
     customer: [
-      row("customer", "고객 정의", true, "첫 공략: …\n사용자 / 구매자: …"),
-      row("problem", "고객 문제 정의", true, "문제: …\n빈도·강도: …\n현재 대안: … — 한계: …"),
+      row("customer", "고객 정의", true, "처음 공략할 고객, 쓰는 사람과 돈 내는 사람"),
+      row("problem", "고객 문제 정의", true, "어떤 상황에서 무엇이 불편한지, 얼마나 자주 겪는지, 지금은 어떻게 버티는지"),
     ],
     solution: [
-      row("solution", "문제 해결 방법", true, "핵심 기능: …\n차별점: …"),
-      row("revenueModel", "수익 모델", false, "구매자 · 방식 · 가격 가설: …"),
+      row("solution", "문제 해결 방법", true, "핵심 기능과 지금 쓰는 방법 대비 다른 점"),
+      row("revenueModel", "수익 모델", false, "누가, 어떤 방식으로, 대략 얼마를 내는지"),
     ],
   };
 }
