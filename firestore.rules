@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 자신의 데이터에만 접근 가능
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // 아이디어 목록 및 개별 아이디어
+      match /ideas/{ideaId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // 아이디어별 진단 보고서 (버전 이력)
+        match /reports/{reportId} {
+          allow read, write: if request.auth != null && request.auth.uid == uid;
+        }
+      }
+
+      // 지원서
+      match /applications/{applicationId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      // 구조 개편 이전 분석 기록 — 읽기 전용으로 유지
+      match /analyses/{analysisId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+  }
+}
