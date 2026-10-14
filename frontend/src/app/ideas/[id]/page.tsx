@@ -4,15 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Header from "@/components/Header";
-import AgentResultCard from "@/components/AgentResultCard";
-import DecisionBanner from "@/components/DecisionBanner";
 import InterviewPanel from "@/components/InterviewPanel";
-import ProfileEditor from "@/components/ProfileEditor";
+import ProfileWorkspace from "@/components/ProfileWorkspace";
 import StatusPill from "@/components/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
-import { AGENT_ORDER, STATUS_BG, STATUS_TEXT } from "@/lib/agents";
 import {
-  DECISION_META,
   type Idea,
   type IdeaProfile,
   type IdeaReport,
@@ -55,7 +51,6 @@ export default function IdeaDetailPage() {
   const { user, loading: authLoading } = useAuth();
   const [idea, setIdea] = useState<Idea | null>(null);
   const [reports, setReports] = useState<IdeaReport[]>([]);
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [memoDraft, setMemoDraft] = useState("");
   const [draft, setDraft] = useState<IdeaProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +66,6 @@ export default function IdeaDetailPage() {
         setMemoDraft(found?.memo ?? "");
         setDraft(found?.profile ?? null);
         setReports(foundReports);
-        setSelectedReportId(foundReports[0]?.id ?? null);
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
@@ -157,7 +151,6 @@ export default function IdeaDetailPage() {
   const profileDirty = JSON.stringify(draft) !== JSON.stringify(current.profile);
   const missing = missingFields(draft);
   const hasReport = current.reportCount > 0 || current.latestReport !== null;
-  const selectedReport = reports.find((r) => r.id === selectedReportId) ?? null;
   const loginHref = `/login?next=/ideas/${current.id}`;
 
   const saveMemo = () =>
@@ -207,10 +200,6 @@ export default function IdeaDetailPage() {
       setDraft(next.profile);
     });
 
-  const saveDraft = () =>
-    run(async () => {
-      setIdea(await saveProfile(user, current, draft));
-    });
 
   // 유료 분석이라 시작 전에 한 번 묻는다 (버튼·카드에서 넘어온 경우 모두)
   const diagnose = () => {
@@ -228,7 +217,6 @@ export default function IdeaDetailPage() {
       if (done.status === "report") {
         const fresh = await listReports(user, done.id);
         setReports(fresh);
-        setSelectedReportId(fresh[0]?.id ?? null);
       }
     });
 
@@ -241,6 +229,42 @@ export default function IdeaDetailPage() {
     (!hasReport || current.profileChangedSinceReport || profileDirty || status === "failed");
 
   handlersRef.current = { beginInterview, startProfile, diagnose, canDiagnose };
+
+  // 줄 단위 수정 저장 — 실패하면 편집 상태를 유지하도록 에러를 다시 던진다
+  const saveProfileRow = async (profile: IdeaProfile) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const next = await saveProfile(user, current, profile);
+      setIdea(next);
+      setDraft(next.profile);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (atProfile) {
+    return (
+      <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+        <Header activeNav="ideas" />
+        <ProfileWorkspace
+          idea={current}
+          status={status}
+          reports={reports}
+          user={user}
+          busy={busy}
+          error={error}
+          canDiagnose={canDiagnose}
+          missingCount={missing.length}
+          onSaveProfile={saveProfileRow}
+          onDiagnose={diagnose}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
@@ -381,137 +405,6 @@ export default function IdeaDetailPage() {
           </>
         )}
 
-        {/* 아이템 프로필 + 상세 진단 */}
-        {atProfile && (
-          <section id="profile" className={`${card} scroll-mt-20`}>
-            <div className="flex items-baseline justify-between gap-3 flex-wrap">
-              <h2 className="text-lg font-bold m-0">아이템 프로필</h2>
-              {current.profileChangedSinceReport && (
-                <span className="text-xs font-semibold" style={{ color: "#B45309" }}>
-                  최신 보고서 이후 수정됐어요
-                </span>
-              )}
-            </div>
-
-            {current.interview && current.interview.messages.length > 0 && (
-              <details className="rounded-xl px-4 py-3 text-sm" style={{ background: "#F5F6F8" }}>
-                <summary className="cursor-pointer font-semibold" style={{ color: "#535768" }}>
-                  인터뷰 기록 보기 · AI가 이 대화로 프로필 초안을 채웠어요
-                </summary>
-                <div className="mt-3 flex flex-col gap-2 leading-relaxed">
-                  {current.interview.messages.map((m, i) => (
-                    <p key={i} className="m-0 whitespace-pre-wrap">
-                      <b style={{ color: m.role === "user" ? "#6161FF" : "#535768" }}>
-                        {m.role === "user" ? "나" : "인터뷰어"}
-                      </b>{" "}
-                      {m.content}
-                    </p>
-                  ))}
-                </div>
-              </details>
-            )}
-
-            <ProfileEditor value={draft} onChange={setDraft} readOnly={!user || status === "diagnosing"} />
-
-            {status === "failed" && (
-              <div className="rounded-xl p-4 text-sm" style={{ background: "#FDECEA", color: "#B42318" }}>
-                상세 진단에 실패했어요. {current.errorMessage ?? "분석이 중간에 끊겼어요."} 다시 시도해 주세요.
-              </div>
-            )}
-
-            {status === "diagnosing" ? (
-              <DiagnosingNotice />
-            ) : (
-              <div className="border-t pt-5 flex gap-3 flex-wrap items-center" style={{ borderColor: "#E6E7EA" }}>
-                {user ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={saveDraft}
-                      disabled={busy || !profileDirty}
-                      className="min-h-[48px] px-5 rounded-full text-sm font-semibold bg-white disabled:opacity-50"
-                      style={{ border: "1.5px solid #DDDFEB", color: "#535768", cursor: "pointer" }}
-                    >
-                      프로필 저장
-                    </button>
-                    <button
-                      type="button"
-                      onClick={diagnose}
-                      disabled={!canDiagnose}
-                      className="min-h-[48px] px-6 rounded-full font-bold text-sm text-white disabled:opacity-50"
-                      style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
-                    >
-                      {hasReport ? "보고서 새로 작성하기 (유료)" : "분석하기 (유료)"}
-                    </button>
-                    <span className="text-xs text-text-muted">
-                      {missing.length > 0
-                        ? "* 표시된 칸을 채우면 분석할 수 있어요"
-                        : hasReport && !canDiagnose
-                          ? "프로필을 고치면 보고서를 새로 작성할 수 있어요"
-                          : "시장·고객·경쟁·수익·재무·위험 6개 분야를 근거와 함께 진단해요"}
-                    </span>
-                  </>
-                ) : (
-                  <Link href={loginHref} className="text-sm font-semibold" style={{ color: "#6161FF" }}>
-                    로그인하면 프로필을 고치고 분석할 수 있어요 ›
-                  </Link>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* 분석 보고서 (버전별) */}
-        {hasReport && (
-          <section id="report" className="flex flex-col gap-5 scroll-mt-20">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h2 className="text-xl font-bold m-0">분석 보고서</h2>
-              {reports.length > 1 && (
-                <div className="flex gap-2 flex-wrap" role="tablist" aria-label="보고서 버전">
-                  {reports.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={r.id === selectedReportId}
-                      onClick={() => setSelectedReportId(r.id)}
-                      className="min-h-[36px] px-3 rounded-full text-xs font-semibold"
-                      style={{
-                        cursor: "pointer",
-                        border: "1px solid #DDDFEB",
-                        background: r.id === selectedReportId ? "#6161FF" : "#fff",
-                        color: r.id === selectedReportId ? "#fff" : "#535768",
-                      }}
-                    >
-                      v{r.version} · {new Date(r.createdAt).toLocaleDateString("ko-KR")}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {selectedReport ? (
-              <ReportView report={selectedReport} />
-            ) : (
-              current.latestReport && (
-                // 구조 개편 전 요약만 저장된 기록
-                <section className="bg-white border border-border rounded-3xl shadow-card p-8 flex flex-col gap-3">
-                  <div className="font-bold">
-                    {current.latestReport.decision
-                      ? DECISION_META[current.latestReport.decision].label
-                      : "판정 없음"}
-                    {current.latestReport.confidence !== undefined &&
-                      ` · 신뢰도 ${Math.round(current.latestReport.confidence * 100)}%`}
-                  </div>
-                  <p className="text-sm text-text-secondary leading-relaxed m-0">{current.latestReport.summary}</p>
-                  <div className="text-xs text-text-muted">
-                    예전에 요약만 저장된 기록이라 분야별 결과는 볼 수 없어요.
-                  </div>
-                </section>
-              )
-            )}
-          </section>
-        )}
       </main>
     </div>
   );
@@ -564,65 +457,5 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
         );
       })}
     </ol>
-  );
-}
-
-function DiagnosingNotice() {
-  return (
-    <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E6E7EA" }}>
-      <div className="font-semibold">6개 분야를 진단하고 있어요</div>
-      <p className="text-sm text-text-secondary m-0">보통 1~3분 걸려요. 지금은 이 화면을 닫지 말아주세요.</p>
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs text-center">
-        {AGENT_ORDER.map((a) => (
-          <div key={a} className="rounded-lg p-2 animate-pulse" style={{ background: "#E7ECFF", color: "#6161FF" }}>
-            {a.replace("Agent", "")}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ReportView({ report }: { report: IdeaReport }) {
-  const wf = report.response.workflow_result;
-  const orderedAgents = AGENT_ORDER.filter((k) => k in wf.agent_results);
-  return (
-    <>
-      <div
-        className="rounded-3xl p-5 flex items-center justify-between gap-4 flex-wrap"
-        style={{ background: STATUS_BG[wf.status] ?? "#F5F6F8" }}
-      >
-        <div>
-          <span className="font-semibold">
-            v{report.version} · {STATUS_TEXT[wf.status] ?? wf.status}
-          </span>
-          {report.elapsedMs && (
-            <span className="text-sm ml-3" style={{ color: "#808080" }}>
-              소요 {(report.elapsedMs / 1000).toFixed(1)}초
-            </span>
-          )}
-        </div>
-        <div className="text-xs" style={{ color: "#808080" }}>
-          {new Date(report.createdAt).toLocaleString("ko-KR")} 작성
-        </div>
-      </div>
-
-      {wf.decision_result ? (
-        <DecisionBanner result={wf.decision_result} />
-      ) : (
-        <div className="rounded-xl p-4 text-sm" style={{ background: "#FFF7EB", color: "#B45309" }}>
-          종합 판정을 내리지 못했어요. 분야별 결과만 확인할 수 있어요.
-        </div>
-      )}
-
-      <div>
-        <h3 className="text-lg font-bold mb-4 mt-0">분야별 진단</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {orderedAgents.map((agentName) => (
-            <AgentResultCard key={agentName} agentName={agentName} result={wf.agent_results[agentName]} />
-          ))}
-        </div>
-      </div>
-    </>
   );
 }
