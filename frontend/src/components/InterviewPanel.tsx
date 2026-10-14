@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { INTERVIEW_MAX_QUESTIONS, type IdeaInterview } from "@/lib/idea";
+import { useSpeechInput } from "@/lib/useSpeechInput";
 
 interface Props {
   interview: IdeaInterview;
@@ -17,6 +18,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
   const [answer, setAnswer] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const speech = useSpeechInput(setAnswer);
   // 지금까지 받은 질문 수 (마무리 인사는 질문으로 세지 않음)
   const asked = interview.messages.filter((m) => m.role === "assistant").length - (interview.done ? 1 : 0);
   const answered = interview.messages.some((m) => m.role === "user");
@@ -33,6 +35,8 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
 
   async function send(text: string) {
     if (!text.trim() || disabled) return;
+    // 듣는 중에 보내면 마이크부터 끈다 (늦게 들어온 인식 결과가 다음 입력칸에 섞이지 않게)
+    if (speech.listening) speech.stop();
     try {
       await onAnswer(text);
       setAnswer("");
@@ -122,13 +126,40 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                     send(answer);
                   }
                 }}
-                placeholder="편하게 말하듯 적어주세요 (Enter로 보내기)"
+                placeholder={speech.listening ? "듣고 있어요… 말을 마치면 마이크를 다시 눌러주세요" : "편하게 말하듯 적어주세요 (Enter로 보내기)"}
                 rows={2}
                 disabled={disabled}
                 className="w-full rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
-                style={{ border: "1.5px solid #E5E7EB" }}
+                style={{ border: `1.5px solid ${speech.listening ? "#7270FF" : "#E5E7EB"}` }}
               />
+              {speech.error && (
+                <span role="alert" className="block mt-1 text-xs" style={{ color: "#B42318" }}>
+                  {speech.error}
+                </span>
+              )}
             </label>
+            <button
+              type="button"
+              onClick={() => (speech.listening ? speech.stop() : speech.start(answer))}
+              disabled={disabled || !speech.supported}
+              aria-pressed={speech.listening}
+              aria-label={speech.listening ? "음성 입력 멈추기" : "음성으로 답하기"}
+              title={
+                speech.supported
+                  ? speech.listening
+                    ? "음성 입력 멈추기"
+                    : "음성으로 답하기"
+                  : "이 브라우저나 주소(https 아님)에서는 음성 입력을 쓸 수 없어요"
+              }
+              className={`min-h-[48px] w-12 rounded-xl flex items-center justify-center disabled:opacity-40 ${speech.listening ? "animate-pulse" : ""}`}
+              style={{
+                border: `1px solid ${speech.listening ? "#7270FF" : "#E5E7EB"}`,
+                background: speech.listening ? "#EEEEFF" : "#fff",
+                cursor: "pointer",
+              }}
+            >
+              <MicIcon active={speech.listening} />
+            </button>
             <button
               type="submit"
               disabled={disabled || !answer.trim()}
@@ -176,5 +207,15 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
         </div>
       </aside>
     </div>
+  );
+}
+
+function MicIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#7270FF" : "#4B5563"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+    </svg>
   );
 }
