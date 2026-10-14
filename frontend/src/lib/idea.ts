@@ -53,6 +53,9 @@ export interface IdeaInterview {
   done: boolean;
 }
 
+/** 백엔드 MAX_QUESTIONS와 맞춘다 — 인터뷰 시작 전·진행 중 안내에 쓴다 */
+export const INTERVIEW_MAX_QUESTIONS = 14;
+
 export const INTERVIEW_SLOTS: { key: InterviewSlot; label: string }[] = [
   { key: "idea", label: "아이디어 · 해결하려는 것" },
   { key: "customer", label: "고객 · 문제를 본 장면" },

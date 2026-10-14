@@ -14,6 +14,7 @@ import {
   type IdeaReport,
   type IdeaStatus,
   STATUS_META,
+  INTERVIEW_MAX_QUESTIONS,
   displayTitle,
   effectiveStatus,
   missingFields,
@@ -339,7 +340,9 @@ export default function IdeaDetailPage() {
             <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E5E7EB" }}>
               <div className="font-semibold">다음 단계 · 인터뷰</div>
               <p className="text-sm text-text-secondary m-0 leading-relaxed">
-                AI 인터뷰어와 대화하며 아이디어를 구체화하고, 그 내용으로 아이템 프로필을 만들어요.
+                AI 컨설턴트와 1:1로 대화하며 아이디어를 구체화하고, 그 내용으로 아이템 프로필을 만들어요.
+                <br />
+                질문은 최대 {INTERVIEW_MAX_QUESTIONS}개 내외, 10~15분 정도 걸려요. 중간에 언제든 마칠 수 있어요.
               </p>
               {user ? (
                 <div className="flex items-center gap-4 flex-wrap">

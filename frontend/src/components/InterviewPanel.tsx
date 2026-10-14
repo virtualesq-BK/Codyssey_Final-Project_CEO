@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EMPTY_COVERAGE, INTERVIEW_SLOTS, type IdeaInterview } from "@/lib/idea";
+import { INTERVIEW_MAX_QUESTIONS, type IdeaInterview } from "@/lib/idea";
 
 interface Props {
   interview: IdeaInterview;
@@ -13,15 +13,12 @@ interface Props {
   locked?: boolean;
 }
 
-const SLOT_MARK = { filled: "✓", skipped: "–", empty: "○" } as const;
-const SLOT_COLOR = { filled: "#2F2B4A", skipped: "#6B7280", empty: "#6B7280" } as const;
-
 export default function InterviewPanel({ interview, onAnswer, onFinish, busy, locked }: Props) {
   const [answer, setAnswer] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const covered = { ...EMPTY_COVERAGE, ...interview.covered };
-  const doneCount = INTERVIEW_SLOTS.filter((s) => covered[s.key] !== "empty").length;
+  // 지금까지 받은 질문 수 (마무리 인사는 질문으로 세지 않음)
+  const asked = interview.messages.filter((m) => m.role === "assistant").length - (interview.done ? 1 : 0);
   const answered = interview.messages.some((m) => m.role === "user");
   const disabled = busy || locked;
 
@@ -145,30 +142,22 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
       </section>
 
       <aside className="flex flex-col gap-4" style={{ flex: "1 1 280px", maxWidth: 360 }}>
-        <div className="bg-white border border-border rounded-lg shadow-card p-5 flex flex-col gap-2">
+        <div className="bg-white border border-border rounded-lg p-5 flex flex-col gap-2">
           <div className="flex justify-between items-baseline">
-            <b className="text-sm">지금까지 들은 것</b>
+            <b className="text-sm">진행</b>
             <span className="text-xs text-text-muted">
-              {INTERVIEW_SLOTS.length}개 중 {doneCount}개
+              질문 {Math.min(asked, INTERVIEW_MAX_QUESTIONS)} / 최대 {INTERVIEW_MAX_QUESTIONS}
             </span>
           </div>
           <div className="h-1.5 rounded-full my-1" style={{ background: "#E5E7EB" }}>
             <div
               className="h-1.5 rounded-full transition-all"
-              style={{ width: `${(doneCount / INTERVIEW_SLOTS.length) * 100}%`, background: "#2F2B4A" }}
+              style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#7270FF" }}
             />
           </div>
-          <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
-            {INTERVIEW_SLOTS.map((s) => (
-              <li key={s.key} className="flex gap-2 text-sm items-center">
-                <span className="w-4 font-bold" style={{ color: SLOT_COLOR[covered[s.key]] }} aria-hidden="true">
-                  {SLOT_MARK[covered[s.key]]}
-                </span>
-                <span style={{ color: covered[s.key] === "empty" ? "#4B5563" : "#2F2B4A" }}>{s.label}</span>
-                {covered[s.key] === "skipped" && <span className="text-xs text-text-muted">건너뜀</span>}
-              </li>
-            ))}
-          </ul>
+          <p className="text-xs m-0 leading-relaxed" style={{ color: "#6B7280" }}>
+            컨설턴트가 답을 따라가며 필요한 만큼 물어봐요. 충분히 파악하면 그 전에 끝나기도 해요.
+          </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3" style={{ border: "1px solid #E5E7EB" }}>
@@ -182,7 +171,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
             {locked ? "프로필 만드는 중…" : "인터뷰 마치고 프로필 만들기"}
           </button>
           <p className="text-xs text-text-secondary m-0 leading-relaxed">
-            덜 답해도 돼요. 답하지 않은 부분은 AI가 추정해서 채우고 'AI 추정'으로 표시해요. 만든 프로필은 직접 고칠 수 있어요.
+            언제든 마칠 수 있어요. 대화에서 나오지 않은 부분은 AI가 현실적으로 채워 넣고, 만든 프로필은 직접 고칠 수 있어요.
           </p>
         </div>
       </aside>
