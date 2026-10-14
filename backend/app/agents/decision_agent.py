@@ -186,5 +186,5 @@ class DecisionAgent(BaseAgent):
                 "3단계: 소규모 파일럿 실행",
             ],
             decision=Decision.VALIDATE_MORE,
-            confidence=0.3,
+            confidence=0.45,
         )

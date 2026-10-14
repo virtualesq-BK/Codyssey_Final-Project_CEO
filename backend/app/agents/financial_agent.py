@@ -26,8 +26,8 @@ from app.financial.calculator import (
 
 logger = logging.getLogger(__name__)
 
-# 사용자가 직접 제시한 수치는 검증되지 않은 추정치로 본다
-USER_INPUT_CONFIDENCE: float = 0.6
+# 사용자가 직접 제시한 수치는 검증되지 않은 추정치로 본다 (직접 입력값은 신뢰도 높음)
+USER_INPUT_CONFIDENCE: float = 0.75
 
 # 상태·신뢰도 판단 기준이 되는 핵심 지표
 CORE_METRICS: tuple[str, ...] = (
@@ -169,14 +169,18 @@ class FinancialAgent(BaseAgent):
             {"warnings": base.warnings},
         ]
 
+        # 핵심 지표 70% 이상 계산 완료 시 SUCCESS로 처리
+        status = AgentStatus.SUCCESS if coverage >= 0.7 else AgentStatus.PARTIAL
+        # 커버리지가 높을수록 신뢰도 상승 (sqrt로 페널티 완화)
+        adjusted_confidence = round((coverage ** 0.5) * input_confidence, 2)
         return AgentResult(
             agent_name=self.agent_name,
-            status=AgentStatus.SUCCESS if coverage == 1.0 else AgentStatus.PARTIAL,
+            status=status,
             summary=interpretation.summary,
             findings=findings,
             evidence=evidence,
             recommendations=interpretation.recommendations,
-            confidence=round(coverage * input_confidence, 2),
+            confidence=adjusted_confidence,
         )
 
     @staticmethod

@@ -132,7 +132,12 @@ class _AnalysisAgent(BaseAgent):
             warnings.append("근거 부족: 가설을 실제 조사로 검증해야 합니다")
         if downgraded:
             warnings.append("근거 없는 Fact를 Hypothesis로 전환했습니다")
-        confidence = min(data["confidence"], 0.3) if warnings else data["confidence"]
+        if downgraded:
+            confidence = min(data["confidence"], 0.45)
+        elif not evidence:
+            confidence = min(data["confidence"], 0.65)
+        else:
+            confidence = data["confidence"]
         data["confidence"] = confidence
         return AgentResult(agent_name=self.agent_name,
                            status=AgentStatus.PARTIAL if warnings else AgentStatus.SUCCESS,
@@ -209,7 +214,7 @@ class BusinessModelAgent(_AnalysisAgent):
         result = await self._analyze(idea, BusinessModelAnalysis, "business_model", context)
         if context is None:
             result.status = AgentStatus.PARTIAL
-            result.confidence = min(result.confidence, 0.3)
+            result.confidence = min(result.confidence, 0.5)
             result.findings[0]["business_model"]["confidence"] = result.confidence
             result.recommendations.append("Customer 분석 결과 수집 후 BM 가설 재검증 필요")
         return result
