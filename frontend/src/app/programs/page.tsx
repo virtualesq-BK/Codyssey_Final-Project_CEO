@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import PageHero from "@/components/PageHero";
 import type { Program } from "@/lib/programs";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
@@ -52,12 +53,9 @@ export default function ProgramsPage() {
     <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="programs" />
 
-      <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <div className="mb-8">
-          <div className="text-sm font-semibold mb-1" style={{ color: "#6B7280" }}>창업 공고 찾기</div>
-          <h1 className="text-3xl font-bold m-0">내게 맞는 공고를 찾아보세요</h1>
-          <p className="text-text-secondary mt-2 mb-0">정부·지자체 창업 지원 프로그램을 한눈에</p>
-        </div>
+      <PageHero eyebrow="창업 공고 찾기" title="내게 맞는 공고를 찾아보세요" description="정부·지자체 창업 지원 프로그램을 한눈에" />
+
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
 
         {/* 검색 바 */}
         <form onSubmit={handleSearch} className="bg-white rounded-lg shadow-card p-5 mb-6 flex gap-3 flex-wrap" style={{ border: "1px solid #E5E7EB" }}>

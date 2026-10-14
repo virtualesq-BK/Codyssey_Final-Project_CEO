@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.interview_routes import router as interview_router
+from app.api.news_routes import router as news_router
 from app.api.routes import router
 from app.core.config import settings
 from app.db.session import init_db
@@ -34,3 +35,4 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(interview_router)
+app.include_router(news_router)

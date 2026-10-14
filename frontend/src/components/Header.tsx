@@ -42,13 +42,6 @@ export default function Header({ activeNav }: HeaderProps) {
           나도사장
         </Link>
 
-        <span
-          className="text-xs px-2 py-0.5 rounded font-medium"
-          style={{ background: "#F3F4F6", color: "#4B5563" }}
-        >
-          창업자판 사람인
-        </span>
-
         <nav className="flex gap-1 flex-wrap flex-1 text-sm">
           {navItems.map((item) => (
             <Link

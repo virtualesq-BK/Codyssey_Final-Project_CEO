@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import PageHero from "@/components/PageHero";
 import NewApplicationDialog from "@/components/NewApplicationDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -89,15 +90,11 @@ export default function ApplicationsPage() {
     <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="applications" />
 
-      <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
-          <div>
-            <div className="text-sm font-semibold mb-1" style={{ color: "#6B7280" }}>
-              MY지원서
-            </div>
-            <h1 className="text-3xl font-bold m-0">내 지원서</h1>
-            <p className="text-text-secondary mt-2 mb-0">아이템 하나로 여러 지원사업에 지원할 수 있어요.</p>
-          </div>
+      <PageHero
+        eyebrow="MY지원서"
+        title="내 지원서"
+        description="아이템 하나로 여러 지원사업에 지원할 수 있어요."
+        actions={
           <button
             type="button"
             onClick={() => (user ? setDialog({}) : (window.location.href = "/login?next=/applications"))}
@@ -106,7 +103,10 @@ export default function ApplicationsPage() {
           >
             + 새 지원서
           </button>
-        </div>
+        }
+      />
+
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
 
         {notice && (
           <div role="status" className="mb-5 rounded-lg p-4 text-sm flex justify-between gap-3" style={{ background: "#fff", border: `1px solid ${line}`, color: "#4B5563" }}>
