@@ -15,7 +15,7 @@ function nextPath() {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<Mode>("login");
   const [displayName, setDisplayName] = useState("");
@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +37,26 @@ export default function LoginPage() {
         await signUp(email, password, displayName.trim());
       }
       router.push(nextPath());
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(translateFirebaseError(msg));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReset() {
+    setError(null);
+    setNotice(null);
+    if (!email.trim()) {
+      setError("위에 가입한 이메일을 먼저 입력해 주세요.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await resetPassword(email.trim());
+      // 없는 이메일이어도 보안상 같은 결과를 보여준다 (Firebase도 구분해주지 않음)
+      setNotice(`${email.trim()}로 비밀번호 재설정 메일을 보냈어요. 메일이 안 보이면 스팸함도 확인해 주세요.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(translateFirebaseError(msg));
@@ -81,7 +102,7 @@ export default function LoginPage() {
             {(["login", "signup"] as Mode[]).map((m) => (
               <button
                 key={m}
-                onClick={() => { setMode(m); setError(null); }}
+                onClick={() => { setMode(m); setError(null); setNotice(null); }}
                 className="flex-1 py-2 rounded-full text-sm font-semibold transition-all"
                 style={{
                   background: mode === m ? "#fff" : "transparent",
@@ -145,9 +166,27 @@ export default function LoginPage() {
               />
             </label>
 
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={loading}
+                className="self-end -mt-2 text-xs font-medium disabled:opacity-60"
+                style={{ background: "none", border: "none", color: "#535768", cursor: "pointer", textDecoration: "underline" }}
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+            )}
+
             {error && (
               <div className="rounded-xl p-3 text-sm" style={{ background: "#FDECEA", color: "#B42318" }}>
                 {error}
+              </div>
+            )}
+
+            {notice && (
+              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
+                {notice}
               </div>
             )}
 
@@ -204,6 +243,8 @@ function translateFirebaseError(msg: string): string {
   if (msg.includes("weak-password")) return "비밀번호는 6자 이상이어야 합니다.";
   if (msg.includes("invalid-email")) return "이메일 형식이 올바르지 않습니다.";
   if (msg.includes("popup-closed-by-user")) return "Google 로그인 창이 닫혔습니다. 다시 시도해 주세요.";
+  if (msg.includes("too-many-requests")) return "요청이 너무 많아요. 잠시 뒤 다시 시도해 주세요.";
+  if (msg.includes("missing-email")) return "이메일을 입력해 주세요.";
   if (msg.includes("network-request-failed")) return "네트워크 오류. 인터넷 연결을 확인해 주세요.";
   return msg;
 }
