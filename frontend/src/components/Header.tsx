@@ -31,11 +31,11 @@ export default function Header({ activeNav }: HeaderProps) {
         <Link
           href="/"
           className="font-bold text-xl no-underline flex items-center gap-2"
-          style={{ textDecoration: "none", color: "#333333" }}
+          style={{ textDecoration: "none", color: "#2F2B4A" }}
         >
           <span
             className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-white text-sm font-bold"
-            style={{ background: "#6161FF" }}
+            style={{ background: "#7270FF" }}
           >
             나
           </span>
@@ -44,7 +44,7 @@ export default function Header({ activeNav }: HeaderProps) {
 
         <span
           className="text-xs px-2 py-0.5 rounded font-medium"
-          style={{ background: "#E7ECFF", color: "#6161FF" }}
+          style={{ background: "#F0F0FF", color: "#7270FF" }}
         >
           창업자판 사람인
         </span>
@@ -54,11 +54,11 @@ export default function Header({ activeNav }: HeaderProps) {
             <Link
               key={item.key}
               href={item.href}
-              className="no-underline font-medium px-3 py-1.5 rounded-full transition-colors"
+              className="no-underline font-medium px-3 py-1.5 rounded-xl transition-colors"
               style={{
-                color: activeNav === item.key ? "#6161FF" : "#535768",
+                color: activeNav === item.key ? "#7270FF" : "#4B5563",
                 fontWeight: activeNav === item.key ? 700 : 500,
-                background: activeNav === item.key ? "#E7ECFF" : "transparent",
+                background: activeNav === item.key ? "#F0F0FF" : "transparent",
                 textDecoration: "none",
               }}
             >
@@ -71,13 +71,13 @@ export default function Header({ activeNav }: HeaderProps) {
           {!loading && (
             user ? (
               <>
-                <span className="text-sm font-medium" style={{ color: "#535768" }}>
+                <span className="text-sm font-medium" style={{ color: "#4B5563" }}>
                   {user.displayName ?? user.email?.split("@")[0]}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="text-xs px-3 py-1.5 rounded-full font-medium transition-colors hover:bg-surface"
-                  style={{ border: "1px solid #DDDFEB", color: "#535768", background: "#fff", cursor: "pointer" }}
+                  className="text-xs px-3 py-1.5 rounded-xl font-medium transition-colors hover:bg-surface"
+                  style={{ border: "1px solid #E5E7EB", color: "#4B5563", background: "#fff", cursor: "pointer" }}
                 >
                   로그아웃
                 </button>
@@ -85,8 +85,8 @@ export default function Header({ activeNav }: HeaderProps) {
             ) : (
               <Link
                 href="/login"
-                className="text-xs px-3 py-1.5 rounded-full font-semibold text-white no-underline"
-                style={{ background: "#6161FF", textDecoration: "none" }}
+                className="text-xs px-3 py-1.5 rounded-xl font-semibold text-white no-underline"
+                style={{ background: "#7270FF", textDecoration: "none" }}
               >
                 로그인
               </Link>

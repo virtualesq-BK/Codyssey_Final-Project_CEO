@@ -5,26 +5,26 @@ import type { DecisionResult } from "@/lib/api";
 const DECISION_CONFIG = {
   GO: {
     label: "GO · 진행 권장",
-    color: "#6161FF",
-    bg: "#E7ECFF",
+    color: "#7270FF",
+    bg: "#F0F0FF",
     desc: "근거가 충분하고 리스크가 관리 가능합니다. 다음 단계로 진행하세요.",
   },
   PIVOT: {
     label: "PIVOT · 방향 수정",
     color: "#B45309",
-    bg: "#FFF7EB",
+    bg: "#FFFBEB",
     desc: "현재 방향에 중요한 문제가 있습니다. 핵심 가정을 재검토하세요.",
   },
   VALIDATE_MORE: {
     label: "VALIDATE MORE · 추가 검증",
     color: "#B45309",
-    bg: "#FFF7EB",
+    bg: "#FFFBEB",
     desc: "잠재력은 있지만 핵심 가정을 먼저 검증해야 합니다.",
   },
   STOP: {
     label: "STOP · 중단 권장",
     color: "#B42318",
-    bg: "#FDECEA",
+    bg: "#FEF2F2",
     desc: "현재 형태로는 사업성이 낮습니다. 근본적인 재검토가 필요합니다.",
   },
 } as const;
@@ -38,7 +38,7 @@ export default function DecisionBanner({ result }: Props) {
 
   return (
     <section
-      className="rounded-3xl p-7 flex flex-col gap-5"
+      className="rounded-lg p-7 flex flex-col gap-5"
       style={{ background: cfg.bg, border: `2px solid ${cfg.color}40` }}
     >
       <div className="flex items-center justify-between flex-wrap gap-3">

@@ -29,7 +29,7 @@ import {
   updateIdea,
 } from "@/lib/ideaStore";
 
-const card = "bg-white border border-border rounded-3xl p-8 flex flex-col gap-5";
+const card = "bg-white border border-border rounded-lg p-8 flex flex-col gap-5";
 
 // 인터뷰 화면을 보여줄 상태 (프로필 만들다 실패한 경우 포함)
 function inInterview(status: IdeaStatus, failedStage: IdeaStatus | null) {
@@ -121,7 +121,7 @@ export default function IdeaDetailPage() {
 
   if (loading || !idea || !draft) {
     return (
-      <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+      <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
         <Header activeNav="ideas" />
         <main className="max-w-[1200px] mx-auto px-6 py-12">
           <section className={`${card} items-center text-center`}>
@@ -133,7 +133,7 @@ export default function IdeaDetailPage() {
                 <div className="text-text-secondary text-sm">
                   {error ?? "삭제됐거나 다른 계정·브라우저에 저장된 아이디어일 수 있어요."}
                 </div>
-                <Link href="/ideas" className="text-sm font-semibold" style={{ color: "#6161FF" }}>
+                <Link href="/ideas" className="text-sm font-semibold" style={{ color: "#7270FF" }}>
                   MY아이디어로 ›
                 </Link>
               </>
@@ -248,7 +248,7 @@ export default function IdeaDetailPage() {
 
   if (atProfile) {
     return (
-      <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+      <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
         <Header activeNav="ideas" />
         <ProfileWorkspace
           idea={current}
@@ -267,7 +267,7 @@ export default function IdeaDetailPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="ideas" />
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col gap-8">
@@ -283,7 +283,7 @@ export default function IdeaDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <StatusPill status={status} />
             {current.profile.industry && (
-              <span className="text-sm font-semibold" style={{ color: "#6161FF" }}>
+              <span className="text-sm font-semibold" style={{ color: "#7270FF" }}>
                 {current.profile.industry} · {current.profile.location}
               </span>
             )}
@@ -298,7 +298,7 @@ export default function IdeaDetailPage() {
         <StageBar status={status} failedStage={failedStage} />
 
         {error && (
-          <div className="rounded-xl p-4 text-sm" style={{ background: "#FDECEA", color: "#B42318" }}>
+          <div className="rounded-xl p-4 text-sm" style={{ background: "#FEF2F2", color: "#B42318" }}>
             {error}
           </div>
         )}
@@ -306,8 +306,8 @@ export default function IdeaDetailPage() {
         {/* 메모 */}
         {atProfile || atInterview ? (
           current.memo && (
-            <section className="bg-white border border-border rounded-3xl shadow-card px-6 py-4 text-sm">
-              <span className="font-semibold mr-2" style={{ color: "#535768" }}>
+            <section className="bg-white border border-border rounded-lg shadow-card px-6 py-4 text-sm">
+              <span className="font-semibold mr-2" style={{ color: "#4B5563" }}>
                 처음 메모
               </span>
               <span className="text-text-secondary whitespace-pre-wrap">{current.memo}</span>
@@ -321,22 +321,22 @@ export default function IdeaDetailPage() {
               onChange={(e) => setMemoDraft(e.target.value)}
               rows={4}
               aria-label="메모"
-              className="rounded-md p-4 text-sm resize-y focus:outline-none leading-relaxed"
-              style={{ border: "1.5px solid #DDDFEB" }}
+              className="rounded-lg p-4 text-sm resize-y focus:outline-none leading-relaxed"
+              style={{ border: "1.5px solid #E5E7EB" }}
             />
             <div className="flex gap-3 flex-wrap items-center">
               <button
                 type="button"
                 onClick={saveMemo}
                 disabled={busy || memoDraft.trim() === current.memo}
-                className="min-h-[44px] px-5 rounded-full text-sm font-semibold bg-white disabled:opacity-50"
-                style={{ border: "1.5px solid #DDDFEB", color: "#535768", cursor: "pointer" }}
+                className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
+                style={{ border: "1.5px solid #E5E7EB", color: "#4B5563", cursor: "pointer" }}
               >
                 메모 저장
               </button>
             </div>
 
-            <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E6E7EA" }}>
+            <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E5E7EB" }}>
               <div className="font-semibold">다음 단계 · 인터뷰</div>
               <p className="text-sm text-text-secondary m-0 leading-relaxed">
                 AI 인터뷰어와 대화하며 아이디어를 구체화하고, 그 내용으로 아이템 프로필을 만들어요.
@@ -347,8 +347,8 @@ export default function IdeaDetailPage() {
                     type="button"
                     onClick={beginInterview}
                     disabled={busy || !memoDraft.trim()}
-                    className="min-h-[48px] px-6 rounded-full font-bold text-sm text-white disabled:opacity-60"
-                    style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                    className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
+                    style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
                   >
                     {busy ? "첫 질문 준비 중…" : "인터뷰 시작"}
                   </button>
@@ -357,7 +357,7 @@ export default function IdeaDetailPage() {
                     onClick={startProfile}
                     disabled={busy || !memoDraft.trim()}
                     className="text-sm underline disabled:opacity-50"
-                    style={{ background: "none", border: "none", color: "#535768", cursor: "pointer" }}
+                    style={{ background: "none", border: "none", color: "#4B5563", cursor: "pointer" }}
                   >
                     인터뷰 없이 직접 작성
                   </button>
@@ -365,8 +365,8 @@ export default function IdeaDetailPage() {
               ) : (
                 <Link
                   href={loginHref}
-                  className="self-start min-h-[48px] px-6 rounded-full font-bold text-sm text-white no-underline inline-flex items-center"
-                  style={{ background: "#6161FF", textDecoration: "none" }}
+                  className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
+                  style={{ background: "#7270FF", textDecoration: "none" }}
                 >
                   로그인하고 인터뷰 시작
                 </Link>
@@ -381,14 +381,14 @@ export default function IdeaDetailPage() {
             {status === "failed" && (
               <div
                 className="rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
-                style={{ background: "#FDECEA", color: "#B42318" }}
+                style={{ background: "#FEF2F2", color: "#B42318" }}
               >
                 <span>프로필을 만들지 못했어요. {current.errorMessage ?? "중간에 끊겼어요."}</span>
                 <button
                   type="button"
                   onClick={makeProfile}
                   disabled={busy}
-                  className="min-h-[40px] px-4 rounded-full text-sm font-semibold bg-white"
+                  className="min-h-[40px] px-4 rounded-xl text-sm font-semibold bg-white"
                   style={{ border: "1px solid #B42318", color: "#B42318", cursor: "pointer" }}
                 >
                   다시 만들기
@@ -441,9 +441,9 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
             aria-current={active ? "step" : undefined}
             className="rounded-xl px-4 py-3 text-sm font-semibold"
             style={{
-              background: active ? "#E7ECFF" : "#fff",
-              color: active ? "#6161FF" : done ? "#0F7B6C" : "#808080",
-              border: `1px solid ${active ? "#6161FF" : "#E6E7EA"}`,
+              background: active ? "#F0F0FF" : "#fff",
+              color: active ? "#7270FF" : done ? "#2F2B4A" : "#6B7280",
+              border: `1px solid ${active ? "#7270FF" : "#E5E7EB"}`,
             }}
           >
             {done ? "✓ " : `${i + 1}. `}

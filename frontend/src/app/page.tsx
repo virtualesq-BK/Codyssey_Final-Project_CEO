@@ -11,81 +11,61 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="analyze" />
 
-      {/* Hero Section */}
-      <section
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #4B4BD9 0%, #6161FF 60%, #8181FF 100%)" }}
-      >
+      {/* Hero Section — 흰 바탕에 잉크 글자, 강조는 한 단어만 violet (레퍼런스: 차분한 도구형) */}
+      <section className="bg-white border-b" style={{ borderColor: "#E5E7EB" }}>
         <div className="max-w-[1200px] mx-auto px-6 py-20 flex flex-col items-start gap-6">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
-            style={{ background: "rgba(255,255,255,0.15)", color: "#fff" }}
+            style={{ background: "#F3F4F6", color: "#4B5563" }}
           >
-            <span
-              className="w-2 h-2 rounded-full inline-block animate-pulse"
-              style={{ background: "#5BEE9A" }}
-            />
+            <span className="w-2 h-2 rounded-full inline-block" style={{ background: "#7270FF" }} />
             AI 에이전트 6개 · 실시간 병렬 분석
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight m-0">
-            아이디어 한 줄에서<br />
-            <span style={{ color: "#DBDBFF" }}>지원서 재료까지</span>
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight m-0 tracking-tight" style={{ color: "#1C1A2C" }}>
+            아이디어 한 줄에서
+            <br />
+            <span style={{ color: "#7270FF" }}>지원서 재료</span>까지
           </h1>
 
-          <p className="text-lg text-white/70 max-w-xl m-0 leading-relaxed">
-            시장·고객·경쟁·수익모델·재무·리스크를 AI가 병렬 분석하고<br />
+          <p className="text-lg max-w-xl m-0 leading-relaxed" style={{ color: "#4B5563" }}>
+            시장·고객·경쟁·수익모델·재무·리스크를 AI가 병렬 분석하고
+            <br />
             맞춤 창업 공고와 지원서 초안까지 한번에 만들어 드립니다.
           </p>
 
           <div className="flex gap-3 flex-wrap">
             <Link
               href="/ideas"
-              className="px-6 py-3 rounded-full font-bold text-base transition-all hover:opacity-90 no-underline"
-              style={{ background: "#fff", color: "#6161FF", textDecoration: "none" }}
+              className="px-6 py-3 rounded-xl font-semibold text-base text-white transition-opacity hover:opacity-90 no-underline"
+              style={{ background: "#7270FF", textDecoration: "none" }}
             >
               아이디어 메모하기
             </Link>
             <Link
               href="/ideas"
-              className="px-6 py-3 rounded-full font-bold text-base border transition-all hover:bg-white/10 no-underline"
-              style={{ borderColor: "rgba(255,255,255,0.4)", color: "#fff", textDecoration: "none" }}
+              className="px-6 py-3 rounded-xl font-semibold text-base transition-colors no-underline bg-white"
+              style={{ border: "1px solid #E5E7EB", color: "#2F2B4A", textDecoration: "none" }}
             >
               샘플 결과 보기
             </Link>
           </div>
 
-          {/* Diagnosis labels */}
           <div className="flex gap-2 flex-wrap mt-2">
-            {[
-              { label: "GO", color: "#2ecc71" },
-              { label: "PIVOT", color: "#f39c12" },
-              { label: "VALIDATE MORE", color: "#3498db" },
-              { label: "STOP", color: "#e74c3c" },
-            ].map((d) => (
+            {["GO", "PIVOT", "VALIDATE MORE", "STOP"].map((label) => (
               <span
-                key={d.label}
-                className="px-2.5 py-1 rounded-full text-xs font-bold"
-                style={{ background: `${d.color}25`, color: d.color, border: `1px solid ${d.color}50` }}
+                key={label}
+                className="px-2.5 py-1 rounded text-xs font-semibold"
+                style={{ background: "#F3F4F6", color: "#4B5563" }}
               >
-                {d.label}
+                {label}
               </span>
             ))}
           </div>
         </div>
-
-        {/* Decorative circles */}
-        <div
-          className="absolute top-[-80px] right-[-80px] w-72 h-72 rounded-full opacity-10"
-          style={{ background: "#fff" }}
-        />
-        <div
-          className="absolute bottom-[-40px] right-[15%] w-40 h-40 rounded-full opacity-10"
-          style={{ background: "#DBDBFF" }}
-        />
       </section>
 
       {/* Process Steps */}
@@ -99,20 +79,20 @@ export default function Home() {
           {STEPS.map((s, i) => (
             <div
               key={s.step}
-              className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-3 relative"
-              style={{ border: "1px solid #E6E7EA" }}
+              className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3 relative"
+              style={{ border: "1px solid #E5E7EB" }}
             >
               {i < STEPS.length - 1 && (
                 <div
-                  className="hidden lg:block absolute top-[28px] right-[-12px] z-10 text-[#DDDFEB] font-bold"
+                  className="hidden lg:block absolute top-[28px] right-[-12px] z-10 text-[#E5E7EB] font-bold"
                   style={{ fontSize: 18 }}
                 >
                   →
                 </div>
               )}
               <span
-                className="text-xs font-bold px-2.5 py-1 rounded-full self-start"
-                style={{ background: "#E7ECFF", color: "#6161FF" }}
+                className="text-xs font-bold px-2.5 py-1 rounded self-start"
+                style={{ background: "#F0F0FF", color: "#7270FF" }}
               >
                 STEP {s.step}
               </span>
@@ -125,8 +105,8 @@ export default function Home() {
         <div className="flex justify-center mt-10">
           <Link
             href="/ideas"
-            className="px-8 py-3.5 rounded-full font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
-            style={{ background: "#6161FF", textDecoration: "none" }}
+            className="px-8 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
+            style={{ background: "#7270FF", textDecoration: "none" }}
           >
             지금 무료로 시작하기
           </Link>
@@ -134,7 +114,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-border bg-white mt-16">
-        <div className="max-w-[1200px] mx-auto px-6 py-6 text-xs" style={{ color: "#808080" }}>
+        <div className="max-w-[1200px] mx-auto px-6 py-6 text-xs" style={{ color: "#6B7280" }}>
           나도사장 · AI 분석 결과는 의사결정 지원 목적이며 사업 성공을 보장하지 않습니다.
         </div>
       </footer>

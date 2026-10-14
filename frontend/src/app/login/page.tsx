@@ -80,33 +80,33 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#F5F6F8" }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#F3F4F6" }}>
       <div className="w-full max-w-md px-4">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 no-underline" style={{ textDecoration: "none" }}>
             <span
               className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-white text-lg font-bold"
-              style={{ background: "#6161FF" }}
+              style={{ background: "#7270FF" }}
             >
               나
             </span>
-            <span className="text-2xl font-bold" style={{ color: "#333333" }}>나도사장</span>
+            <span className="text-2xl font-bold" style={{ color: "#2F2B4A" }}>나도사장</span>
           </Link>
-          <p className="text-sm mt-2" style={{ color: "#808080" }}>AI 창업 사업성 진단 서비스</p>
+          <p className="text-sm mt-2" style={{ color: "#6B7280" }}>AI 창업 사업성 진단 서비스</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-card p-8" style={{ border: "1px solid #E6E7EA" }}>
+        <div className="bg-white rounded-lg shadow-card p-8" style={{ border: "1px solid #E5E7EB" }}>
           {/* 탭 */}
-          <div className="flex rounded-full p-1 mb-6" style={{ background: "#F5F6F8" }}>
+          <div className="flex rounded-xl p-1 mb-6" style={{ background: "#F3F4F6" }}>
             {(["login", "signup"] as Mode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(null); setNotice(null); }}
-                className="flex-1 py-2 rounded-full text-sm font-semibold transition-all"
+                className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
                 style={{
                   background: mode === m ? "#fff" : "transparent",
-                  color: mode === m ? "#333333" : "#808080",
+                  color: mode === m ? "#2F2B4A" : "#6B7280",
                   border: "none",
                   cursor: "pointer",
                   boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
@@ -127,10 +127,10 @@ export default function LoginPage() {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="홍길동"
-                  className="h-12 rounded-md px-4 font-normal text-sm focus:outline-none"
-                  style={{ border: "1.5px solid #DDDFEB" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#6161FF")}
-                  onBlur={(e) => (e.target.style.borderColor = "#DDDFEB")}
+                  className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
+                  style={{ border: "1.5px solid #E5E7EB" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#7270FF")}
+                  onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                 />
               </label>
             )}
@@ -143,10 +143,10 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="h-12 rounded-md px-4 font-normal text-sm focus:outline-none"
-                style={{ border: "1.5px solid #DDDFEB" }}
-                onFocus={(e) => (e.target.style.borderColor = "#6161FF")}
-                onBlur={(e) => (e.target.style.borderColor = "#DDDFEB")}
+                className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
+                style={{ border: "1.5px solid #E5E7EB" }}
+                onFocus={(e) => (e.target.style.borderColor = "#7270FF")}
+                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
             </label>
 
@@ -159,10 +159,10 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === "signup" ? "6자 이상" : "비밀번호"}
                 minLength={mode === "signup" ? 6 : undefined}
-                className="h-12 rounded-md px-4 font-normal text-sm focus:outline-none"
-                style={{ border: "1.5px solid #DDDFEB" }}
-                onFocus={(e) => (e.target.style.borderColor = "#6161FF")}
-                onBlur={(e) => (e.target.style.borderColor = "#DDDFEB")}
+                className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
+                style={{ border: "1.5px solid #E5E7EB" }}
+                onFocus={(e) => (e.target.style.borderColor = "#7270FF")}
+                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
             </label>
 
@@ -172,20 +172,20 @@ export default function LoginPage() {
                 onClick={handleReset}
                 disabled={loading}
                 className="self-end -mt-2 text-xs font-medium disabled:opacity-60"
-                style={{ background: "none", border: "none", color: "#535768", cursor: "pointer", textDecoration: "underline" }}
+                style={{ background: "none", border: "none", color: "#4B5563", cursor: "pointer", textDecoration: "underline" }}
               >
                 비밀번호를 잊으셨나요?
               </button>
             )}
 
             {error && (
-              <div className="rounded-xl p-3 text-sm" style={{ background: "#FDECEA", color: "#B42318" }}>
+              <div className="rounded-xl p-3 text-sm" style={{ background: "#FEF2F2", color: "#B42318" }}>
                 {error}
               </div>
             )}
 
             {notice && (
-              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
+              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
                 {notice}
               </div>
             )}
@@ -193,31 +193,31 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="h-12 rounded-full font-bold text-sm text-white transition-opacity disabled:opacity-60"
-              style={{ background: "#6161FF", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+              className="h-12 rounded-xl font-bold text-sm text-white transition-opacity disabled:opacity-60"
+              style={{ background: "#7270FF", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
             >
               {loading ? "처리 중…" : mode === "login" ? "로그인" : "회원가입"}
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px" style={{ background: "#E6E7EA" }} />
-            <span className="text-xs" style={{ color: "#808080" }}>또는</span>
-            <div className="flex-1 h-px" style={{ background: "#E6E7EA" }} />
+            <div className="flex-1 h-px" style={{ background: "#E5E7EB" }} />
+            <span className="text-xs" style={{ color: "#6B7280" }}>또는</span>
+            <div className="flex-1 h-px" style={{ background: "#E5E7EB" }} />
           </div>
 
           <button
             onClick={handleGoogle}
             disabled={loading}
-            className="w-full h-12 rounded-full font-semibold text-sm flex items-center justify-center gap-3 transition-colors disabled:opacity-60"
-            style={{ border: "1.5px solid #DDDFEB", background: "#fff", cursor: loading ? "not-allowed" : "pointer", color: "#333333" }}
+            className="w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-3 transition-colors disabled:opacity-60"
+            style={{ border: "1.5px solid #E5E7EB", background: "#fff", cursor: loading ? "not-allowed" : "pointer", color: "#2F2B4A" }}
           >
             <GoogleIcon />
             Google로 계속하기
           </button>
         </div>
 
-        <p className="text-center text-xs mt-4" style={{ color: "#808080" }}>
+        <p className="text-center text-xs mt-4" style={{ color: "#6B7280" }}>
           로그인하면 AI 분석 결과가 클라우드에 저장됩니다.
         </p>
       </div>

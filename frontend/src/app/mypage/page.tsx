@@ -22,7 +22,7 @@ const DECISION_LABEL: Record<string, string> = {
   GO: "GO", PIVOT: "PIVOT", VALIDATE_MORE: "VALIDATE MORE", STOP: "STOP",
 };
 const DECISION_COLOR: Record<string, string> = {
-  GO: "#1A7A4A", PIVOT: "#856404", VALIDATE_MORE: "#6161FF", STOP: "#B42318",
+  GO: "#1A7A4A", PIVOT: "#856404", VALIDATE_MORE: "#7270FF", STOP: "#B42318",
 };
 
 export default function MyPage() {
@@ -72,18 +72,18 @@ export default function MyPage() {
   const avatarLetter = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="mypage" />
 
       <div className="max-w-[1200px] mx-auto px-6 py-10">
         {/* 프로필 */}
         <div
-          className="bg-white rounded-3xl shadow-card p-6 mb-8 flex items-center gap-5 flex-wrap"
-          style={{ border: "1px solid #E6E7EA" }}
+          className="bg-white rounded-lg shadow-card p-6 mb-8 flex items-center gap-5 flex-wrap"
+          style={{ border: "1px solid #E5E7EB" }}
         >
           <div
-            className="w-16 h-16 rounded-3xl flex items-center justify-center text-2xl font-bold text-white shrink-0"
-            style={{ background: "linear-gradient(135deg, #4B4BD9, #6161FF)" }}
+            className="w-16 h-16 rounded-lg flex items-center justify-center text-2xl font-bold text-white shrink-0"
+            style={{ background: "#7270FF" }}
           >
             {avatarLetter}
           </div>
@@ -96,11 +96,11 @@ export default function MyPage() {
           </div>
           {!user && (
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-xs" style={{ color: "#808080" }}>로그인하면 분석 결과가 클라우드에 저장됩니다</span>
+              <span className="text-xs" style={{ color: "#6B7280" }}>로그인하면 분석 결과가 클라우드에 저장됩니다</span>
               <button
                 onClick={() => router.push("/login")}
-                className="px-4 py-2 rounded-full text-sm font-semibold text-white"
-                style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
               >
                 로그인
               </button>
@@ -109,7 +109,7 @@ export default function MyPage() {
           {user && (
             <div
               className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium"
-              style={{ background: "#E7ECFF", color: "#6161FF" }}
+              style={{ background: "#F0F0FF", color: "#7270FF" }}
             >
               클라우드 저장 활성
             </div>
@@ -135,13 +135,13 @@ export default function MyPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-1"
-              style={{ border: "1px solid #E6E7EA" }}
+              className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-1"
+              style={{ border: "1px solid #E5E7EB" }}
             >
               <div className="text-xs text-text-muted">{stat.label}</div>
               <div
                 className="text-2xl font-bold"
-                style={{ color: stat.color ?? "#333333" }}
+                style={{ color: stat.color ?? "#2F2B4A" }}
               >
                 {stat.value}
               </div>
@@ -151,13 +151,13 @@ export default function MyPage() {
         </div>
 
         {/* 최근 아이디어 */}
-        <div className="bg-white rounded-3xl shadow-card p-6 mb-6" style={{ border: "1px solid #E6E7EA" }}>
+        <div className="bg-white rounded-lg shadow-card p-6 mb-6" style={{ border: "1px solid #E5E7EB" }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold m-0">최근 분석 아이디어</h2>
             <Link
               href="/ideas"
               className="text-sm font-semibold no-underline"
-              style={{ color: "#6161FF", textDecoration: "none" }}
+              style={{ color: "#7270FF", textDecoration: "none" }}
             >
               전체 보기 →
             </Link>
@@ -167,7 +167,7 @@ export default function MyPage() {
           ) : ideas.length === 0 ? (
             <div className="text-center py-8 text-text-muted text-sm">
               아직 분석한 아이디어가 없습니다.{" "}
-              <Link href="/ideas" style={{ color: "#6161FF" }}>지금 시작하기 →</Link>
+              <Link href="/ideas" style={{ color: "#7270FF" }}>지금 시작하기 →</Link>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -176,14 +176,14 @@ export default function MyPage() {
                   key={idea.id}
                   href={`/ideas/${idea.id}`}
                   className="flex items-center justify-between gap-3 py-3 no-underline text-text"
-                  style={{ borderBottom: "1px solid #F5F6F8", textDecoration: "none" }}
+                  style={{ borderBottom: "1px solid #F3F4F6", textDecoration: "none" }}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span
-                      className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
+                      className="text-xs font-bold px-2 py-0.5 rounded shrink-0"
                       style={{
-                        background: `${DECISION_COLOR[idea.decision] ?? "#808080"}18`,
-                        color: DECISION_COLOR[idea.decision] ?? "#808080",
+                        background: `${DECISION_COLOR[idea.decision] ?? "#6B7280"}18`,
+                        color: DECISION_COLOR[idea.decision] ?? "#6B7280",
                       }}
                     >
                       {DECISION_LABEL[idea.decision] ?? idea.decision}
@@ -210,8 +210,8 @@ export default function MyPage() {
             <Link
               key={m.href}
               href={m.href}
-              className="bg-white rounded-3xl shadow-card p-5 flex items-center gap-4 no-underline hover:shadow-sm transition-shadow"
-              style={{ border: "1px solid #E6E7EA", textDecoration: "none" }}
+              className="bg-white rounded-lg shadow-card p-5 flex items-center gap-4 no-underline hover:shadow-sm transition-shadow"
+              style={{ border: "1px solid #E5E7EB", textDecoration: "none" }}
             >
               <span className="text-2xl">{m.icon}</span>
               <div>

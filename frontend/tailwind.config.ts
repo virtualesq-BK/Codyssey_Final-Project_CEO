@@ -9,30 +9,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#6161FF",
-        "primary-dark": "#4B4BD9",
-        "primary-light": "#E7ECFF",
-        surface: "#F5F6F8",
-        border: "#DDDFEB",
-        "border-light": "#CACBCD",
-        text: "#333333",
-        "text-secondary": "#535768",
-        "text-muted": "#535768",
-        "text-disabled": "#808080",
+        primary: "#7270FF",
+        "primary-dark": "#5B59E0",
+        "primary-light": "#F0F0FF",
+        surface: "#F3F4F6",
+        border: "#E5E7EB",
+        "border-light": "#D9DBDA",
+        text: "#2F2B4A",
+        "text-secondary": "#4B5563",
+        "text-muted": "#4B5563",
+        "text-disabled": "#6B7280",
         amber: "#B45309",
         "amber-bg": "#FFF7EB",
         "amber-border": "#F1D3A3",
         danger: "#B42318",
         "danger-bg": "#FDECEA",
       },
-      // 카드용 옅은 라벤더 그림자 (레퍼런스: 무거운 그림자 금지)
+      // 레퍼런스(Lottielab): 그림자 대신 1px 테두리와 바탕색 단계로 층을 나눈다
       boxShadow: {
-        card: "0 2px 48px rgba(205, 208, 223, 0.4)",
-        "card-hover": "0 5px 45px rgba(0, 0, 0, 0.12)",
+        card: "none",
+        "card-hover": "none",
       },
       fontFamily: {
-        // 영문·숫자는 Poppins, 한글은 IBM Plex Sans KR로 자동 대체
-        sans: ["Poppins", "IBM Plex Sans KR", "sans-serif"],
+        // 영문·숫자는 Plus Jakarta Sans, 한글은 IBM Plex Sans KR로 자동 대체
+        sans: ["Plus Jakarta Sans", "IBM Plex Sans KR", "sans-serif"],
       },
     },
   },

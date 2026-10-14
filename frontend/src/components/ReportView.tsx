@@ -12,20 +12,20 @@ export default function ReportView({ report }: { report: IdeaReport }) {
   return (
     <div className="flex flex-col gap-5">
       <div
-        className="rounded-3xl p-5 flex items-center justify-between gap-4 flex-wrap"
-        style={{ background: STATUS_BG[wf.status] ?? "#F5F6F8" }}
+        className="rounded-lg p-5 flex items-center justify-between gap-4 flex-wrap"
+        style={{ background: STATUS_BG[wf.status] ?? "#F3F4F6" }}
       >
         <div>
           <span className="font-semibold">
             v{report.version} · {STATUS_TEXT[wf.status] ?? wf.status}
           </span>
           {report.elapsedMs && (
-            <span className="text-sm ml-3" style={{ color: "#808080" }}>
+            <span className="text-sm ml-3" style={{ color: "#6B7280" }}>
               소요 {(report.elapsedMs / 1000).toFixed(1)}초
             </span>
           )}
         </div>
-        <div className="text-xs" style={{ color: "#808080" }}>
+        <div className="text-xs" style={{ color: "#6B7280" }}>
           {new Date(report.createdAt).toLocaleString("ko-KR")} 작성
         </div>
       </div>
@@ -33,7 +33,7 @@ export default function ReportView({ report }: { report: IdeaReport }) {
       {wf.decision_result ? (
         <DecisionBanner result={wf.decision_result} />
       ) : (
-        <div className="rounded-xl p-4 text-sm" style={{ background: "#FFF7EB", color: "#B45309" }}>
+        <div className="rounded-xl p-4 text-sm" style={{ background: "#FFFBEB", color: "#B45309" }}>
           종합 판정을 내리지 못했어요. 분야별 결과만 확인할 수 있어요.
         </div>
       )}

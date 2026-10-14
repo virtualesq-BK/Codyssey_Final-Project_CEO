@@ -99,21 +99,21 @@ export interface IdeaReport {
   createdAt: string;
 }
 
-// 상태 배지는 파스텔 배경 + 같은 계열의 진한 글자 (레퍼런스: 파스텔은 배경에만)
+// 상태 배지: 색조는 violet 하나만 쓰고 진하기로 단계를 나눈다 (레퍼런스: 다른 색조 금지)
 export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg: string }> = {
-  memo: { label: "메모", color: "#535768", bg: "#F5F6F8" },
-  interviewing: { label: "인터뷰 중", color: "#6B3FA0", bg: "#EDDFF7" },
-  profiling: { label: "프로필 만드는 중", color: "#0B6377", bg: "#D1FAFF" },
-  profile: { label: "프로필", color: "#4B4BD9", bg: "#DBDBFF" },
-  diagnosing: { label: "진단 중", color: "#0B6377", bg: "#D1FAFF" },
-  report: { label: "보고서", color: "#2A5C4E", bg: "#BCFE90" },
-  failed: { label: "실패", color: "#B42318", bg: "#FCD0F8" },
+  memo: { label: "메모", color: "#4B5563", bg: "#F3F4F6" },
+  interviewing: { label: "인터뷰 중", color: "#5B59E0", bg: "#F0F0FF" },
+  profiling: { label: "프로필 만드는 중", color: "#5B59E0", bg: "#F0F0FF" },
+  profile: { label: "프로필", color: "#5B59E0", bg: "#E6E6FF" },
+  diagnosing: { label: "진단 중", color: "#5B59E0", bg: "#F0F0FF" },
+  report: { label: "보고서", color: "#FFFFFF", bg: "#2F2B4A" },
+  failed: { label: "실패", color: "#B42318", bg: "#FEF2F2" },
 };
 
 export const DECISION_META: Record<Decision, { label: string; color: string }> = {
   GO: { label: "GO", color: "#1A7A4A" },
   PIVOT: { label: "PIVOT", color: "#856404" },
-  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#6161FF" },
+  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#7270FF" },
   STOP: { label: "STOP", color: "#B42318" },
 };
 

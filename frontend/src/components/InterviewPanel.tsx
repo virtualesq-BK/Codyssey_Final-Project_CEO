@@ -14,7 +14,7 @@ interface Props {
 }
 
 const SLOT_MARK = { filled: "✓", skipped: "–", empty: "○" } as const;
-const SLOT_COLOR = { filled: "#0F7B6C", skipped: "#808080", empty: "#808080" } as const;
+const SLOT_COLOR = { filled: "#2F2B4A", skipped: "#6B7280", empty: "#6B7280" } as const;
 
 export default function InterviewPanel({ interview, onAnswer, onFinish, busy, locked }: Props) {
   const [answer, setAnswer] = useState("");
@@ -47,11 +47,11 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
   return (
     <div className="flex gap-5 flex-wrap items-start">
       <section
-        className="bg-white border border-border rounded-3xl shadow-card flex flex-col min-w-0"
+        className="bg-white border border-border rounded-lg shadow-card flex flex-col min-w-0"
         style={{ flex: "999 1 520px" }}
         aria-label="딥 인터뷰 대화"
       >
-        <div className="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: "#E6E7EA" }}>
+        <div className="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: "#E5E7EB" }}>
           <b>딥 인터뷰</b>
           <span className="text-xs text-text-muted">답할 때마다 저장돼요 · 나중에 이어서 할 수 있어요</span>
         </div>
@@ -60,12 +60,12 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
           {interview.messages.map((m, i) =>
             m.role === "assistant" ? (
               <div key={i} className="self-start max-w-[80%]">
-                <div className="text-xs mb-1" style={{ color: "#535768" }}>
+                <div className="text-xs mb-1" style={{ color: "#4B5563" }}>
                   나도사장 인터뷰어
                 </div>
                 <div
                   className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
-                  style={{ background: "#F5F6F8", border: "1px solid #E6E7EA", borderRadius: "4px 16px 16px 16px" }}
+                  style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: "4px 16px 16px 16px" }}
                 >
                   {m.content}
                 </div>
@@ -74,14 +74,14 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               <div
                 key={i}
                 className="self-end max-w-[80%] px-4 py-3 text-sm leading-relaxed text-white whitespace-pre-wrap"
-                style={{ background: "#6161FF", borderRadius: "16px 4px 16px 16px" }}
+                style={{ background: "#7270FF", borderRadius: "16px 4px 16px 16px" }}
               >
                 {m.content}
               </div>
             ),
           )}
           {busy && !locked && (
-            <div className="self-start text-xs animate-pulse" style={{ color: "#535768" }}>
+            <div className="self-start text-xs animate-pulse" style={{ color: "#4B5563" }}>
               인터뷰어가 다음 질문을 고르는 중…
             </div>
           )}
@@ -93,7 +93,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                   type="button"
                   onClick={() => send(q)}
                   className="min-h-[36px] px-3 rounded-full text-xs bg-white"
-                  style={{ border: "1px solid #CACBCD", color: "#333333", cursor: "pointer" }}
+                  style={{ border: "1px solid #D9DBDA", color: "#2F2B4A", cursor: "pointer" }}
                 >
                   {q}
                 </button>
@@ -110,7 +110,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               send(answer);
             }}
             className="px-6 py-4 border-t flex gap-3 items-end"
-            style={{ borderColor: "#E6E7EA" }}
+            style={{ borderColor: "#E5E7EB" }}
           >
             <label className="flex-1 text-sm">
               <span className="sr-only">답변 입력</span>
@@ -128,15 +128,15 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                 placeholder="편하게 말하듯 적어주세요 (Enter로 보내기)"
                 rows={2}
                 disabled={disabled}
-                className="w-full rounded-md p-3 text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
-                style={{ border: "1.5px solid #DDDFEB" }}
+                className="w-full rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
+                style={{ border: "1.5px solid #E5E7EB" }}
               />
             </label>
             <button
               type="submit"
               disabled={disabled || !answer.trim()}
-              className="min-h-[48px] px-5 rounded-full text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+              className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
             >
               보내기
             </button>
@@ -145,17 +145,17 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
       </section>
 
       <aside className="flex flex-col gap-4" style={{ flex: "1 1 280px", maxWidth: 360 }}>
-        <div className="bg-white border border-border rounded-3xl shadow-card p-5 flex flex-col gap-2">
+        <div className="bg-white border border-border rounded-lg shadow-card p-5 flex flex-col gap-2">
           <div className="flex justify-between items-baseline">
             <b className="text-sm">지금까지 들은 것</b>
             <span className="text-xs text-text-muted">
               {INTERVIEW_SLOTS.length}개 중 {doneCount}개
             </span>
           </div>
-          <div className="h-1.5 rounded-full my-1" style={{ background: "#E6E7EA" }}>
+          <div className="h-1.5 rounded-full my-1" style={{ background: "#E5E7EB" }}>
             <div
               className="h-1.5 rounded-full transition-all"
-              style={{ width: `${(doneCount / INTERVIEW_SLOTS.length) * 100}%`, background: "#6161FF" }}
+              style={{ width: `${(doneCount / INTERVIEW_SLOTS.length) * 100}%`, background: "#7270FF" }}
             />
           </div>
           <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
@@ -164,20 +164,20 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                 <span className="w-4 font-bold" style={{ color: SLOT_COLOR[covered[s.key]] }} aria-hidden="true">
                   {SLOT_MARK[covered[s.key]]}
                 </span>
-                <span style={{ color: covered[s.key] === "empty" ? "#535768" : "#333333" }}>{s.label}</span>
+                <span style={{ color: covered[s.key] === "empty" ? "#4B5563" : "#2F2B4A" }}>{s.label}</span>
                 {covered[s.key] === "skipped" && <span className="text-xs text-text-muted">건너뜀</span>}
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-3" style={{ border: "2px solid #6161FF" }}>
+        <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3" style={{ border: "2px solid #7270FF" }}>
           <button
             type="button"
             onClick={onFinish}
             disabled={disabled || !answered}
-            className="min-h-[52px] rounded-full text-base font-bold text-white disabled:opacity-50"
-            style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+            className="min-h-[52px] rounded-xl text-base font-bold text-white disabled:opacity-50"
+            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
           >
             {locked ? "프로필 만드는 중…" : "인터뷰 마치고 프로필 만들기"}
           </button>

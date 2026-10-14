@@ -43,10 +43,10 @@ interface Props {
   onDiagnose: () => void;
 }
 
-const ink = "#333333";
-const slate = "#535768";
-const iron = "#808080";
-const line = "#E6E7EA";
+const ink = "#2F2B4A";
+const slate = "#4B5563";
+const iron = "#6B7280";
+const line = "#E5E7EB";
 
 export default function ProfileWorkspace(props: Props) {
   const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose } = props;
@@ -111,18 +111,18 @@ export default function ProfileWorkspace(props: Props) {
 
   const renderSection = (s: Section, sectionLocked: boolean) => (
     <div key={s.no} className="py-4" aria-hidden={sectionLocked || undefined}>
-      <div className="flex items-baseline justify-between gap-3 flex-wrap pb-3" style={{ borderBottom: `2px solid ${sectionLocked ? "#CACBCD" : ink}` }}>
+      <div className="flex items-baseline justify-between gap-3 flex-wrap pb-3" style={{ borderBottom: `2px solid ${sectionLocked ? "#D9DBDA" : ink}` }}>
         <h2 className="text-base font-bold m-0 flex items-center gap-1.5" style={{ color: sectionLocked ? iron : ink }}>
           {s.no} · {s.title}
           {s.fromReport && (
-            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#F5F6F8", color: iron }}>
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: iron }}>
               유료
             </span>
           )}
         </h2>
         <div className="flex items-center gap-2">
           {s.badge && (
-            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
               {s.badge}
             </span>
           )}
@@ -162,8 +162,8 @@ export default function ProfileWorkspace(props: Props) {
                       value={editValue || "전국"}
                       onChange={(e) => setEditValue(e.target.value)}
                       aria-label={r.label}
-                      className="h-10 rounded-md px-3 text-sm bg-white focus:outline-none self-start"
-                      style={{ border: "1.5px solid #6161FF" }}
+                      className="h-10 rounded-lg px-3 text-sm bg-white focus:outline-none self-start"
+                      style={{ border: "1.5px solid #7270FF" }}
                     >
                       {REGIONS.map((x) => (
                         <option key={x}>{x}</option>
@@ -177,8 +177,8 @@ export default function ProfileWorkspace(props: Props) {
                     aria-label={r.label}
                     placeholder={r.hint}
                     rows={Math.min(10, Math.max(3, editValue.split("\n").length + 1, Math.ceil(editValue.length / 45)))}
-                    className="rounded-md p-3 text-sm resize-y focus:outline-none leading-relaxed"
-                    style={{ border: "1.5px solid #6161FF" }}
+                    className="rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed"
+                    style={{ border: "1.5px solid #7270FF" }}
                   />
                   )}
                   <div className="flex gap-2">
@@ -186,16 +186,16 @@ export default function ProfileWorkspace(props: Props) {
                       type="button"
                       onClick={() => save(r)}
                       disabled={busy}
-                      className="min-h-[36px] px-4 rounded-full text-xs font-bold text-white disabled:opacity-50"
-                      style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                      className="min-h-[36px] px-4 rounded-xl text-xs font-bold text-white disabled:opacity-50"
+                      style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
                     >
                       저장
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditing(null)}
-                      className="min-h-[36px] px-4 rounded-full text-xs font-semibold bg-white"
-                      style={{ border: "1px solid #DDDFEB", color: slate, cursor: "pointer" }}
+                      className="min-h-[36px] px-4 rounded-xl text-xs font-semibold bg-white"
+                      style={{ border: "1px solid #E5E7EB", color: slate, cursor: "pointer" }}
                     >
                       취소
                     </button>
@@ -217,8 +217,8 @@ export default function ProfileWorkspace(props: Props) {
                 <button
                   type="button"
                   onClick={() => startEdit(r)}
-                  className="min-h-[36px] px-3 rounded-full text-xs font-semibold bg-white"
-                  style={{ border: "1px solid #DDDFEB", color: ink, cursor: "pointer" }}
+                  className="min-h-[36px] px-3 rounded-xl text-xs font-semibold bg-white"
+                  style={{ border: "1px solid #E5E7EB", color: ink, cursor: "pointer" }}
                 >
                   {empty ? "입력" : "수정"}
                 </button>
@@ -235,7 +235,7 @@ export default function ProfileWorkspace(props: Props) {
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8 grid gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[220px_minmax(0,1fr)_320px] items-start">
       {/* ── 왼쪽: 내 아이디어 ── */}
-      <aside className="hidden xl:flex flex-col gap-2 bg-white rounded-3xl shadow-card p-4" style={{ border: `1px solid ${line}` }}>
+      <aside className="hidden xl:flex flex-col gap-2 bg-white rounded-lg shadow-card p-4" style={{ border: `1px solid ${line}` }}>
         <div className="text-xs px-2 pb-1" style={{ color: iron }}>
           내 아이디어
         </div>
@@ -245,8 +245,8 @@ export default function ProfileWorkspace(props: Props) {
             <Link
               key={i.id}
               href={`/ideas/${i.id}`}
-              className="rounded-2xl px-3 py-3 no-underline flex flex-col gap-1.5"
-              style={{ background: active ? "#E7ECFF" : "transparent", textDecoration: "none", color: ink }}
+              className="rounded-lg px-3 py-3 no-underline flex flex-col gap-1.5"
+              style={{ background: active ? "#F0F0FF" : "transparent", textDecoration: "none", color: ink }}
             >
               <span className="text-sm font-semibold leading-snug line-clamp-2">{displayTitle(i)}</span>
               <span className="self-start">
@@ -257,8 +257,8 @@ export default function ProfileWorkspace(props: Props) {
         })}
         <Link
           href="/ideas"
-          className="mt-2 rounded-2xl py-3 text-center text-sm font-semibold no-underline"
-          style={{ border: "1.5px dashed #6161FF", color: "#6161FF", textDecoration: "none" }}
+          className="mt-2 rounded-lg py-3 text-center text-sm font-semibold no-underline"
+          style={{ border: "1.5px dashed #7270FF", color: "#7270FF", textDecoration: "none" }}
         >
           + 새 아이디어
         </Link>
@@ -282,7 +282,7 @@ export default function ProfileWorkspace(props: Props) {
                 onClick={onDiagnose}
                 disabled={!canDiagnose}
                 title={!canDiagnose && missingCount > 0 ? "필수 항목을 채우면 분석할 수 있어요" : undefined}
-                className="min-h-[44px] px-5 rounded-full text-sm font-semibold bg-white disabled:opacity-50"
+                className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
                 style={{ border: `1px solid ${slate}`, color: ink, cursor: "pointer" }}
               >
                 {diagnoseLabel}
@@ -290,8 +290,8 @@ export default function ProfileWorkspace(props: Props) {
             )}
             <Link
               href="/programs"
-              className="min-h-[44px] px-5 rounded-full text-sm font-bold text-white no-underline inline-flex items-center"
-              style={{ background: "#6161FF", textDecoration: "none" }}
+              className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white no-underline inline-flex items-center"
+              style={{ background: "#7270FF", textDecoration: "none" }}
             >
               이 아이템으로 공고 찾기
             </Link>
@@ -317,8 +317,8 @@ export default function ProfileWorkspace(props: Props) {
               style={{
                 background: "none",
                 border: "none",
-                borderBottom: `2px solid ${tab === key ? "#6161FF" : "transparent"}`,
-                color: tab === key ? "#6161FF" : slate,
+                borderBottom: `2px solid ${tab === key ? "#7270FF" : "transparent"}`,
+                color: tab === key ? "#7270FF" : slate,
                 cursor: "pointer",
               }}
             >
@@ -329,13 +329,13 @@ export default function ProfileWorkspace(props: Props) {
         </div>
 
         {error && (
-          <div className="rounded-xl p-4 text-sm" style={{ background: "#FDECEA", color: "#B42318" }}>
+          <div className="rounded-xl p-4 text-sm" style={{ background: "#FEF2F2", color: "#B42318" }}>
             {error}
           </div>
         )}
 
         {tab === "overview" && (
-          <section id="profile" className="bg-white rounded-3xl shadow-card px-6 py-4 scroll-mt-20" style={{ border: `1px solid ${line}` }}>
+          <section id="profile" className="bg-white rounded-lg shadow-card px-6 py-4 scroll-mt-20" style={{ border: `1px solid ${line}` }}>
             {sections.filter((s) => !s.fromReport).map((s) => renderSection(s, false))}
 
             {/* 상세분석(유료) 섹션 — 분석 전엔 흐리게 가리고 잠근다 */}
@@ -344,10 +344,10 @@ export default function ProfileWorkspace(props: Props) {
               {locked && (
                 <div className="absolute inset-0 flex items-start justify-center pt-24">
                   <div
-                    className="bg-white rounded-3xl p-6 max-w-[360px] w-full flex flex-col items-center gap-3 text-center"
-                    style={{ border: "1px solid #DDDFEB", boxShadow: "0 5px 45px rgba(0,0,0,0.12)" }}
+                    className="bg-white rounded-lg p-6 max-w-[360px] w-full flex flex-col items-center gap-3 text-center"
+                    style={{ border: "1px solid #E5E7EB" }}
                   >
-                    <span className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#E7ECFF" }}>
+                    <span className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#F0F0FF" }}>
                       <LockIcon />
                     </span>
                     <b className="text-base" style={{ color: ink }}>
@@ -361,8 +361,8 @@ export default function ProfileWorkspace(props: Props) {
                         type="button"
                         onClick={onDiagnose}
                         disabled={!canDiagnose}
-                        className="min-h-[44px] px-6 rounded-full text-sm font-bold text-white disabled:opacity-50"
-                        style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                        className="min-h-[44px] px-6 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                        style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
                       >
                         상세분석하기 (유료)
                       </button>
@@ -389,11 +389,11 @@ export default function ProfileWorkspace(props: Props) {
                     key={r.id}
                     type="button"
                     onClick={() => setSelectedReportId(r.id)}
-                    className="min-h-[36px] px-3 rounded-full text-xs font-semibold"
+                    className="min-h-[36px] px-3 rounded-xl text-xs font-semibold"
                     style={{
                       cursor: "pointer",
-                      border: "1px solid #DDDFEB",
-                      background: r.id === selectedReport?.id ? "#6161FF" : "#fff",
+                      border: "1px solid #E5E7EB",
+                      background: r.id === selectedReport?.id ? "#7270FF" : "#fff",
                       color: r.id === selectedReport?.id ? "#fff" : slate,
                     }}
                   >
@@ -405,7 +405,7 @@ export default function ProfileWorkspace(props: Props) {
             {selectedReport ? (
               <ReportView report={selectedReport} />
             ) : idea.latestReport ? (
-              <div className="bg-white rounded-3xl shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
+              <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
                 <div className="font-bold">
                   {idea.latestReport.decision ? DECISION_META[idea.latestReport.decision].label : "판정 없음"}
                 </div>
@@ -424,13 +424,13 @@ export default function ProfileWorkspace(props: Props) {
 
         {tab === "interview" &&
           (idea.interview?.messages.length ? (
-            <section className="bg-white rounded-3xl shadow-card p-6 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
+            <section className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
               <p className="text-xs m-0" style={{ color: iron }}>
                 AI가 이 대화로 프로필 초안을 채웠어요 · 처음 메모: {idea.memo}
               </p>
               {idea.interview.messages.map((m, i) => (
                 <p key={i} className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
-                  <b style={{ color: m.role === "user" ? "#6161FF" : slate }}>{m.role === "user" ? "나" : "인터뷰어"}</b>{" "}
+                  <b style={{ color: m.role === "user" ? "#7270FF" : slate }}>{m.role === "user" ? "나" : "인터뷰어"}</b>{" "}
                   {m.content}
                 </p>
               ))}
@@ -454,7 +454,7 @@ export default function ProfileWorkspace(props: Props) {
           onOpenReport={() => setTab("report")}
         />
 
-        <div className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-2" style={{ border: `1px solid ${line}` }}>
+        <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2" style={{ border: `1px solid ${line}` }}>
           <b className="text-sm" style={{ color: ink }}>
             채워진 정도
           </b>
@@ -470,7 +470,7 @@ export default function ProfileWorkspace(props: Props) {
                 {isLocked ? (
                   <span className="text-xs">잠김</span>
                 ) : (
-                  <span className="font-semibold" style={{ color: n === s.rows.length ? "#0F7B6C" : ink }}>
+                  <span className="font-semibold" style={{ color: n === s.rows.length ? "#2F2B4A" : ink }}>
                     {n}/{s.rows.length}
                   </span>
                 )}
@@ -478,14 +478,14 @@ export default function ProfileWorkspace(props: Props) {
             );
           })}
           {toFill.length > 0 && (
-            <div className="mt-2 rounded-2xl p-3 text-xs leading-relaxed" style={{ background: "#FFF7EB", color: "#8A4B08" }}>
+            <div className="mt-2 rounded-lg p-3 text-xs leading-relaxed" style={{ background: "#FFFBEB", color: "#8A4B08" }}>
               <b className="block mb-1">직접 채워야 할 것</b>
               {toFill.join(" · ")}
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-3 text-sm" style={{ border: `1px solid ${line}` }}>
+        <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3 text-sm" style={{ border: `1px solid ${line}` }}>
           <b style={{ color: ink }}>이 프로필이 쓰이는 곳</b>
           <div className="flex justify-between" style={{ color: slate }}>
             <span>작성 중인 지원서</span>
@@ -493,7 +493,7 @@ export default function ProfileWorkspace(props: Props) {
           </div>
           <Link href="/programs" className="flex justify-between no-underline" style={{ color: slate, textDecoration: "none" }}>
             <span>맞춤 공고 추천</span>
-            <span style={{ color: "#6161FF" }}>보기 ›</span>
+            <span style={{ color: "#7270FF" }}>보기 ›</span>
           </Link>
         </div>
       </aside>
@@ -515,7 +515,7 @@ function Plain({ value }: { value: string }) {
     t.split(/(\(AI 추정\)\s*[^.!?\n]*[.!?]?|\(미확인\))/).map((x, i) => {
       if (x === "(미확인)") {
         return (
-          <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md mx-0.5" style={{ background: "#FFF7EB", color: "#B45309" }}>
+          <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded mx-0.5" style={{ background: "#FFFBEB", color: "#B45309" }}>
             미확인
           </span>
         );
@@ -525,7 +525,7 @@ function Plain({ value }: { value: string }) {
           <span
             key={i}
             title="보라색 밑줄은 AI가 추정한 내용이에요"
-            style={{ color: "#6B3FA0", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
+            style={{ color: "#5B59E0", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
           >
             {x.replace(/^\(AI 추정\)\s*/, "")}
           </span>
@@ -537,7 +537,7 @@ function Plain({ value }: { value: string }) {
     return (
       <div className="flex flex-wrap gap-1.5">
         {parts.map((t, i) => (
-          <span key={i} className="px-2.5 py-1 rounded-full text-[13px]" style={{ background: "#F5F6F8", color: "#333333" }}>
+          <span key={i} className="px-2.5 py-1 rounded-full text-[13px]" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
             {highlight(t.trim())}
           </span>
         ))}
@@ -558,36 +558,36 @@ function SourceBadge({
   fromInterview: boolean;
   empty: boolean;
 }) {
-  const base = "inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded-md whitespace-nowrap";
+  const base = "inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap";
   if (sectionFromReport) {
     return row.fromReport && !empty ? (
-      <span className={base} style={{ background: "#BCFE90", color: "#2A5C4E" }}>
+      <span className={base} style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
         상세분석 v{row.fromReport}
       </span>
     ) : (
-      <span className={base} style={{ border: "1px dashed #CACBCD", color: "#808080" }}>
+      <span className={base} style={{ border: "1px dashed #D9DBDA", color: "#6B7280" }}>
         분석 전
       </span>
     );
   }
   if (empty) {
     return row.required ? (
-      <span className={base} style={{ background: "#FCD0F8", color: "#B42318" }}>
+      <span className={base} style={{ background: "#FEF2F2", color: "#B42318" }}>
         필수 · 미입력
       </span>
     ) : (
-      <span className={base} style={{ background: "#FFF7EB", color: "#B45309" }}>
+      <span className={base} style={{ background: "#FFFBEB", color: "#B45309" }}>
         사용자 입력
       </span>
     );
   }
   return (
     row.value.includes("(AI 추정)") ? (
-      <span className={base} title="보라색 밑줄은 AI가 추정한 내용이에요" style={{ background: "#EDDFF7", color: "#6B3FA0" }}>
+      <span className={base} title="보라색 밑줄은 AI가 추정한 내용이에요" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
         AI 추정 포함
       </span>
     ) : (
-    <span className={base} style={{ background: fromInterview ? "#E7ECFF" : "#F5F6F8", color: fromInterview ? "#4B4BD9" : "#535768" }}>
+    <span className={base} style={{ background: fromInterview ? "#F0F0FF" : "#F3F4F6", color: fromInterview ? "#5B59E0" : "#4B5563" }}>
       {fromInterview ? "인터뷰 · AI" : "직접 입력"}
     </span>
     )
@@ -619,19 +619,19 @@ function DiagnosisCard({
   const decision = dr ? DECISION_META[dr.decision] : idea.latestReport?.decision ? DECISION_META[idea.latestReport.decision] : null;
 
   return (
-    <div className="bg-white rounded-3xl p-5 flex flex-col gap-4" style={{ border: "2px solid #333333" }}>
+    <div className="bg-white rounded-lg p-5 flex flex-col gap-4" style={{ border: "1px solid #2F2B4A" }}>
       <div className="flex items-center justify-between gap-2">
-        <b className="text-lg" style={{ color: "#333333" }}>
+        <b className="text-lg" style={{ color: "#2F2B4A" }}>
           진단
         </b>
         {status === "diagnosing" ? (
           <StatusPill status="diagnosing" />
         ) : decision ? (
-          <span className="text-xs font-bold px-2 py-0.5 rounded-md" style={{ background: "#F5F6F8", color: decision.color }}>
+          <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#F3F4F6", color: decision.color }}>
             {decision.label}
           </span>
         ) : (
-          <span className="text-xs px-2 py-0.5 rounded-md" style={{ border: "1px dashed #CACBCD", color: "#808080" }}>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ border: "1px dashed #D9DBDA", color: "#6B7280" }}>
             판정 준비 중
           </span>
         )}
@@ -639,12 +639,12 @@ function DiagnosisCard({
 
       {status === "diagnosing" ? (
         <>
-          <p className="text-sm m-0 leading-relaxed" style={{ color: "#535768" }}>
+          <p className="text-sm m-0 leading-relaxed" style={{ color: "#4B5563" }}>
             6개 분야를 근거와 함께 진단하고 있어요. 보통 2~3분 걸려요. 이 화면을 닫지 말아주세요.
           </p>
           <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
             {AGENT_ORDER.map((a) => (
-              <span key={a} className="rounded-md py-1.5 animate-pulse" style={{ background: "#D1FAFF", color: "#0B6377" }}>
+              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F0F0FF", color: "#5B59E0" }}>
                 {AGENT_LABELS[a] ?? a}
               </span>
             ))}
@@ -653,42 +653,42 @@ function DiagnosisCard({
       ) : dr ? (
         <>
           <div>
-            <div className="flex justify-between text-xs mb-1" style={{ color: "#535768" }}>
+            <div className="flex justify-between text-xs mb-1" style={{ color: "#4B5563" }}>
               <span>확신도</span>
               <span className="font-semibold">{dr.confidence.toFixed(2)}</span>
             </div>
-            <div className="h-1.5 rounded-full" style={{ background: "#E6E7EA" }}>
+            <div className="h-1.5 rounded-full" style={{ background: "#E5E7EB" }}>
               <div className="h-1.5 rounded-full" style={{ width: `${Math.round(dr.confidence * 100)}%`, background: decision?.color }} />
             </div>
           </div>
-          <p className="text-sm m-0 leading-relaxed" style={{ color: "#333333" }}>
+          <p className="text-sm m-0 leading-relaxed" style={{ color: "#2F2B4A" }}>
             {dr.summary}
           </p>
           {[
-            ["가장 강한 점", dr.strengths[0], "#BCFE90", "#2A5C4E"],
-            ["가장 큰 약점", dr.weaknesses[0], "#FCD0F8", "#9D1C6A"],
-            ["지금 할 일", dr.action_plan[0], "#FFF7EB", "#8A4B08"],
+            ["가장 강한 점", dr.strengths[0], "#F9FAFB", "#2F2B4A"],
+            ["가장 큰 약점", dr.weaknesses[0], "#F9FAFB", "#2F2B4A"],
+            ["지금 할 일", dr.action_plan[0], "#F0F0FF", "#5B59E0"],
           ]
             .filter(([, text]) => text)
             .map(([title, text, bg, fg]) => (
-              <div key={title} className="rounded-2xl p-3 text-sm leading-relaxed" style={{ background: bg }}>
+              <div key={title} className="rounded-lg p-3 text-sm leading-relaxed" style={{ background: bg }}>
                 <b className="block text-xs mb-1" style={{ color: fg }}>
                   {title}
                 </b>
-                <span style={{ color: "#333333" }}>{text}</span>
+                <span style={{ color: "#2F2B4A" }}>{text}</span>
               </div>
             ))}
           <button
             type="button"
             onClick={onOpenReport}
-            className="min-h-[48px] rounded-full text-sm font-bold text-white"
-            style={{ background: "#333333", border: "none", cursor: "pointer" }}
+            className="min-h-[48px] rounded-xl text-sm font-bold text-white"
+            style={{ background: "#2F2B4A", border: "none", cursor: "pointer" }}
           >
             진단 전체 보기 ›
           </button>
         </>
       ) : (
-        <p className="text-sm m-0 leading-relaxed" style={{ color: "#535768" }}>
+        <p className="text-sm m-0 leading-relaxed" style={{ color: "#4B5563" }}>
           {status === "failed"
             ? `상세 진단에 실패했어요. ${idea.errorMessage ?? "분석이 중간에 끊겼어요."}`
             : idea.latestReport?.summary ||
@@ -702,12 +702,12 @@ function DiagnosisCard({
             type="button"
             onClick={onDiagnose}
             disabled={!canDiagnose}
-            className="min-h-[48px] rounded-full text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+            className="min-h-[48px] rounded-xl text-sm font-bold text-white disabled:opacity-50"
+            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
           >
             {status === "failed" ? "다시 분석 (유료)" : label}
           </button>
-          <span className="text-xs text-center" style={{ color: "#808080" }}>
+          <span className="text-xs text-center" style={{ color: "#6B7280" }}>
             {missingCount > 0
               ? "* 필수 항목을 채우면 분석할 수 있어요"
               : idea.profileChangedSinceReport
@@ -717,7 +717,7 @@ function DiagnosisCard({
         </div>
       )}
       {!loggedIn && (
-        <Link href={`/login?next=/ideas/${idea.id}`} className="text-sm font-semibold" style={{ color: "#6161FF" }}>
+        <Link href={`/login?next=/ideas/${idea.id}`} className="text-sm font-semibold" style={{ color: "#7270FF" }}>
           로그인하면 고치고 분석할 수 있어요 ›
         </Link>
       )}
@@ -727,7 +727,7 @@ function DiagnosisCard({
 
 function EmptyCard({ text }: { text: string }) {
   return (
-    <div className="bg-white rounded-3xl shadow-card p-10 text-center text-sm" style={{ border: "1px solid #E6E7EA", color: "#808080" }}>
+    <div className="bg-white rounded-lg shadow-card p-10 text-center text-sm" style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}>
       {text}
     </div>
   );
@@ -735,7 +735,7 @@ function EmptyCard({ text }: { text: string }) {
 
 function LockIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6161FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7270FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>

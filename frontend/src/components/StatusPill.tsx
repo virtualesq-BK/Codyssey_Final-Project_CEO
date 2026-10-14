@@ -5,7 +5,7 @@ export default function StatusPill({ status }: { status: IdeaStatus }) {
   const inProgress = status === "profiling" || status === "diagnosing";
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-md whitespace-nowrap"
+      className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap"
       style={{ background: meta.bg, color: meta.color }}
     >
       {inProgress && (
