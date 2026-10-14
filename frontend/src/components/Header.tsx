@@ -56,9 +56,9 @@ export default function Header({ activeNav }: HeaderProps) {
               href={item.href}
               className="no-underline font-medium px-3 py-1.5 rounded-xl transition-colors"
               style={{
-                color: activeNav === item.key ? "#1C1A2C" : "#4B5563",
+                color: activeNav === item.key ? "#5B59E0" : "#4B5563",
                 fontWeight: activeNav === item.key ? 700 : 500,
-                background: activeNav === item.key ? "#F3F4F6" : "transparent",
+                background: activeNav === item.key ? "#EEEEFF" : "transparent",
                 textDecoration: "none",
               }}
             >

@@ -176,13 +176,13 @@ export default function IdeasPage() {
                   className="min-h-[36px] px-4 rounded-xl text-sm font-semibold"
                   style={{
                     cursor: "pointer",
-                    border: `1px solid ${active ? "#2F2B4A" : "#E5E7EB"}`,
-                    background: active ? "#F3F4F6" : "#fff",
-                    color: active ? "#2F2B4A" : "#4B5563",
+                    border: `1px solid ${active ? "#7270FF" : "#E5E7EB"}`,
+                    background: active ? "#EEEEFF" : "#fff",
+                    color: active ? "#5B59E0" : "#4B5563",
                   }}
                 >
                   {f.label}
-                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#2F2B4A" : "#6B7280" }}>
+                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#7270FF" : "#6B7280" }}>
                     {count}
                   </span>
                 </button>

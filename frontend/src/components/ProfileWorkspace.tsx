@@ -319,8 +319,8 @@ export default function ProfileWorkspace(props: Props) {
               style={{
                 background: "none",
                 border: "none",
-                borderBottom: `2px solid ${tab === key ? "#2F2B4A" : "transparent"}`,
-                color: tab === key ? "#1C1A2C" : slate,
+                borderBottom: `2px solid ${tab === key ? "#7270FF" : "transparent"}`,
+                color: tab === key ? "#5B59E0" : slate,
                 cursor: "pointer",
               }}
             >
