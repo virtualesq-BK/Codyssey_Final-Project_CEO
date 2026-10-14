@@ -150,7 +150,7 @@ export async function listReports(user: User | null, ideaId: string): Promise<Id
 }
 
 // randomUUID는 https·localhost에서만 있어 Tailscale 등 http 접속용 대체 생성기를 둔다
-function newId(): string {
+export function newId(): string {
   if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
   const b = crypto.getRandomValues(new Uint8Array(16));
   b[6] = (b[6] & 0x0f) | 0x40;

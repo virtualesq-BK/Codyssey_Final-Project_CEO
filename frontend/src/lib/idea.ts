@@ -53,6 +53,9 @@ export interface IdeaInterview {
   done: boolean;
 }
 
+/** 백엔드 MAX_QUESTIONS와 맞춘다 — 인터뷰 시작 전·진행 중 안내에 쓴다 */
+export const INTERVIEW_MAX_QUESTIONS = 14;
+
 export const INTERVIEW_SLOTS: { key: InterviewSlot; label: string }[] = [
   { key: "idea", label: "아이디어 · 해결하려는 것" },
   { key: "customer", label: "고객 · 문제를 본 장면" },
@@ -99,21 +102,21 @@ export interface IdeaReport {
   createdAt: string;
 }
 
-// 상태 배지는 파스텔 배경 + 같은 계열의 진한 글자 (레퍼런스: 파스텔은 배경에만)
-export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg: string }> = {
-  memo: { label: "메모", color: "#535768", bg: "#F5F6F8" },
-  interviewing: { label: "인터뷰 중", color: "#6B3FA0", bg: "#EDDFF7" },
-  profiling: { label: "프로필 만드는 중", color: "#0B6377", bg: "#D1FAFF" },
-  profile: { label: "프로필", color: "#4B4BD9", bg: "#DBDBFF" },
-  diagnosing: { label: "진단 중", color: "#0B6377", bg: "#D1FAFF" },
-  report: { label: "보고서", color: "#2A5C4E", bg: "#BCFE90" },
-  failed: { label: "실패", color: "#B42318", bg: "#FCD0F8" },
+// 상태 배지: 단계별 은은한 색 — 메모 회색, 인터뷰 주황, 프로필 파랑, 보고서 바이올렛 (디자인 A안)
+export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg: string; dot: string }> = {
+  memo: { label: "메모", color: "#4B5563", bg: "#F3F4F6", dot: "#9CA3AF" },
+  interviewing: { label: "인터뷰 중", color: "#B45309", bg: "#FFF4E5", dot: "#F59E0B" },
+  profiling: { label: "프로필 만드는 중", color: "#B45309", bg: "#FFF4E5", dot: "#F59E0B" },
+  profile: { label: "프로필", color: "#1D4ED8", bg: "#E8F1FF", dot: "#3B82F6" },
+  diagnosing: { label: "진단 중", color: "#1D4ED8", bg: "#E8F1FF", dot: "#3B82F6" },
+  report: { label: "보고서", color: "#FFFFFF", bg: "#7270FF", dot: "#FFFFFF" },
+  failed: { label: "실패", color: "#B42318", bg: "#FEF2F2", dot: "#B42318" },
 };
 
 export const DECISION_META: Record<Decision, { label: string; color: string }> = {
   GO: { label: "GO", color: "#1A7A4A" },
   PIVOT: { label: "PIVOT", color: "#856404" },
-  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#6161FF" },
+  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#4B5563" },
   STOP: { label: "STOP", color: "#B42318" },
 };
 

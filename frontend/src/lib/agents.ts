@@ -11,11 +11,11 @@ export const AGENT_ORDER = [
 
 export const STATUS_BG: Record<AgentStatus, string> = {
   success: "#F0FFF4",
-  partial: "#FFF7EB",
-  failed: "#FDECEA",
-  running: "#F5F6F8",
-  pending: "#F5F6F8",
-  skipped: "#F5F6F8",
+  partial: "#FFFBEB",
+  failed: "#FEF2F2",
+  running: "#F3F4F6",
+  pending: "#F3F4F6",
+  skipped: "#F3F4F6",
 };
 
 export const STATUS_TEXT: Record<string, string> = {
@@ -25,4 +25,14 @@ export const STATUS_TEXT: Record<string, string> = {
   running: "분석 중",
   pending: "대기",
   skipped: "건너뜀",
+};
+
+/** 분석 분야를 사람이 읽는 이름으로 */
+export const AGENT_LABELS: Record<string, string> = {
+  MarketAgent: "시장",
+  CustomerAgent: "고객",
+  CompetitorAgent: "경쟁",
+  BusinessModelAgent: "수익 구조",
+  FinancialAgent: "재무",
+  RiskAgent: "위험",
 };

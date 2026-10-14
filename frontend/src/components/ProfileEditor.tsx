@@ -54,7 +54,7 @@ const GROUPS: { title: string; fields: FieldDef[] }[] = [
   },
 ];
 
-const inputStyle = { border: "1.5px solid #DDDFEB" };
+const inputStyle = { border: "1.5px solid #E5E7EB" };
 
 interface Props {
   value: IdeaProfile;
@@ -81,7 +81,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
     <div className="flex flex-col gap-7">
       {GROUPS.map((group, gi) => (
         <fieldset key={group.title} className="flex flex-col gap-4 border-0 p-0 m-0" disabled={readOnly}>
-          <legend className="text-sm font-bold mb-3 p-0" style={{ color: "#6161FF" }}>
+          <legend className="text-sm font-bold mb-3 p-0" style={{ color: "#7270FF" }}>
             {group.title}
           </legend>
 
@@ -94,7 +94,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
                   onChange={(e) => update(f.key, e.target.value)}
                   placeholder={f.placeholder}
                   rows={f.rows}
-                  className="rounded-md p-4 font-normal text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
+                  className="rounded-lg p-4 font-normal text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
                   style={inputStyle}
                 />
               ) : (
@@ -103,7 +103,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
                   value={value[f.key]}
                   onChange={(e) => update(f.key, e.target.value)}
                   placeholder={f.placeholder}
-                  className="h-12 rounded-md px-4 font-normal text-sm focus:outline-none disabled:bg-surface"
+                  className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none disabled:bg-surface"
                   style={inputStyle}
                 />
               )}
@@ -120,7 +120,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
                   value={value.industry}
                   onChange={(e) => update("industry", e.target.value)}
                   placeholder="예: 에듀테크, 반려동물"
-                  className="h-12 rounded-md px-4 font-normal text-sm focus:outline-none disabled:bg-surface"
+                  className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none disabled:bg-surface"
                   style={inputStyle}
                 />
               </label>
@@ -129,7 +129,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
                 <select
                   value={value.location}
                   onChange={(e) => update("location", e.target.value)}
-                  className="h-12 rounded-md px-4 font-normal text-sm focus:outline-none bg-white disabled:bg-surface"
+                  className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none bg-white disabled:bg-surface"
                   style={inputStyle}
                 >
                   {REGIONS.map((r) => (

@@ -12,12 +12,12 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<AgentStatus, string> = {
-  success: "#6161FF",
+  success: "#2F2B4A",
   partial: "#B45309",
   failed: "#B42318",
-  running: "#535768",
-  pending: "#808080",
-  skipped: "#808080",
+  running: "#4B5563",
+  pending: "#6B7280",
+  skipped: "#6B7280",
 };
 
 const STATUS_LABELS: Record<AgentStatus, string> = {
@@ -31,10 +31,10 @@ const STATUS_LABELS: Record<AgentStatus, string> = {
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
-  const color = value >= 0.7 ? "#6161FF" : value >= 0.4 ? "#B45309" : "#B42318";
+  const color = value >= 0.7 ? "#2F2B4A" : value >= 0.4 ? "#B45309" : "#B42318";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-[#E6E7EA] rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
         <div
           className="h-2 rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -59,8 +59,8 @@ export default function AgentResultCard({ agentName, result }: Props) {
 
   return (
     <div
-      className="bg-white border rounded-3xl shadow-card p-6 flex flex-col gap-4"
-      style={{ borderColor: "#DDDFEB" }}
+      className="bg-white border rounded-lg shadow-card p-6 flex flex-col gap-4"
+      style={{ borderColor: "#E5E7EB" }}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
@@ -100,7 +100,7 @@ export default function AgentResultCard({ agentName, result }: Props) {
       )}
 
       {result.evidence.length > 0 && (
-        <div className="border-t pt-3" style={{ borderColor: "#DDDFEB" }}>
+        <div className="border-t pt-3" style={{ borderColor: "#E5E7EB" }}>
           <div className="text-xs font-semibold text-text-muted mb-2">
             근거 자료 {result.evidence.length}건
           </div>

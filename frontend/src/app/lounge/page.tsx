@@ -59,12 +59,12 @@ const NEWS = [
 
 export default function LoungePage() {
   return (
-    <div className="min-h-screen" style={{ background: "#F5F6F8" }}>
+    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="lounge" />
 
       <div className="max-w-[1200px] mx-auto px-6 py-10">
         <div className="mb-10">
-          <div className="text-sm font-semibold mb-1" style={{ color: "#6161FF" }}>스타트업라운지</div>
+          <div className="text-sm font-semibold mb-1" style={{ color: "#6B7280" }}>스타트업라운지</div>
           <h1 className="text-3xl font-bold m-0">창업 생태계 정보 한곳에</h1>
           <p className="text-text-secondary mt-2 mb-0">최신 창업 뉴스, 정부 자원, 투자 트렌드를 확인하세요.</p>
         </div>
@@ -76,13 +76,13 @@ export default function LoungePage() {
             {NEWS.map((n, i) => (
               <div
                 key={i}
-                className="bg-white rounded-3xl shadow-card p-5 flex flex-col gap-2"
-                style={{ border: "1px solid #E6E7EA" }}
+                className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2"
+                style={{ border: "1px solid #E5E7EB" }}
               >
                 <div className="flex items-center gap-2">
                   <span
-                    className="text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: "#E7ECFF", color: "#6161FF" }}
+                    className="text-xs font-bold px-2 py-0.5 rounded"
+                    style={{ background: "#F3F4F6", color: "#4B5563" }}
                   >
                     {n.tag}
                   </span>
@@ -107,11 +107,11 @@ export default function LoungePage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-white rounded-xl p-4 flex items-start gap-3 hover:shadow-sm transition-shadow no-underline"
-                      style={{ border: "1px solid #E6E7EA", textDecoration: "none" }}
+                      style={{ border: "1px solid #E5E7EB", textDecoration: "none" }}
                     >
                       <div
                         className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-sm text-white"
-                        style={{ background: "#6161FF" }}
+                        style={{ background: "#2F2B4A" }}
                       >
                         {item.name[0]}
                       </div>
@@ -127,8 +127,8 @@ export default function LoungePage() {
 
             {/* CTA */}
             <div
-              className="rounded-3xl p-5 flex flex-col gap-3"
-              style={{ background: "linear-gradient(135deg, #4B4BD9 0%, #6161FF 100%)" }}
+              className="rounded-lg p-5 flex flex-col gap-3"
+              style={{ background: "#2F2B4A" }}
             >
               <div className="text-white font-bold">내 아이디어 AI 진단받기</div>
               <div className="text-white/70 text-sm leading-relaxed">
@@ -136,8 +136,8 @@ export default function LoungePage() {
               </div>
               <Link
                 href="/"
-                className="bg-white text-center rounded-full py-2.5 text-sm font-bold no-underline"
-                style={{ color: "#6161FF", textDecoration: "none" }}
+                className="bg-white text-center rounded-xl py-2.5 text-sm font-bold no-underline"
+                style={{ color: "#2F2B4A", textDecoration: "underline" }}
               >
                 무료로 시작하기
               </Link>
