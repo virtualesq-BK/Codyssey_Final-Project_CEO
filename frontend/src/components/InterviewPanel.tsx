@@ -182,7 +182,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
             {locked ? "프로필 만드는 중…" : "인터뷰 마치고 프로필 만들기"}
           </button>
           <p className="text-xs text-text-secondary m-0 leading-relaxed">
-            덜 답해도 시작할 수 있어요. 답하지 않은 칸은 지어내지 않고 비워둬요. 만든 프로필은 직접 고칠 수 있어요.
+            덜 답해도 돼요. 답하지 않은 부분은 AI가 추정해서 채우고 'AI 추정'으로 표시해요. 만든 프로필은 직접 고칠 수 있어요.
           </p>
         </div>
       </aside>

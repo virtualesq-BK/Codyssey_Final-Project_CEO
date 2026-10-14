@@ -118,7 +118,8 @@ export default function ProfileWorkspace(props: Props) {
 
   function startEdit(row: ProfileRow) {
     setEditing(row.id);
-    setEditValue(row.value.replace(/\(미확인\)/g, "").trim());
+    // 사용자가 직접 고치면 확인된 내용이므로 AI 추정·미확인 표시를 지운다
+    setEditValue(row.value.replace(/\((미확인|AI 추정)\)\s*/g, "").trim());
   }
 
   const renderSection = (s: Section, sectionLocked: boolean) => (
@@ -590,10 +591,14 @@ function Plain({ value }: { value: string }) {
   // "· 기능1\n· 기능2"처럼 목록으로 온 값만 칩으로 보여준다
   const parts = value.trim().startsWith("·") ? value.split(/\s*·\s+/).filter((t) => t.trim()) : [];
   const highlight = (t: string) =>
-    t.split(/(\(미확인\))/).map((x, i) =>
+    t.split(/(\(미확인\)|\(AI 추정\))/).map((x, i) =>
       x === "(미확인)" ? (
         <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md mx-0.5" style={{ background: "#FFF7EB", color: "#B45309" }}>
           미확인
+        </span>
+      ) : x === "(AI 추정)" ? (
+        <span key={i} className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md mr-1" style={{ background: "#EDDFF7", color: "#6B3FA0" }}>
+          AI 추정
         </span>
       ) : (
         <span key={i}>{x}</span>
