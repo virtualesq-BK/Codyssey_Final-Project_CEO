@@ -1,22 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
-
-type Program = {
-  id: string;
-  title: string;
-  organization: string;
-  category: string;
-  region: string;
-  deadline_status: string;
-  ends_on: string;
-  starts_on: string;
-  target: string;
-  body: string;
-  detail_url: string;
-  amount: string;
-};
+import type { Program } from "@/lib/programs";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   "모집중": { bg: "#E6F9F0", text: "#1A7A4A" },
@@ -227,14 +214,21 @@ export default function ProgramsPage() {
                 <div className="text-sm leading-relaxed text-text-secondary">{selected.body}</div>
               </div>
 
+              <Link
+                href={`/applications?new=1&program=${selected.id}`}
+                className="flex items-center justify-center h-11 rounded-xl font-bold text-sm text-white"
+                style={{ background: "#7270FF", textDecoration: "none" }}
+              >
+                이 공고로 지원서 만들기
+              </Link>
               <a
                 href={selected.detail_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center h-11 rounded-xl font-bold text-sm text-white"
-                style={{ background: "#7270FF", textDecoration: "none" }}
+                className="flex items-center justify-center h-11 rounded-xl font-semibold text-sm bg-white"
+                style={{ border: "1px solid #E5E7EB", color: "#2F2B4A", textDecoration: "none" }}
               >
-                공고 상세 보기 →
+                공고 원문 보기 →
               </a>
             </div>
           )}

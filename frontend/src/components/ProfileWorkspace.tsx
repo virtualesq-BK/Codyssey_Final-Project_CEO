@@ -489,10 +489,16 @@ export default function ProfileWorkspace(props: Props) {
 
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3 text-sm" style={{ border: `1px solid ${line}` }}>
           <b style={{ color: ink }}>이 프로필이 쓰이는 곳</b>
-          <div className="flex justify-between" style={{ color: slate }}>
-            <span>작성 중인 지원서</span>
-            <span>준비 중</span>
-          </div>
+          <Link
+            href={latest ? `/applications?new=1&idea=${idea.id}` : "/applications"}
+            className="flex justify-between no-underline"
+            style={{ color: slate, textDecoration: "none" }}
+          >
+            <span>{latest ? "이 아이템으로 지원서 만들기" : "MY지원서"}</span>
+            <span className="underline" style={{ color: "#2F2B4A" }}>
+              {latest ? "만들기 ›" : "보기 ›"}
+            </span>
+          </Link>
           <Link href="/programs" className="flex justify-between no-underline" style={{ color: slate, textDecoration: "none" }}>
             <span>맞춤 공고 추천</span>
             <span className="underline" style={{ color: "#2F2B4A" }}>보기 ›</span>

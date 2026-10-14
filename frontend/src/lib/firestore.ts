@@ -2,6 +2,7 @@
  * Firestore 경로
  *   users/{uid}/ideas/{ideaId}                    아이디어 (상태·프로필·최신 보고서 요약)
  *   users/{uid}/ideas/{ideaId}/reports/{reportId} 상세 진단 결과, 버전별로 쌓임
+ *   users/{uid}/applications/{appId}              지원서 (아이템 × 지원사업)
  *   users/{uid}/analyses/{id}                     구조 개편 전 기록 — 읽기만 함
  */
 import {
@@ -19,6 +20,7 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import type { Application } from "@/lib/application";
 import type { Idea, IdeaReport } from "@/lib/idea";
 import type { LegacyDetail, LegacyIdea } from "@/lib/storage";
 
@@ -94,4 +96,19 @@ export async function getLegacyAnalysesFS(
       detail: data.detail ?? null,
     };
   });
+}
+
+// ── 지원서 ────────────────────────────────────────────────────────────
+
+export async function getApplicationsFS(uid: string): Promise<Application[]> {
+  const snap = await getDocs(query(collection(db, "users", uid, "applications"), orderBy("updatedAt", "desc")));
+  return snap.docs.map((d) => ({ ...(d.data() as Application), id: d.id }));
+}
+
+export async function setApplicationFS(uid: string, app: Application) {
+  await setDoc(doc(db, "users", uid, "applications", app.id), clean(app));
+}
+
+export async function deleteApplicationFS(uid: string, appId: string) {
+  await deleteDoc(doc(db, "users", uid, "applications", appId));
 }

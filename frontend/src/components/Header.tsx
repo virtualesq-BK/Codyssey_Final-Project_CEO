@@ -15,7 +15,7 @@ export default function Header({ activeNav }: HeaderProps) {
   const navItems = [
     { label: "공고 찾기", href: "/programs", key: "programs" },
     { label: "MY아이디어", href: "/ideas", key: "ideas" },
-    { label: "AI 지원서", href: "/", key: "analyze" },
+    { label: "MY지원서", href: "/applications", key: "applications" },
     { label: "스타트업라운지", href: "/lounge", key: "lounge" },
     { label: "마이페이지", href: "/mypage", key: "mypage" },
   ];

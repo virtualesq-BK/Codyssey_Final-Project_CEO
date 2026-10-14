@@ -12,7 +12,7 @@ const STEPS = [
 export default function Home() {
   return (
     <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
-      <Header activeNav="analyze" />
+      <Header />
 
       {/* Hero Section — 흰 바탕에 잉크 글자, 강조는 한 단어만 violet (레퍼런스: 차분한 도구형) */}
       <section className="bg-white border-b" style={{ borderColor: "#E5E7EB" }}>

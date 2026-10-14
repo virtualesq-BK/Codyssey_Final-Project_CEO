@@ -39,7 +39,7 @@ function actionsFor(idea: Idea, status: IdeaStatus, failedStage: IdeaStatus | nu
     case "report":
       return [
         { label: "보고서 보기", href: `${base}#report` },
-        { label: "지원서 쓰기", note: "준비 중" },
+        { label: "지원서 쓰기", href: `/applications?new=1&idea=${idea.id}`, needsLogin: true },
       ];
     case "failed":
       return failedStage === "diagnosing"
