@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import PageHero from "@/components/PageHero";
 import IdeaCard from "@/components/IdeaCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Idea, type IdeaStatus, displayTitle, effectiveStatus } from "@/lib/idea";
@@ -81,12 +82,9 @@ export default function IdeasPage() {
     <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <Header activeNav="ideas" />
 
-      <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <div className="mb-6">
-          <div className="text-sm font-semibold mb-1" style={{ color: "#6B7280" }}>MY아이디어</div>
-          <h1 className="text-3xl font-bold m-0">내 아이디어</h1>
-          <p className="text-text-secondary mt-2 mb-0">메모부터 보고서까지, 단계와 상관없이 모두 모아뒀어요.</p>
-        </div>
+      <PageHero eyebrow="MY아이디어" title="내 아이디어" description="메모부터 보고서까지, 단계와 상관없이 모두 모아뒀어요." />
+
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
 
         <form
           onSubmit={(e) => {
