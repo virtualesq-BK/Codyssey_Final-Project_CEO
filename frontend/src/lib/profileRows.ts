@@ -89,6 +89,44 @@ export function fieldRows(profile: IdeaProfile, field: keyof IdeaProfile, fallba
   return rows;
 }
 
+/** 프로필 6칸 — 줄 하나가 칸 하나 (수정도 칸 단위) */
+export function profileFieldRows(profile: IdeaProfile) {
+  const row = (field: keyof IdeaProfile, label: string, required: boolean, hint: string): ProfileRow => ({
+    id: field,
+    label,
+    value: profile[field] ?? "",
+    hint,
+    field,
+    key: null,
+    required,
+  });
+  return {
+    item: [
+      row("name", "이름", true, "아이템 이름"),
+      row("oneLiner", "한줄 소개", false, "[첫 공략 고객]을 위한 [카테고리]. [기존 대안]과 달리 [차별점]."),
+    ],
+    customer: [
+      row("customer", "고객 정의", true, "첫 공략: …\n사용자 / 구매자: …"),
+      row("problem", "고객 문제 정의", true, "문제: …\n빈도·강도: …\n현재 대안: … — 한계: …"),
+    ],
+    solution: [
+      row("solution", "문제 해결 방법", true, "핵심 기능: …\n차별점: …"),
+      row("revenueModel", "수익 모델", false, "구매자 · 방식 · 가격 가설: …"),
+    ],
+  };
+}
+
+/** 칸 안의 "키: 값" 줄을 소제목과 내용으로. 구조가 아니면 null */
+export function subParts(field: keyof IdeaProfile, text: string): { label: string; value: string }[] | null {
+  const parsed = parseLines(text);
+  if (parsed.length === 0 || parsed.some((x) => x.key === null)) return null;
+  const template = TEMPLATES[field] ?? [];
+  return parsed.map((x) => ({
+    label: template.find((t) => norm(t.key) === norm(x.key ?? ""))?.label ?? (x.key as string),
+    value: x.value,
+  }));
+}
+
 /** 줄 하나를 고친 결과를 칸 문자열로 다시 합친다 */
 export function updateRow(profile: IdeaProfile, row: ProfileRow, value: string): IdeaProfile {
   if (!row.field) return profile;
@@ -128,7 +166,23 @@ export function reportRows(report: IdeaReport | null) {
   ].filter(Boolean);
   const market_ = (k: string) => ((market?.[k] as Claim)?.text ?? "").trim();
 
+  const agent = (name: string) => report?.response.workflow_result.agent_results[name];
+  const risks = findingOf(report, "RiskAgent", "top_risks") as unknown as { label: string; risk: string; level: string }[] | null;
+
   return {
+    finance: [
+      { id: "fin:summary", label: "재무 요약", value: (agent("FinancialAgent")?.summary ?? "").trim(), hint: "유닛 이코노믹스 · 손익분기 · 필요 자금", fromReport: v },
+    ] as ProfileRow[],
+    risk: [
+      {
+        id: "risk:top",
+        label: "주요 리스크",
+        // 같은 분류에 여러 리스크가 나올 수 있어 내용까지 한 줄씩 보여준다
+        value: (risks ?? []).map((r) => `[${r.level}] ${r.risk || r.label}`).join("\n") || (agent("RiskAgent")?.summary ?? "").trim(),
+        hint: "가능성 · 영향 기준 상위 리스크",
+        fromReport: v,
+      },
+    ] as ProfileRow[],
     market: [
       { id: "market:size", label: "시장 규모", value: market_("market_size"), hint: "전체 / 목표 시장 규모 — 공공 통계 근거", fromReport: v },
       { id: "market:target", label: "목표 시장", value: market_("target_market_size"), hint: "1차 공략 시장의 크기", fromReport: v },

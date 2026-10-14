@@ -17,7 +17,7 @@ import {
   effectiveStatus,
 } from "@/lib/idea";
 import { listIdeas } from "@/lib/ideaStore";
-import { type ProfileRow, fieldRows, isUnknown, reportRows, updateRow } from "@/lib/profileRows";
+import { type ProfileRow, isUnknown, profileFieldRows, reportRows, subParts, updateRow } from "@/lib/profileRows";
 
 type Tab = "overview" | "report" | "interview";
 
@@ -75,56 +75,157 @@ export default function ProfileWorkspace(props: Props) {
   const fromReport = reportRows(latest);
   const canEdit = !!user && status !== "diagnosing";
 
+  const base = profileFieldRows(p);
+  // 4~7은 상세분석(유료) 결과 — 보고서가 없으면 가려 둔다
+  const locked = !latest;
   const sections: Section[] = [
-    {
-      no: 1,
-      title: "기본",
-      badge: "",
-      rows: [
-        ...fieldRows(p, "name", "이름", true),
-        ...fieldRows(p, "oneLiner", "한 줄 정의", false),
-        ...fieldRows(p, "industry", "분야", true),
-        ...fieldRows(p, "location", "시작 지역", false),
-      ],
-    },
-    {
-      no: 2,
-      title: "문제 · 고객",
-      badge: "P 문제인식",
-      rows: [...fieldRows(p, "customer", "고객 정의", true), ...fieldRows(p, "problem", "고객 문제 정의", true)],
-    },
-    {
-      no: 3,
-      title: "해결 · 솔루션",
-      badge: "S 실현가능성",
-      rows: fieldRows(p, "solution", "문제 해결 방법", true),
-    },
-    {
-      no: 4,
-      title: "수익 모델",
-      badge: "S 비즈니스 모델",
-      rows: fieldRows(p, "revenueModel", "수익 모델", false),
-    },
-    { no: 5, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true },
-    { no: 6, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true },
+    { no: 1, title: "아이템", badge: "", rows: base.item },
+    { no: 2, title: "문제 · 고객", badge: "P 문제인식", rows: base.customer },
+    { no: 3, title: "해결 · 솔루션", badge: "S 실현가능성 · BM", rows: base.solution },
+    { no: 4, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true },
+    { no: 5, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true },
+    { no: 6, title: "재무", badge: "S 자금 소요", rows: fromReport.finance, fromReport: true },
+    { no: 7, title: "리스크", badge: "", rows: fromReport.risk, fromReport: true },
   ];
+  const [tagEditing, setTagEditing] = useState(false);
+  const [tagDraft, setTagDraft] = useState({ industry: p.industry, location: p.location });
+
+  async function saveTags() {
+    try {
+      await onSaveProfile({ ...p, industry: tagDraft.industry.trim(), location: tagDraft.location });
+      setTagEditing(false);
+    } catch {
+      // 에러 문구는 상위에서 보여준다
+    }
+  }
 
   const filled = (rows: ProfileRow[]) => rows.filter((r) => !isUnknown(r.value)).length;
   const toFill = sections
     .filter((s) => !s.fromReport)
     .flatMap((s) => s.rows)
     .filter((r) => isUnknown(r.value))
-    .map((r) => r.label);
+    .map((r) => r.label)
+    .concat(p.industry.trim() ? [] : ["분야 태그"]);
 
   async function save(row: ProfileRow) {
-    await onSaveProfile(updateRow(p, row, editValue));
-    setEditing(null);
+    try {
+      await onSaveProfile(updateRow(p, row, editValue));
+      setEditing(null);
+    } catch {
+      // 실패하면 고치던 내용을 그대로 둔다
+    }
   }
 
   function startEdit(row: ProfileRow) {
     setEditing(row.id);
     setEditValue(row.value.replace(/\(미확인\)/g, "").trim());
   }
+
+  const renderSection = (s: Section, sectionLocked: boolean) => (
+    <div key={s.no} className="py-4" aria-hidden={sectionLocked || undefined}>
+      <div className="flex items-baseline justify-between gap-3 flex-wrap pb-3" style={{ borderBottom: `2px solid ${sectionLocked ? "#CACBCD" : ink}` }}>
+        <h2 className="text-base font-bold m-0 flex items-center gap-1.5" style={{ color: sectionLocked ? iron : ink }}>
+          {s.no} · {s.title}
+          {s.fromReport && (
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#F5F6F8", color: iron }}>
+              유료
+            </span>
+          )}
+        </h2>
+        <div className="flex items-center gap-2">
+          {s.badge && (
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
+              {s.badge}
+            </span>
+          )}
+          {!sectionLocked && (
+            <span className="text-xs" style={{ color: iron }}>
+              {filled(s.rows)}/{s.rows.length}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {s.rows.map((r) => {
+        const empty = isUnknown(r.value);
+        const isEditing = editing === r.id;
+        return (
+          <div
+            key={r.id}
+            className="grid gap-x-4 gap-y-2 py-4 grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_110px_64px] items-start"
+            style={{ borderBottom: `1px solid ${line}` }}
+          >
+            <div className="text-sm font-semibold" style={{ color: sectionLocked ? iron : ink }}>
+              {r.label}
+              {r.required && <span style={{ color: "#B42318" }}> *</span>}
+            </div>
+
+            <div className="text-sm leading-relaxed min-w-0" style={{ color: empty ? iron : ink }}>
+              {sectionLocked ? (
+                // 잠긴 칸: 실제 내용 대신 흐린 자리 표시
+                <span className="select-none" style={{ filter: "blur(4px)", color: slate }}>
+                  {r.hint} — 상세분석 결과가 여기에 들어가요. 근거 자료와 함께 정리돼요.
+                </span>
+              ) : isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    aria-label={r.label}
+                    placeholder={r.hint}
+                    rows={Math.min(10, Math.max(3, editValue.split("\n").length + 1, Math.ceil(editValue.length / 45)))}
+                    className="rounded-md p-3 text-sm resize-y focus:outline-none leading-relaxed"
+                    style={{ border: "1.5px solid #6161FF" }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => save(r)}
+                      disabled={busy}
+                      className="min-h-[36px] px-4 rounded-full text-xs font-bold text-white disabled:opacity-50"
+                      style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                    >
+                      저장
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(null)}
+                      className="min-h-[36px] px-4 rounded-full text-xs font-semibold bg-white"
+                      style={{ border: "1px solid #DDDFEB", color: slate, cursor: "pointer" }}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              ) : empty && !r.value.includes("(미확인)") ? (
+                <span>{s.fromReport ? "이번 분석에서 나오지 않았어요" : "미입력"}</span>
+              ) : (
+                <RowValue field={r.field} value={r.value} />
+              )}
+            </div>
+
+            <div>
+              {!sectionLocked && <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} empty={empty} />}
+            </div>
+
+            <div className="md:text-right">
+              {r.field && canEdit && !isEditing && !sectionLocked && (
+                <button
+                  type="button"
+                  onClick={() => startEdit(r)}
+                  className="min-h-[36px] px-3 rounded-full text-xs font-semibold bg-white"
+                  style={{ border: "1px solid #DDDFEB", color: ink, cursor: "pointer" }}
+                >
+                  {empty ? "입력" : "수정"}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   const diagnoseLabel = hasReport ? "보고서 새로 작성 (유료)" : "상세분석하기 (유료)";
 
@@ -170,6 +271,75 @@ export default function ProfileWorkspace(props: Props) {
             <h1 className="text-3xl font-bold m-0 tracking-tight" style={{ color: ink }}>
               {displayTitle(idea)}
             </h1>
+            {/* 분야·지역 태그 — 상세분석 검색어와 공고 매칭에 쓰인다 */}
+            {tagEditing ? (
+              <div className="mt-3 flex gap-2 flex-wrap items-center">
+                <input
+                  value={tagDraft.industry}
+                  onChange={(e) => setTagDraft((d) => ({ ...d, industry: e.target.value }))}
+                  aria-label="분야"
+                  placeholder="분야 (예: 에듀테크)"
+                  className="h-9 rounded-md px-3 text-sm focus:outline-none"
+                  style={{ border: "1.5px solid #6161FF" }}
+                />
+                <select
+                  value={tagDraft.location}
+                  onChange={(e) => setTagDraft((d) => ({ ...d, location: e.target.value }))}
+                  aria-label="시작 지역"
+                  className="h-9 rounded-md px-3 text-sm bg-white focus:outline-none"
+                  style={{ border: "1.5px solid #DDDFEB" }}
+                >
+                  {REGIONS.map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={saveTags}
+                  disabled={busy || !tagDraft.industry.trim()}
+                  className="min-h-[36px] px-4 rounded-full text-xs font-bold text-white disabled:opacity-50"
+                  style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                >
+                  저장
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTagEditing(false)}
+                  className="min-h-[36px] px-4 rounded-full text-xs font-semibold bg-white"
+                  style={{ border: "1px solid #DDDFEB", color: slate, cursor: "pointer" }}
+                >
+                  취소
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 flex gap-1.5 flex-wrap items-center">
+                {p.industry ? (
+                  <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
+                    #{p.industry}
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: "#FCD0F8", color: "#B42318" }}>
+                    분야 미입력 *
+                  </span>
+                )}
+                <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: "#F5F6F8", color: slate }}>
+                  #{p.location || "전국"}
+                </span>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTagDraft({ industry: p.industry, location: p.location || "전국" });
+                      setTagEditing(true);
+                    }}
+                    className="text-xs underline"
+                    style={{ background: "none", border: "none", color: iron, cursor: "pointer" }}
+                  >
+                    태그 수정
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex gap-2 flex-wrap">
             {user && status !== "diagnosing" && (
@@ -198,7 +368,7 @@ export default function ProfileWorkspace(props: Props) {
         <div className="flex gap-1 border-b" style={{ borderColor: line }} role="tablist">
           {(
             [
-              ["overview", "개요", null],
+              ["overview", "프로필", null],
               ["report", "진단 보고서", reports.length || (idea.latestReport ? 1 : 0)],
               ["interview", "인터뷰 기록", idea.interview?.messages.filter((m) => m.role === "user").length ?? 0],
             ] as [Tab, string, number | null][]
@@ -232,115 +402,47 @@ export default function ProfileWorkspace(props: Props) {
 
         {tab === "overview" && (
           <section id="profile" className="bg-white rounded-3xl shadow-card px-6 py-4 scroll-mt-20" style={{ border: `1px solid ${line}` }}>
-            {sections.map((s) => (
-              <div key={s.no} className="py-4">
-                <div className="flex items-baseline justify-between gap-3 flex-wrap pb-3" style={{ borderBottom: `2px solid ${ink}` }}>
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <h2 className="text-base font-bold m-0" style={{ color: ink }}>
-                      {s.no} · {s.title}
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {s.badge && (
-                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#E7ECFF", color: "#4B4BD9" }}>
-                        {s.badge}
+            {sections.filter((s) => !s.fromReport).map((s) => renderSection(s, false))}
+
+            {/* 상세분석(유료) 섹션 — 분석 전엔 흐리게 가리고 잠근다 */}
+            <div className="relative">
+              {sections.filter((s) => s.fromReport).map((s) => renderSection(s, locked))}
+              {locked && (
+                <div className="absolute inset-0 flex items-start justify-center pt-24">
+                  <div
+                    className="bg-white rounded-3xl p-6 max-w-[360px] w-full flex flex-col items-center gap-3 text-center"
+                    style={{ border: "1px solid #DDDFEB", boxShadow: "0 5px 45px rgba(0,0,0,0.12)" }}
+                  >
+                    <span className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#E7ECFF" }}>
+                      <LockIcon />
+                    </span>
+                    <b className="text-base" style={{ color: ink }}>
+                      상세분석(유료)에서 열려요
+                    </b>
+                    <p className="text-sm m-0 leading-relaxed" style={{ color: slate }}>
+                      시장 · 경쟁 · 재무 · 리스크를 외부 자료와 함께 분석해 이 칸들을 채워요.
+                    </p>
+                    {user && status !== "diagnosing" && (
+                      <button
+                        type="button"
+                        onClick={onDiagnose}
+                        disabled={!canDiagnose}
+                        className="min-h-[44px] px-6 rounded-full text-sm font-bold text-white disabled:opacity-50"
+                        style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
+                      >
+                        상세분석하기 (유료)
+                      </button>
+                    )}
+                    {status === "diagnosing" && <StatusPill status="diagnosing" />}
+                    {missingCount > 0 && (
+                      <span className="text-xs" style={{ color: iron }}>
+                        * 필수 항목을 먼저 채워주세요
                       </span>
                     )}
-                    <span className="text-xs" style={{ color: iron }}>
-                      {filled(s.rows)}/{s.rows.length}
-                    </span>
                   </div>
                 </div>
-
-                {s.rows.map((r) => {
-                  const empty = isUnknown(r.value);
-                  const isEditing = editing === r.id;
-                  return (
-                    <div
-                      key={r.id}
-                      className="grid gap-x-4 gap-y-2 py-4 grid-cols-1 md:grid-cols-[150px_minmax(0,1fr)_110px_64px] items-start"
-                      style={{ borderBottom: `1px solid ${line}` }}
-                    >
-                      <div className="text-sm font-semibold" style={{ color: ink }}>
-                        {r.label}
-                        {r.required && <span style={{ color: "#B42318" }}> *</span>}
-                      </div>
-
-                      <div className="text-sm leading-relaxed min-w-0" style={{ color: empty ? iron : ink }}>
-                        {isEditing ? (
-                          <div className="flex flex-col gap-2">
-                            {r.field === "location" ? (
-                              <select
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                aria-label={r.label}
-                                className="h-10 rounded-md px-3 text-sm bg-white focus:outline-none"
-                                style={{ border: "1.5px solid #DDDFEB" }}
-                              >
-                                {REGIONS.map((x) => (
-                                  <option key={x}>{x}</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <textarea
-                                autoFocus
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                aria-label={r.label}
-                                placeholder={r.hint}
-                                rows={Math.min(6, Math.max(2, Math.ceil(editValue.length / 40)))}
-                                className="rounded-md p-3 text-sm resize-y focus:outline-none leading-relaxed"
-                                style={{ border: "1.5px solid #6161FF" }}
-                              />
-                            )}
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => save(r)}
-                                disabled={busy}
-                                className="min-h-[36px] px-4 rounded-full text-xs font-bold text-white disabled:opacity-50"
-                                style={{ background: "#6161FF", border: "none", cursor: "pointer" }}
-                              >
-                                저장
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditing(null)}
-                                className="min-h-[36px] px-4 rounded-full text-xs font-semibold bg-white"
-                                style={{ border: "1px solid #DDDFEB", color: slate, cursor: "pointer" }}
-                              >
-                                취소
-                              </button>
-                            </div>
-                          </div>
-                        ) : empty && !r.value.includes("(미확인)") ? (
-                          <span>{r.fromReport === undefined && s.fromReport ? "상세분석 후 채워져요" : r.hint || "미입력"}</span>
-                        ) : (
-                          <RowValue value={r.value} />
-                        )}
-                      </div>
-
-                      <div>
-                        <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} empty={empty} />
-                      </div>
-
-                      <div className="md:text-right">
-                        {r.field && canEdit && !isEditing && (
-                          <button
-                            type="button"
-                            onClick={() => startEdit(r)}
-                            className="min-h-[36px] px-3 rounded-full text-xs font-semibold bg-white"
-                            style={{ border: "1px solid #DDDFEB", color: ink, cursor: "pointer" }}
-                          >
-                            {empty ? "입력" : "수정"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+              )}
+            </div>
           </section>
         )}
 
@@ -424,12 +526,20 @@ export default function ProfileWorkspace(props: Props) {
           </b>
           {sections.map((s) => {
             const n = filled(s.rows);
+            const isLocked = s.fromReport && locked;
             return (
-              <div key={s.no} className="flex justify-between text-sm" style={{ color: slate }}>
-                <span>{s.title}</span>
-                <span className="font-semibold" style={{ color: n === s.rows.length ? "#0F7B6C" : ink }}>
-                  {n}/{s.rows.length}
+              <div key={s.no} className="flex justify-between text-sm" style={{ color: isLocked ? iron : slate }}>
+                <span>
+                  {s.title}
+                  {s.fromReport && <span className="text-[11px] ml-1">(유료)</span>}
                 </span>
+                {isLocked ? (
+                  <span className="text-xs">잠김</span>
+                ) : (
+                  <span className="font-semibold" style={{ color: n === s.rows.length ? "#0F7B6C" : ink }}>
+                    {n}/{s.rows.length}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -457,8 +567,26 @@ export default function ProfileWorkspace(props: Props) {
   );
 }
 
-/** "· "로 이어진 값은 칩으로, "— 한계:"는 줄을 나눠 보여준다 */
-function RowValue({ value }: { value: string }) {
+/** 칸 하나: "키: 값" 구조면 작은 소제목으로 나눠 보여준다 */
+function RowValue({ field, value }: { field?: keyof IdeaProfile; value: string }) {
+  const parts = field ? subParts(field, value) : null;
+  if (!parts) return <Plain value={value} />;
+  return (
+    <div className="flex flex-col gap-2.5">
+      {parts.map((part, i) => (
+        <div key={i}>
+          <div className="text-[11px] font-semibold mb-0.5" style={{ color: "#808080" }}>
+            {part.label}
+          </div>
+          <Plain value={part.value} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** "· "로 시작하는 목록은 칩으로, "— 한계:"는 줄을 나눠 보여준다 */
+function Plain({ value }: { value: string }) {
   // "· 기능1\n· 기능2"처럼 목록으로 온 값만 칩으로 보여준다
   const parts = value.trim().startsWith("·") ? value.split(/\s*·\s+/).filter((t) => t.trim()) : [];
   const highlight = (t: string) =>
@@ -662,5 +790,14 @@ function EmptyCard({ text }: { text: string }) {
     <div className="bg-white rounded-3xl shadow-card p-10 text-center text-sm" style={{ border: "1px solid #E6E7EA", color: "#808080" }}>
       {text}
     </div>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6161FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
   );
 }
