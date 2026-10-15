@@ -34,6 +34,8 @@ export interface ProfileRow {
   key?: string | null;
   /** 상세분석 결과에서 온 줄 (읽기 전용) */
   fromReport?: number;
+  /** 보고서 원문 (짧은 요약을 만들 때 넘긴다) */
+  raw?: string;
   required?: boolean;
 }
 
@@ -197,14 +199,15 @@ export function reportRows(report: IdeaReport | null) {
   const competitorsValue = competitorLines.length
     ? [`직접 경쟁 ${direct.length}곳 · 간접 경쟁 ${indirect.length}곳`, ...competitorLines].join("\n")
     : toSummaryBullets((competition?.summary as string) ?? "");
-  const market_ = (k: string) => toSummaryBullets(((market?.[k] as Claim)?.text ?? "").trim());
+  const market_raw = (k: string) => ((market?.[k] as Claim)?.text ?? "").trim();
+  const market_ = (k: string) => toSummaryBullets(market_raw(k));
 
   const agent = (name: string) => report?.response.workflow_result.agent_results[name];
   const risks = findingOf(report, "RiskAgent", "top_risks") as unknown as { label: string; risk: string; level: string }[] | null;
 
   return {
     finance: [
-      { id: "fin:summary", label: "재무 요약", value: toSummaryBullets((agent("FinancialAgent")?.summary ?? "").trim()), hint: "유닛 이코노믹스 · 손익분기 · 필요 자금", fromReport: v },
+      { id: "fin:summary", raw: (agent("FinancialAgent")?.summary ?? "").trim(), label: "재무 요약", value: toSummaryBullets((agent("FinancialAgent")?.summary ?? "").trim()), hint: "유닛 이코노믹스 · 손익분기 · 필요 자금", fromReport: v },
     ] as ProfileRow[],
     risk: [
       {
@@ -217,13 +220,14 @@ export function reportRows(report: IdeaReport | null) {
       },
     ] as ProfileRow[],
     market: [
-      { id: "market:size", label: "시장 규모", value: market_("market_size"), hint: "전체 / 목표 시장 규모 — 공공 통계 근거", fromReport: v },
-      { id: "market:target", label: "목표 시장", value: market_("target_market_size"), hint: "1차 공략 시장의 크기", fromReport: v },
-      { id: "market:growth", label: "성장 추세", value: market_("growth_rate"), hint: "관련 시장·대상 수의 변화", fromReport: v },
+      { raw: market_raw("market_size"), id: "market:size", label: "시장 규모", value: market_("market_size"), hint: "전체 / 목표 시장 규모 — 공공 통계 근거", fromReport: v },
+      { raw: market_raw("target_market_size"), id: "market:target", label: "목표 시장", value: market_("target_market_size"), hint: "1차 공략 시장의 크기", fromReport: v },
+      { raw: market_raw("growth_rate"), id: "market:growth", label: "성장 추세", value: market_("growth_rate"), hint: "관련 시장·대상 수의 변화", fromReport: v },
     ] as ProfileRow[],
     competition: [
       {
         id: "comp:list",
+        raw: [competitorsValue, ((competition?.summary as string) ?? "").trim()].filter(Boolean).join("\n"),
         label: "주요 경쟁사",
         value: competitorsValue,
         hint: "경쟁·대체 서비스 비교",
@@ -231,6 +235,7 @@ export function reportRows(report: IdeaReport | null) {
       },
       {
         id: "comp:position",
+        raw: ((competition?.competitive_position as Claim)?.text ?? "").trim(),
         label: "경쟁 포지션",
         value: toSummaryBullets(((competition?.competitive_position as Claim)?.text ?? "").trim()),
         hint: "우리가 설 자리",

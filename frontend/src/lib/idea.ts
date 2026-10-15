@@ -96,6 +96,8 @@ export interface Idea {
   marketSizing?: { reportId: string; data: MarketSizing } | null;
   /** 보고서 요약의 영역별 점수 (보고서 버전마다 한 번 매겨 저장) */
   areaScores?: { reportId: string; data: AreaScore[] } | null;
+  /** 프로필 4~7 칸의 짧은 요약 (칸 id → "요약\n· 근거") — 보고서 버전마다 한 번 만들어 저장 */
+  reportDigest?: { reportId: string; rows: Record<string, string> } | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
   createdAt: string;
