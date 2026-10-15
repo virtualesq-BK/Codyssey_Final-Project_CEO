@@ -506,14 +506,12 @@ export function FinancePanel({
   const addLine = (group: LineGroup) => edit((p) => ({ ...p, lines: [...p.lines, { id: newLineId(), group, label: "", amount: 0 }] }));
 
   const t = plan ? totalsOf(plan.lines, plan.unitCount) : null;
-  const aiCount = plan?.lines.filter((l) => l.ai).length ?? 0;
 
   return (
     <section className={card} style={{ border: `1px solid ${line}` }} aria-label="월 손익계산서">
       <SectionHead
         title="월 손익계산서"
-        sub="출시 6~12개월 차 한 달 기준. 매출 − 매출원가 − 판매관리비 = 영업이익 (합계는 계산식으로 내요)"
-        badge={aiCount ? `AI 예시 ${aiCount}개` : plan ? "직접 입력" : undefined}
+        sub="출시 6~12개월 차 한 달 기준"
       />
 
       <div role="radiogroup" aria-label="수익 방식" className="flex gap-2 flex-wrap items-center">
@@ -591,15 +589,10 @@ export function FinancePanel({
               return (
                 <div key={g.key} className="rounded-xl p-4 flex flex-col gap-2.5" style={{ background: "#FAFBFD", border: `1px solid ${line}` }}>
                   <div className="flex items-baseline justify-between gap-2">
-                    <div>
-                      <b className="text-sm" style={{ color: tone }}>
-                        {g.key === "revenue" ? "＋ " : "－ "}
-                        {g.label}
-                      </b>
-                      <div className="text-[11px]" style={{ color: gray }}>
-                        {g.desc}
-                      </div>
-                    </div>
+                    <b className="text-sm" style={{ color: tone }}>
+                      {g.key === "revenue" ? "＋ " : "－ "}
+                      {g.label}
+                    </b>
                     <span className="text-sm font-bold tabular-nums" style={{ color: navy }}>
                       {won(subtotal)}
                     </span>
@@ -615,11 +608,6 @@ export function FinancePanel({
                           className="flex-1 min-w-0 text-[13px] font-semibold focus:outline-none bg-transparent"
                           style={{ border: "none", color: navy }}
                         />
-                        {l.ai && (
-                          <span className="text-[10px] font-bold px-1 rounded shrink-0" style={{ background: "#FFF6DE", color: "#8A4B08" }}>
-                            AI 예시
-                          </span>
-                        )}
                         <button
                           type="button"
                           onClick={() => removeLine(l.id)}
@@ -630,7 +618,7 @@ export function FinancePanel({
                           ×
                         </button>
                       </div>
-                      <label className="flex items-center rounded-md overflow-hidden" style={{ border: `1px solid ${line}` }}>
+                      <label className="flex items-center rounded-md overflow-hidden" style={{ border: `1px solid ${line}` }} title={l.basis || undefined}>
                         <span className="sr-only">{l.label} 월 금액</span>
                         <input
                           inputMode="numeric"
@@ -644,11 +632,6 @@ export function FinancePanel({
                           원/월
                         </span>
                       </label>
-                      {l.basis && (
-                        <span className="text-[11px] leading-snug" style={{ color: gray }}>
-                          {l.basis}
-                        </span>
-                      )}
                     </div>
                   ))}
                   <button
@@ -681,9 +664,8 @@ export function FinancePanel({
                   return (
                     <tr key={sc.key} style={{ borderTop: `1px solid ${line}`, fontWeight: sc.key === "base" ? 700 : 400 }}>
                       <td className="px-3 py-2">
-                        <span style={{ color: sc.key === "base" ? blue : navy }}>{sc.label}</span>{" "}
-                        <span className="text-[11px] font-normal" style={{ color: gray }}>
-                          {sc.desc}
+                        <span style={{ color: sc.key === "base" ? blue : navy }} title={sc.desc}>
+                          {sc.label}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums">{won(x.revenue)}</td>
@@ -697,16 +679,13 @@ export function FinancePanel({
               </tbody>
             </table>
           </div>
-          <p className="m-0 text-[11px] leading-relaxed" style={{ color: gray }}>
-            시나리오는 매출과 매출원가가 같이 70% / 130%로 움직이고 판매관리비는 그대로라고 본 단순 민감도예요. 손익분기 = 판매관리비 ÷ (매출총이익 ÷ 매출).
-          </p>
         </>
       )}
     </section>
   );
 }
 
-/** 매출에서 비용이 빠져 영업이익이 되는 흐름 (폭포 차트) */
+/** 매출에서 비용이 빠져 영업이익이 되는 흐름 (가로 폭포 차트) */
 function Waterfall({ t }: { t: Totals }) {
   const steps = [
     { label: "매출", value: t.revenue, kind: "total" as const },
@@ -715,46 +694,36 @@ function Waterfall({ t }: { t: Totals }) {
     { label: "판매관리비", value: -t.opex, kind: "minus" as const },
     { label: "영업이익", value: t.operating, kind: "result" as const },
   ];
-  // 막대 위치: 누적 시작점과 끝점 (0 아래로 내려갈 수 있음)
+  // 각 막대의 시작·끝 (빼는 항목은 앞 단계 끝에서 왼쪽으로 줄어든다)
   let run = 0;
-  const bars = steps.map((s) => {
-    let from: number, to: number;
-    if (s.kind === "minus") {
-      from = run;
-      to = run + s.value;
-      run = to;
-    } else {
-      from = 0;
-      to = s.value;
-      run = s.value;
-    }
-    return { ...s, lo: Math.min(from, to), hi: Math.max(from, to) };
+  const bars = steps.map((st) => {
+    const from = st.kind === "minus" ? run : 0;
+    const to = st.kind === "minus" ? run + st.value : st.value;
+    run = to;
+    return { ...st, lo: Math.min(from, to), hi: Math.max(from, to) };
   });
-  const top = Math.max(1, ...bars.map((b) => b.hi));
-  const bottom = Math.min(0, ...bars.map((b) => b.lo));
-  const H = 180;
-  const PAD = 18; // 맨 위 막대 위 금액 글자 자리
-  const y = (v: number) => PAD + ((top - v) / (top - bottom)) * H;
+  const max = Math.max(1, ...bars.map((b) => b.hi));
+  const min = Math.min(0, ...bars.map((b) => b.lo));
+  const x = (v: number) => ((v - min) / (max - min)) * 100;
   return (
-    <div role="img" aria-label={`매출 ${won(t.revenue)}, 매출원가 ${won(t.cogs)}, 판매관리비 ${won(t.opex)}, 영업이익 ${won(t.operating)}`}>
-      <div className="relative grid grid-cols-5 gap-3 px-1" style={{ height: H + PAD + 30 }}>
-        {/* 0 기준선 */}
-        <div className="absolute left-0 right-0" style={{ top: y(0), borderTop: `1px dashed #C9D0DC` }} />
-        {bars.map((b) => {
-          const color = b.kind === "minus" ? "#E5735C" : b.kind === "result" ? (b.value < 0 ? "#C2341C" : "#0F7B6C") : b.label === "매출" ? blue : "#9DB8F5";
-          return (
-            <div key={b.label} className="relative">
-              <div className="absolute left-0 right-0 rounded-md" style={{ top: y(b.hi), height: Math.max(3, y(b.lo) - y(b.hi)), background: color }} />
-              <div className="absolute left-0 right-0 text-center text-[11px] font-bold tabular-nums" style={{ top: Math.max(0, y(b.hi) - 16), color: navy }}>
-                {won(b.value)}
-              </div>
-              <div className="absolute left-0 right-0 text-center text-[11px]" style={{ top: H + PAD + 8, color: slate }}>
-                {b.label}
-              </div>
+    <div className="flex flex-col gap-2" role="img" aria-label={`매출 ${won(t.revenue)}, 매출원가 ${won(t.cogs)}, 판매관리비 ${won(t.opex)}, 영업이익 ${won(t.operating)}`}>
+      {bars.map((b) => {
+        const color = b.kind === "minus" ? "#E5735C" : b.kind === "result" ? (b.value < 0 ? "#C2341C" : "#0F7B6C") : b.label === "매출" ? blue : "#9DB8F5";
+        return (
+          <div key={b.label} className="grid grid-cols-[76px_minmax(0,1fr)_76px] items-center gap-3">
+            <span className="text-xs" style={{ color: b.kind === "total" || b.kind === "result" ? navy : slate, fontWeight: b.kind === "minus" ? 400 : 700 }}>
+              {b.label}
+            </span>
+            <div className="relative h-6 rounded" style={{ background: "#F5F7FC" }}>
+              {min < 0 && <div className="absolute top-0 bottom-0" style={{ left: `${x(0)}%`, borderLeft: "1px dashed #C9D0DC" }} />}
+              <div className="absolute top-0 bottom-0 rounded" style={{ left: `${x(b.lo)}%`, width: `${Math.max(0.8, x(b.hi) - x(b.lo))}%`, background: color }} />
             </div>
-          );
-        })}
-      </div>
+            <span className="text-xs font-bold text-right tabular-nums" style={{ color: b.kind === "result" ? color : navy }}>
+              {won(b.value)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
