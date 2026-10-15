@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { type FinanceInputs, type FinanceScenario, calcScenarios } from "@/lib/api";
+import {
+  type FinancePlan,
+  type PlanField,
+  REVENUE_TYPES,
+  type RevenueType,
+  TYPE_ORDER,
+  guessRevenueType,
+  planFromExtracted,
+  toCalculatorInputs,
+} from "@/lib/financePlan";
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
 
@@ -401,16 +411,6 @@ export function CompetitionPanel({ report }: { report: IdeaReport }) {
 
 /* ───────────── 4. 재무 시나리오 ───────────── */
 
-const FIELDS: { key: keyof FinanceInputs; label: string; unit: string; hint: string }[] = [
-  { key: "price", label: "고객 1명 월 결제액", unit: "원", hint: "예: 150000" },
-  { key: "customers", label: "월 결제 고객 수", unit: "명", hint: "예: 40" },
-  { key: "variable_cost_per_unit", label: "고객 1명당 월 변동비", unit: "원", hint: "서버·콘텐츠·결제 수수료 등" },
-  { key: "fixed_cost", label: "월 고정비", unit: "원", hint: "인건비·임대료 등" },
-  { key: "acquisition_cost", label: "월 마케팅·영업비", unit: "원", hint: "고객 데려오는 데 쓰는 돈" },
-  { key: "new_customers", label: "월 신규 고객 수", unit: "명", hint: "예: 8" },
-  { key: "monthly_churn_rate", label: "월 이탈률", unit: "%", hint: "예: 5" },
-];
-
 const won = (v: number | null | undefined) => {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   const abs = Math.abs(v);
@@ -426,29 +426,39 @@ export function FinancePanel({
   onSave,
 }: {
   report: IdeaReport;
-  saved?: FinanceInputs | null;
-  onSave?: (inputs: FinanceInputs) => Promise<void> | void;
+  saved?: FinancePlan | null;
+  onSave?: (plan: FinancePlan) => Promise<void> | void;
 }) {
-  // 처음 값: 직접 넣어 둔 값 → 없으면 분석이 대화에서 뽑은 값
+  // 분석이 대화에서 뽑아 둔 계산기 값
   const extracted = useMemo(() => {
     const inp = findingOf(report, "FinancialAgent", "inputs") as Record<string, { value?: number | null }> | null;
     const out: FinanceInputs = {};
-    if (inp) for (const f of FIELDS) out[f.key] = inp[f.key]?.value ?? null;
+    if (inp) for (const k of Object.keys(inp)) (out as Record<string, number | null>)[k] = inp[k]?.value ?? null;
     return out;
   }, [report]);
-  const initial = saved ?? extracted;
-  const [form, setForm] = useState<Record<string, string>>(() => toForm(initial));
+  const guessed = guessRevenueType(report.profile?.revenueModel ?? "");
+  const initial = saved ?? planFromExtracted(guessed, extracted);
+
+  const [type, setType] = useState<RevenueType>(initial.type);
+  // 유형마다 입력을 따로 기억해 둔다 (유형을 바꿨다 돌아와도 남게)
+  const [forms, setForms] = useState<Partial<Record<RevenueType, Record<string, string>>>>(() => ({ [initial.type]: toForm(initial.values) }));
+  const def = REVENUE_TYPES[type];
+  const form = forms[type] ?? toForm(planFromExtracted(type, extracted).values);
+  const setField = (k: string, v: string) => setForms((p) => ({ ...p, [type]: { ...form, [k]: v.replace(/[^0-9.]/g, "") } }));
   const [scenarios, setScenarios] = useState<FinanceScenario[] | null>(null);
+  const [calcType, setCalcType] = useState<RevenueType>(initial.type);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const filled = FIELDS.filter((f) => form[f.key]?.trim()).length;
+  const required = def.fields.filter((f) => !f.optional);
+  const filled = def.fields.filter((f) => form[f.key]?.trim()).length;
 
-  async function run(inputs: FinanceInputs, persist: boolean) {
+  async function run(plan: FinancePlan, persist: boolean) {
     setBusy(true);
     setError(null);
     try {
-      setScenarios(await calcScenarios(inputs));
-      if (persist) await onSave?.(inputs);
+      setScenarios(await calcScenarios(toCalculatorInputs(plan)));
+      setCalcType(plan.type);
+      if (persist) await onSave?.(plan);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -458,32 +468,78 @@ export function FinancePanel({
 
   // 저장된 값이 있으면 열 때 바로 계산해 보여준다
   useEffect(() => {
-    if (FIELDS.some((f) => initial[f.key] != null)) run(initial, false);
+    if (Object.values(initial.values).some((v) => v != null)) run(initial, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const base = scenarios?.find((s) => s.scenario === "base")?.metrics;
   const maxAbs = Math.max(1, ...(scenarios ?? []).flatMap((s) => [Math.abs(s.metrics.revenue ?? 0), Math.abs(s.metrics.operating_profit ?? 0)]));
+  const calcDef = REVENUE_TYPES[calcType];
 
   return (
     <section className={card} style={{ border: `1px solid ${line}` }} aria-label="재무 시나리오">
-      <SectionHead title="재무 시나리오" sub="숫자를 넣으면 보수 · 기본 · 낙관 3가지로 매출과 이익, 손익분기를 계산해요 (AI 추정이 아니라 계산식)" badge={`입력 ${filled}/7`} />
+      <SectionHead title="재무 시나리오" sub="수익 방식을 고르고 숫자를 넣으면 보수 · 기본 · 낙관 3가지로 계산해요 (AI 추정이 아니라 계산식)" badge={`입력 ${filled}/${def.fields.length}`} />
+
+      <div role="radiogroup" aria-label="수익 방식" className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+        {TYPE_ORDER.map((t) => {
+          const d = REVENUE_TYPES[t];
+          const on = t === type;
+          return (
+            <button
+              key={t}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => setType(t)}
+              className="rounded-lg px-3 py-2.5 text-left flex flex-col gap-0.5"
+              style={{ border: `1.5px solid ${on ? blue : line}`, background: on ? "#EAF0FD" : "#fff", cursor: "pointer" }}
+            >
+              <span className="text-sm font-bold flex items-center gap-1.5" style={{ color: on ? "#1446C4" : navy }}>
+                {d.label}
+                {t === guessed && !saved && (
+                  <span className="text-[10px] font-semibold px-1 rounded" style={{ background: "#FFF6DE", color: "#8A4B08" }}>
+                    추천
+                  </span>
+                )}
+              </span>
+              <span className="text-[11px]" style={{ color: gray }}>
+                {d.desc}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {!saved && report.profile?.revenueModel && (
+        <p className="m-0 -mt-1 text-xs leading-relaxed" style={{ color: slate }}>
+          프로필의 수익 모델 &lsquo;{report.profile.revenueModel.split("\n")[0].slice(0, 40)}&rsquo;을 보고{" "}
+          <b style={{ color: "#1446C4" }}>{REVENUE_TYPES[guessed].label}</b>으로 골라 뒀어요. 다르면 바꿔 주세요.
+        </p>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          run(fromForm(form), true);
+          run({ type, values: fromForm(def.fields, form) }, true);
         }}
         className="grid gap-3"
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}
       >
-        {FIELDS.map((f) => (
-          <label key={f.key} className="flex flex-col gap-1 text-xs font-semibold" style={{ color: slate }}>
-            {f.label}
-            <span className="flex items-center rounded-lg overflow-hidden" style={{ border: `1.5px solid ${form[f.key]?.trim() ? "#C9D6F5" : line}` }}>
+        {def.fields.map((f) => (
+          <label key={`${type}-${f.key}`} className="flex flex-col gap-1 text-xs font-semibold" style={{ color: slate }}>
+            <span>
+              {f.label}
+              {f.optional && (
+                <span className="font-normal" style={{ color: gray }}>
+                  {" "}
+                  (선택)
+                </span>
+              )}
+            </span>
+            <span className="flex items-center rounded-lg overflow-hidden bg-white" style={{ border: `1.5px solid ${form[f.key]?.trim() ? "#C9D6F5" : line}` }}>
               <input
                 inputMode="decimal"
                 value={form[f.key] ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value.replace(/[^0-9.]/g, "") }))}
+                onChange={(e) => setField(f.key, e.target.value)}
                 placeholder={f.hint}
                 className="flex-1 min-w-0 h-10 px-3 text-sm font-normal focus:outline-none"
                 style={{ border: "none", color: navy }}
@@ -515,10 +571,10 @@ export function FinancePanel({
         <>
           <div className="grid gap-3 sm:grid-cols-4">
             <Kpi label="월 매출 (기본)" value={won(base?.revenue)} />
-            <Kpi label="월 영업이익 (기본)" value={won(base?.operating_profit)} tone={(base?.operating_profit ?? 0) < 0 ? "bad" : "good"} />
-            <Kpi label="손익분기 고객 수" value={base?.breakeven_units != null ? `${base.breakeven_units.toLocaleString()}명` : "—"} />
+            <Kpi label="월 영업이익 (기본)" value={won(base?.operating_profit)} tone={base?.operating_profit == null ? undefined : base.operating_profit < 0 ? "bad" : "good"} />
+            <Kpi label={`손익분기 ${calcDef.unitNoun} 수`} value={base?.breakeven_units != null ? `${base.breakeven_units.toLocaleString()}` : "—"} />
             <Kpi
-              label="고객 가치 / 획득 비용"
+              label={`${calcDef.unitNoun} 가치 / 획득 비용`}
               value={base?.ltv_cac_ratio != null ? `${base.ltv_cac_ratio.toFixed(1)}배` : "—"}
               tone={base?.ltv_cac_ratio == null ? undefined : base.ltv_cac_ratio >= 3 ? "good" : "bad"}
             />
@@ -541,13 +597,13 @@ export function FinancePanel({
               </div>
             ))}
           </div>
-          {base && Object.values(base).every((v) => v === null) && (
+          {base && base.revenue == null && (
             <p className="m-0 text-xs" style={{ color: gray }}>
-              값이 더 있어야 계산돼요. 최소한 결제액 · 고객 수 · 변동비 · 고정비를 넣어 보세요.
+              값이 더 있어야 계산돼요. {required.slice(0, 3).map((f) => f.label).join(" · ")}부터 넣어 보세요.
             </p>
           )}
-          <p className="m-0 text-[11px]" style={{ color: gray }}>
-            보수 = 고객 수 70% · 비용 110~120%, 낙관 = 고객 수 130% · 비용 90~95%로 바꿔 계산한 일반적인 민감도예요.
+          <p className="m-0 text-[11px] leading-relaxed" style={{ color: gray }}>
+            {calcDef.label}: {calcDef.note} 보수 = {calcDef.unitNoun} 수 70% · 비용 110~120%, 낙관 = {calcDef.unitNoun} 수 130% · 비용 90~95%로 바꾼 일반적인 민감도예요.
           </p>
         </>
       )}
@@ -555,21 +611,18 @@ export function FinancePanel({
   );
 }
 
-function toForm(i: FinanceInputs): Record<string, string> {
+function toForm(values: Record<string, number | null>): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const f of FIELDS) {
-    const v = i[f.key];
-    out[f.key] = v == null ? "" : f.key === "monthly_churn_rate" ? String(Math.round(v * 1000) / 10) : String(v);
-  }
+  for (const [k, v] of Object.entries(values)) out[k] = v == null ? "" : String(Math.round(v * 1000) / 1000);
   return out;
 }
 
-function fromForm(form: Record<string, string>): FinanceInputs {
-  const out: FinanceInputs = {};
-  for (const f of FIELDS) {
+function fromForm(fields: PlanField[], form: Record<string, string>): Record<string, number | null> {
+  const out: Record<string, number | null> = {};
+  for (const f of fields) {
     const raw = form[f.key]?.trim();
-    const n = raw ? Number(raw) : null;
-    out[f.key] = n == null || Number.isNaN(n) ? null : f.key === "monthly_churn_rate" ? n / 100 : n;
+    const v = raw ? Number(raw) : null;
+    out[f.key] = v == null || Number.isNaN(v) ? null : v;
   }
   return out;
 }

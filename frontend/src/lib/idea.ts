@@ -2,7 +2,8 @@
  * 아이디어 한 건의 모양과 상태 규칙.
  * 메모 → 인터뷰 → (1차 분석) → 아이템 프로필 → (상세 진단) → 분석 보고서
  */
-import type { AnalyzeRequest, AnalyzeResponse, Coverage, Decision, FinanceInputs, InterviewMessage, InterviewSlot } from "@/lib/api";
+import type { AnalyzeRequest, AnalyzeResponse, Coverage, Decision, InterviewMessage, InterviewSlot } from "@/lib/api";
+import type { FinancePlan } from "@/lib/financePlan";
 
 export type IdeaStatus =
   | "memo"
@@ -89,8 +90,8 @@ export interface Idea {
   diagnosisJobId?: string | null;
   /** 상세분석 작업을 시작할 때 보낸 입력 — 보고서에 함께 남긴다 */
   diagnosisInput?: AnalyzeRequest | null;
-  /** 사용자가 보고서 화면에서 직접 넣은 재무 숫자 (시나리오 계산용) */
-  financeInputs?: FinanceInputs | null;
+  /** 사용자가 보고서 화면에서 직접 넣은 재무 숫자 — 수익 방식 + 값 (시나리오 계산용) */
+  financePlan?: FinancePlan | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
   createdAt: string;

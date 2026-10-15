@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import ReportView from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
-import type { AnalyzeJob, FinanceInputs } from "@/lib/api";
+import type { AnalyzeJob } from "@/lib/api";
+import type { FinancePlan } from "@/lib/financePlan";
 import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
 import { progressOf } from "@/lib/diagnosisRunner";
@@ -53,7 +54,7 @@ interface Props {
   /** 값이 바뀌면 보고서 탭으로 넘긴다 (진행 모달의 '보고서 보기') */
   openReportSignal?: number;
   /** 보고서 재무 시나리오에 넣은 숫자 저장 */
-  onSaveFinance?: (inputs: FinanceInputs) => Promise<void>;
+  onSaveFinance?: (plan: FinancePlan) => Promise<void>;
 }
 
 const ink = "#08183F";
@@ -240,7 +241,7 @@ export default function ProfileWorkspace(props: Props) {
                     className="min-h-[36px] px-3 rounded-lg text-xs font-bold"
                     style={{ background: "#EAF0FD", color: "#1446C4", border: "none", cursor: "pointer" }}
                   >
-                    {idea.financeInputs ? "재무 시나리오 보기 ›" : "숫자 넣고 손익 계산하기 ›"}
+                    {idea.financePlan ? "재무 시나리오 보기 ›" : "숫자 넣고 손익 계산하기 ›"}
                   </button>
                 </div>
               ) : r.id === "risk:top" && latest && risksOf(latest).length > 0 ? (
@@ -498,7 +499,7 @@ export default function ProfileWorkspace(props: Props) {
               </div>
             )}
             {selectedReport ? (
-              <ReportView report={selectedReport} financeInputs={idea.financeInputs} onSaveFinanceInputs={onSaveFinance} />
+              <ReportView report={selectedReport} financePlan={idea.financePlan} onSaveFinancePlan={onSaveFinance} />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
                 <div className="font-bold">

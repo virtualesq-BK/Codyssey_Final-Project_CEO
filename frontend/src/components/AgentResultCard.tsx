@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { AgentResult, AgentStatus } from "@/lib/api";
 
 const AGENT_LABELS: Record<string, string> = {
@@ -51,6 +52,7 @@ interface Props {
 }
 
 export default function AgentResultCard({ agentName, result }: Props) {
+  const [showAll, setShowAll] = useState(false);
   const label = AGENT_LABELS[agentName] ?? agentName;
   const statusColor = STATUS_COLORS[result.status];
   const statusLabel = STATUS_LABELS[result.status];
@@ -104,14 +106,43 @@ export default function AgentResultCard({ agentName, result }: Props) {
           <div className="text-xs font-semibold text-text-muted mb-2">
             근거 자료 {result.evidence.length}건
           </div>
-          <div className="flex flex-col gap-1">
-            {result.evidence.slice(0, 3).map((ev, i) => (
-              <div key={i} className="text-xs text-text-muted flex gap-2">
-                <span className="text-primary font-medium">[{ev.source}]</span>
-                <span>{ev.title}</span>
-              </div>
+          <ul className="m-0 p-0 list-none flex flex-col gap-2">
+            {(showAll ? result.evidence : result.evidence.slice(0, 3)).map((ev, i) => (
+              <li key={i} className="text-xs flex flex-col gap-0.5">
+                <span className="flex gap-2 items-baseline">
+                  <span className="font-medium shrink-0" style={{ color: "#1B57EA" }}>
+                    [{ev.source}]
+                  </span>
+                  {ev.url ? (
+                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 min-w-0 break-words" style={{ color: "#08183F" }}>
+                      {ev.title} <span aria-hidden="true">↗</span>
+                      <span className="sr-only"> (새 창에서 열림)</span>
+                    </a>
+                  ) : (
+                    <span className="min-w-0" style={{ color: "#08183F" }}>
+                      {ev.title}
+                    </span>
+                  )}
+                </span>
+                {showAll && ev.content && (
+                  <span className="pl-1 leading-relaxed line-clamp-2" style={{ color: "#6B7280" }}>
+                    {ev.content}
+                  </span>
+                )}
+              </li>
             ))}
-          </div>
+          </ul>
+          {result.evidence.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              aria-expanded={showAll}
+              className="mt-2 text-xs font-semibold"
+              style={{ background: "none", border: "none", color: "#1B57EA", cursor: "pointer", padding: 0 }}
+            >
+              {showAll ? "▴ 접기" : `▾ 전체 ${result.evidence.length}건 보기 (내용 포함)`}
+            </button>
+          )}
         </div>
       )}
     </div>

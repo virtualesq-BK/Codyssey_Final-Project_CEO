@@ -318,7 +318,7 @@ export default function IdeaDetailPage() {
           diagnosisJob={job}
           onShowProgress={() => setProgressOpen(true)}
           openReportSignal={reportSignal}
-          onSaveFinance={async (financeInputs) => setIdea(await updateIdea(user, current, { financeInputs }))}
+          onSaveFinance={async (financePlan) => setIdea(await updateIdea(user, current, { financePlan }))}
         />
         {diagnosisModals}
       </div>

@@ -3,19 +3,19 @@
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
 import { CompetitionPanel, EvidenceOverview, FinancePanel, RiskPanel } from "@/components/ReportVisuals";
-import type { FinanceInputs } from "@/lib/api";
+import type { FinancePlan } from "@/lib/financePlan";
 import { AGENT_ORDER, STATUS_BG, STATUS_TEXT } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
 
 /** 상세 진단 보고서 한 버전 — 판정 배너 + 한눈에 보기(근거·리스크·경쟁·재무) + 분야별 카드 */
 export default function ReportView({
   report,
-  financeInputs,
-  onSaveFinanceInputs,
+  financePlan,
+  onSaveFinancePlan,
 }: {
   report: IdeaReport;
-  financeInputs?: FinanceInputs | null;
-  onSaveFinanceInputs?: (inputs: FinanceInputs) => Promise<void> | void;
+  financePlan?: FinancePlan | null;
+  onSaveFinancePlan?: (plan: FinancePlan) => Promise<void> | void;
 }) {
   const wf = report.response.workflow_result;
   const orderedAgents = AGENT_ORDER.filter((k) => k in wf.agent_results);
@@ -54,7 +54,7 @@ export default function ReportView({
         <RiskPanel report={report} />
         <CompetitionPanel report={report} />
         {/* 보고서 버전이 바뀌면 입력칸도 새로 */}
-        <FinancePanel key={report.id} report={report} saved={financeInputs} onSave={onSaveFinanceInputs} />
+        <FinancePanel key={report.id} report={report} saved={financePlan} onSave={onSaveFinancePlan} />
       </div>
 
       <div>
