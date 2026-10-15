@@ -53,7 +53,32 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
         aria-label="딥 인터뷰 대화"
       >
         <div className="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: "#E5E7EB" }}>
-          <b>딥 인터뷰</b>
+          <div className="flex items-center gap-4 flex-wrap">
+            <b>딥 인터뷰</b>
+            {/* 진행 — 헤더에 붙여 대화 중에도 눈에 띄게 */}
+            <div
+              className="flex items-center gap-2"
+              title="컨설턴트가 답을 따라가며 필요한 만큼 물어봐요. 충분히 파악하면 그 전에 끝나기도 해요."
+            >
+              <div
+                className="h-2 w-32 sm:w-40 rounded-full"
+                style={{ background: "#E5E7EB" }}
+                role="progressbar"
+                aria-label="인터뷰 진행"
+                aria-valuemin={0}
+                aria-valuemax={INTERVIEW_MAX_QUESTIONS}
+                aria-valuenow={Math.min(asked, INTERVIEW_MAX_QUESTIONS)}
+              >
+                <div
+                  className="h-2 rounded-full transition-all"
+                  style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#1B57EA" }}
+                />
+              </div>
+              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#08183F" }}>
+                질문 {Math.min(asked, INTERVIEW_MAX_QUESTIONS)} <span className="font-normal" style={{ color: "#6B7280" }}>/ 최대 {INTERVIEW_MAX_QUESTIONS}</span>
+              </span>
+            </div>
+          </div>
           <span className="text-xs text-text-muted">답할 때마다 저장돼요 · 나중에 이어서 할 수 있어요</span>
         </div>
 
@@ -68,7 +93,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                   className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
                   style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: "4px 16px 16px 16px" }}
                 >
-                  {m.content}
+                  <QuestionText text={m.content} />
                 </div>
               </div>
             ) : (
@@ -173,24 +198,6 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
       </section>
 
       <aside className="flex flex-col gap-4" style={{ flex: "1 1 280px", maxWidth: 360 }}>
-        <div className="bg-white border border-border rounded-lg p-5 flex flex-col gap-2">
-          <div className="flex justify-between items-baseline">
-            <b className="text-sm">진행</b>
-            <span className="text-xs text-text-muted">
-              질문 {Math.min(asked, INTERVIEW_MAX_QUESTIONS)} / 최대 {INTERVIEW_MAX_QUESTIONS}
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full my-1" style={{ background: "#E5E7EB" }}>
-            <div
-              className="h-1.5 rounded-full transition-all"
-              style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#1B57EA" }}
-            />
-          </div>
-          <p className="text-xs m-0 leading-relaxed" style={{ color: "#6B7280" }}>
-            컨설턴트가 답을 따라가며 필요한 만큼 물어봐요. 충분히 파악하면 그 전에 끝나기도 해요.
-          </p>
-        </div>
-
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3" style={{ border: "1px solid #E5E7EB" }}>
           <button
             type="button"
@@ -202,7 +209,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
             {locked ? "프로필 만드는 중…" : "인터뷰 마치고 프로필 만들기"}
           </button>
           <p className="text-xs text-text-secondary m-0 leading-relaxed">
-            언제든 마칠 수 있어요. 대화에서 나오지 않은 부분은 AI가 현실적으로 채워 넣고, 만든 프로필은 직접 고칠 수 있어요.
+            컨설턴트가 답을 따라가며 필요한 만큼 물어보고, 충분히 파악하면 그 전에 끝나기도 해요. 언제든 마칠 수 있어요. 대화에서 나오지 않은 부분은 AI가 현실적으로 채워 넣고, 만든 프로필은 직접 고칠 수 있어요.
           </p>
         </div>
       </aside>
@@ -217,5 +224,26 @@ function MicIcon({ active }: { active: boolean }) {
       <path d="M5 11a7 7 0 0 0 14 0" />
       <path d="M12 18v3" />
     </svg>
+  );
+}
+
+/** 질문 끝의 "(영역 · 의도)" 줄은 본문과 구분해 작고 흐리게 보여준다 */
+function QuestionText({ text }: { text: string }) {
+  const m = text.match(/^([\s\S]*?)\n?\s*\(([^()\n]+)\)\s*$/);
+  if (!m || !m[2].includes("·")) return <>{text}</>;
+  // 첫 "·"만 영역과 의도의 경계로 본다 (의도 안의 "·"는 그대로 둔다)
+  const cut = m[2].indexOf("·");
+  const area = m[2].slice(0, cut).trim();
+  const why = m[2].slice(cut + 1).trim();
+  return (
+    <>
+      {m[1].trim()}
+      <span className="block mt-2 text-xs" style={{ color: "#6B7280" }}>
+        <b className="font-semibold" style={{ color: "#1B57EA" }}>
+          {area}
+        </b>
+        {why && ` · ${why}`}
+      </span>
+    </>
   );
 }
