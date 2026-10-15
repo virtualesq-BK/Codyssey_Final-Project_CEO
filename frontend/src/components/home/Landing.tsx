@@ -42,14 +42,14 @@ export default function Landing() {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
             style={{ background: "#F3F4F6", color: "#4B5563" }}
           >
-            <span className="w-2 h-2 rounded-full inline-block" style={{ background: "#7270FF" }} />
+            <span className="w-2 h-2 rounded-full inline-block" style={{ background: "#134CD8" }} />
             AI 에이전트 6개 · 실시간 병렬 분석
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight m-0 tracking-tight" style={{ color: "#1C1A2C" }}>
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight m-0 tracking-tight" style={{ color: "#111111" }}>
             아이디어 한 줄에서
             <br />
-            <span style={{ color: "#7270FF" }}>지원서 재료</span>까지
+            <span style={{ color: "#134CD8" }}>지원서 재료</span>까지
           </h1>
 
           <p className="text-lg max-w-xl m-0 leading-relaxed" style={{ color: "#4B5563" }}>
@@ -62,14 +62,14 @@ export default function Landing() {
             <Link
               href="/ideas"
               className="px-6 py-3 rounded-xl font-semibold text-base text-white transition-opacity hover:opacity-90 no-underline"
-              style={{ background: "#7270FF", textDecoration: "none" }}
+              style={{ background: "#134CD8", textDecoration: "none" }}
             >
               아이디어 메모하기
             </Link>
             <Link
               href="/ideas"
               className="px-6 py-3 rounded-xl font-semibold text-base transition-colors no-underline bg-white"
-              style={{ border: "1px solid #E5E7EB", color: "#2F2B4A", textDecoration: "none" }}
+              style={{ border: "1px solid #E5E7EB", color: "#111111", textDecoration: "none" }}
             >
               샘플 결과 보기
             </Link>
@@ -127,7 +127,7 @@ export default function Landing() {
           <Link
             href="/ideas"
             className="px-8 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
-            style={{ background: "#7270FF", textDecoration: "none" }}
+            style={{ background: "#134CD8", textDecoration: "none" }}
           >
             지금 무료로 시작하기
           </Link>

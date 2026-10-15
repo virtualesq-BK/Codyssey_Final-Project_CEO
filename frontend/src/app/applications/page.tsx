@@ -98,8 +98,8 @@ export default function ApplicationsPage() {
           <button
             type="button"
             onClick={() => (user ? setDialog({}) : (window.location.href = "/login?next=/applications"))}
-            className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            className="min-h-[44px] px-5 rounded-xl text-sm font-bold bg-white"
+            style={{ color: "#134CD8", border: "none", cursor: "pointer" }}
           >
             + 새 지원서
           </button>
@@ -130,10 +130,10 @@ export default function ApplicationsPage() {
               보고서가 나온 아이템으로 지원사업을 골라 지원서를 만들어 보세요.
             </div>
             <div className="flex gap-2 mt-2">
-              <Link href="/programs" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#2F2B4A", textDecoration: "none" }}>
+              <Link href="/programs" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#111111", textDecoration: "none" }}>
                 공고 찾기
               </Link>
-              <Link href="/ideas" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#2F2B4A", textDecoration: "none" }}>
+              <Link href="/ideas" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#111111", textDecoration: "none" }}>
                 MY아이디어
               </Link>
             </div>
@@ -154,13 +154,13 @@ export default function ApplicationsPage() {
                     className="min-h-[36px] px-4 rounded-xl text-sm font-semibold"
                     style={{
                       cursor: "pointer",
-                      border: `1px solid ${active ? "#7270FF" : line}`,
-                      background: active ? "#EEEEFF" : "#fff",
-                      color: active ? "#5B59E0" : "#4B5563",
+                      border: `1px solid ${active ? "#134CD8" : line}`,
+                      background: active ? "#EAF0FD" : "#fff",
+                      color: active ? "#0F3DB0" : "#4B5563",
                     }}
                   >
                     {f.label}
-                    <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#7270FF" : "#6B7280" }}>
+                    <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#134CD8" : "#6B7280" }}>
                       {count}
                     </span>
                   </button>
@@ -205,7 +205,7 @@ export default function ApplicationsPage() {
                         </div>
 
                         <div className="min-w-0">
-                          <div className="font-bold text-base line-clamp-2" style={{ color: "#1C1A2C" }}>
+                          <div className="font-bold text-base line-clamp-2" style={{ color: "#111111" }}>
                             {a.programTitle}
                           </div>
                           <div className="text-xs mt-1" style={{ color: "#6B7280" }}>
@@ -230,7 +230,7 @@ export default function ApplicationsPage() {
                               value={a.status}
                               onChange={(e) => changeStatus(a, e.target.value as ApplicationStatus)}
                               className="h-8 rounded-lg px-2 text-xs bg-white focus:outline-none"
-                              style={{ border: `1px solid ${line}`, color: "#2F2B4A" }}
+                              style={{ border: `1px solid ${line}`, color: "#111111" }}
                             >
                               {(Object.keys(APPLICATION_STATUS) as ApplicationStatus[]).map((k) => (
                                 <option key={k} value={k}>

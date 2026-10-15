@@ -36,11 +36,11 @@ export default function Header({ activeNav }: HeaderProps) {
         <Link
           href="/"
           className="font-bold text-xl no-underline flex items-center gap-2"
-          style={{ textDecoration: "none", color: "#2F2B4A" }}
+          style={{ textDecoration: "none", color: "#111111" }}
         >
           <span
             className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-white text-sm font-bold"
-            style={{ background: "#7270FF" }}
+            style={{ background: "#134CD8" }}
           >
             나
           </span>
@@ -54,9 +54,9 @@ export default function Header({ activeNav }: HeaderProps) {
               href={item.href}
               className="no-underline font-medium px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap"
               style={{
-                color: activeNav === item.key ? "#5B59E0" : "#4B5563",
+                color: activeNav === item.key ? "#0F3DB0" : "#4B5563",
                 fontWeight: activeNav === item.key ? 700 : 500,
-                background: activeNav === item.key ? "#EEEEFF" : "transparent",
+                background: activeNav === item.key ? "#EAF0FD" : "transparent",
                 textDecoration: "none",
               }}
             >
@@ -84,7 +84,7 @@ export default function Header({ activeNav }: HeaderProps) {
               <Link
                 href="/login"
                 className="text-xs px-3 py-1.5 rounded-xl font-semibold no-underline bg-white"
-                style={{ border: "1px solid #E5E7EB", color: "#2F2B4A", textDecoration: "none" }}
+                style={{ border: "1px solid #E5E7EB", color: "#111111", textDecoration: "none" }}
               >
                 로그인
               </Link>
@@ -97,7 +97,7 @@ export default function Header({ activeNav }: HeaderProps) {
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             className="lg:hidden w-10 h-10 -mr-2 inline-flex items-center justify-center rounded-xl"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#2F2B4A" }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#111111" }}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -115,9 +115,9 @@ export default function Header({ activeNav }: HeaderProps) {
               onClick={() => setMenuOpen(false)}
               className="no-underline px-3 py-3 rounded-xl text-sm"
               style={{
-                color: activeNav === item.key ? "#5B59E0" : "#2F2B4A",
+                color: activeNav === item.key ? "#0F3DB0" : "#111111",
                 fontWeight: activeNav === item.key ? 700 : 500,
-                background: activeNav === item.key ? "#EEEEFF" : "transparent",
+                background: activeNav === item.key ? "#EAF0FD" : "transparent",
                 textDecoration: "none",
               }}
             >

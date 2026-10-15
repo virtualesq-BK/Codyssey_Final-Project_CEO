@@ -75,7 +75,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               <div
                 key={i}
                 className="self-end max-w-[80%] px-4 py-3 text-sm leading-relaxed text-white whitespace-pre-wrap"
-                style={{ background: "#2F2B4A", borderRadius: "16px 4px 16px 16px" }}
+                style={{ background: "#111111", borderRadius: "16px 4px 16px 16px" }}
               >
                 {m.content}
               </div>
@@ -94,7 +94,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                   type="button"
                   onClick={() => send(q)}
                   className="min-h-[36px] px-3 rounded-full text-xs bg-white"
-                  style={{ border: "1px solid #D9DBDA", color: "#2F2B4A", cursor: "pointer" }}
+                  style={{ border: "1px solid #D9DBDA", color: "#111111", cursor: "pointer" }}
                 >
                   {q}
                 </button>
@@ -130,7 +130,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                 rows={2}
                 disabled={disabled}
                 className="w-full rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
-                style={{ border: `1.5px solid ${speech.listening ? "#7270FF" : "#E5E7EB"}` }}
+                style={{ border: `1.5px solid ${speech.listening ? "#134CD8" : "#E5E7EB"}` }}
               />
               {speech.error && (
                 <span role="alert" className="block mt-1 text-xs" style={{ color: "#B42318" }}>
@@ -153,8 +153,8 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               }
               className={`min-h-[48px] w-12 rounded-xl flex items-center justify-center disabled:opacity-40 ${speech.listening ? "animate-pulse" : ""}`}
               style={{
-                border: `1px solid ${speech.listening ? "#7270FF" : "#E5E7EB"}`,
-                background: speech.listening ? "#EEEEFF" : "#fff",
+                border: `1px solid ${speech.listening ? "#134CD8" : "#E5E7EB"}`,
+                background: speech.listening ? "#EAF0FD" : "#fff",
                 cursor: "pointer",
               }}
             >
@@ -164,7 +164,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               type="submit"
               disabled={disabled || !answer.trim()}
               className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#2F2B4A", border: "none", cursor: "pointer" }}
+              style={{ background: "#111111", border: "none", cursor: "pointer" }}
             >
               보내기
             </button>
@@ -183,7 +183,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
           <div className="h-1.5 rounded-full my-1" style={{ background: "#E5E7EB" }}>
             <div
               className="h-1.5 rounded-full transition-all"
-              style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#7270FF" }}
+              style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#134CD8" }}
             />
           </div>
           <p className="text-xs m-0 leading-relaxed" style={{ color: "#6B7280" }}>
@@ -197,7 +197,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
             onClick={onFinish}
             disabled={disabled || !answered}
             className="min-h-[52px] rounded-xl text-base font-bold text-white disabled:opacity-50"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
           >
             {locked ? "프로필 만드는 중…" : "인터뷰 마치고 프로필 만들기"}
           </button>
@@ -212,7 +212,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
 
 function MicIcon({ active }: { active: boolean }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#7270FF" : "#4B5563"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#134CD8" : "#4B5563"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="9" y="3" width="6" height="11" rx="3" />
       <path d="M5 11a7 7 0 0 0 14 0" />
       <path d="M12 18v3" />

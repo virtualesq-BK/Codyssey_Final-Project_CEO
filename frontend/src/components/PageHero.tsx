@@ -8,11 +8,11 @@ interface Props {
   actions?: ReactNode;
 }
 
-/** 목록 화면 맨 위 미니 히어로 — 남보라 띠로 아래 내용과 섹션을 나눈다 (색은 임시, 나중에 조정) */
+/** 목록 화면 맨 위 미니 히어로 — 키컬러(로열 블루) 띠로 아래 내용과 섹션을 나눈다. 안의 버튼은 흰 바탕으로 */
 export default function PageHero({ eyebrow, title, description, actions }: Props) {
   return (
-    <section className="relative overflow-hidden" style={{ background: "#36325E" }}>
-      {/* 오른쪽 끝에 은은한 보라빛 */}
+    <section className="relative overflow-hidden" style={{ background: "linear-gradient(100deg, #134CD8 0%, #0F3DB0 100%)" }}>
+      {/* 오른쪽 끝에 은은한 빛 */}
       <div
         aria-hidden="true"
         className="absolute pointer-events-none"
@@ -22,7 +22,7 @@ export default function PageHero({ eyebrow, title, description, actions }: Props
           width: 420,
           height: 420,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(160,158,255,0.45), rgba(160,158,255,0) 70%)",
+          background: "radial-gradient(circle, rgba(255,255,255,0.22), rgba(255,255,255,0) 70%)",
         }}
       />
 
@@ -32,14 +32,14 @@ export default function PageHero({ eyebrow, title, description, actions }: Props
             className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full text-xs font-semibold"
             style={{ color: "#fff", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#A09EFF" }} />
+            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#fff" }} />
             {eyebrow}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold m-0 tracking-tight" style={{ color: "#fff" }}>
             {title}
           </h1>
           {description && (
-            <p className="m-0 text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>
+            <p className="m-0 text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.85)" }}>
               {description}
             </p>
           )}

@@ -109,7 +109,7 @@ export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg:
   profiling: { label: "프로필 만드는 중", color: "#B45309", bg: "#FFF4E5", dot: "#F59E0B" },
   profile: { label: "프로필", color: "#1D4ED8", bg: "#E8F1FF", dot: "#3B82F6" },
   diagnosing: { label: "진단 중", color: "#1D4ED8", bg: "#E8F1FF", dot: "#3B82F6" },
-  report: { label: "보고서", color: "#FFFFFF", bg: "#7270FF", dot: "#FFFFFF" },
+  report: { label: "보고서", color: "#FFFFFF", bg: "#134CD8", dot: "#FFFFFF" },
   failed: { label: "실패", color: "#B42318", bg: "#FEF2F2", dot: "#B42318" },
 };
 

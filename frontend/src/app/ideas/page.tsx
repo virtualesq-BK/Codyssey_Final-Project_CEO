@@ -116,7 +116,7 @@ export default function IdeasPage() {
             type="submit"
             disabled={saving || !memo.trim()}
             className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50 shrink-0"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
           >
             {saving ? "저장 중…" : "메모 추가"}
           </button>
@@ -133,7 +133,7 @@ export default function IdeasPage() {
             style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#4B5563" }}
           >
             <span>이 브라우저에만 저장돼 있어요. 로그인하면 계정으로 옮겨져요.</span>
-            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#2F2B4A" }}>
+            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#111111" }}>
               로그인 ›
             </Link>
           </div>
@@ -174,13 +174,13 @@ export default function IdeasPage() {
                   className="min-h-[36px] px-4 rounded-xl text-sm font-semibold"
                   style={{
                     cursor: "pointer",
-                    border: `1px solid ${active ? "#7270FF" : "#E5E7EB"}`,
-                    background: active ? "#EEEEFF" : "#fff",
-                    color: active ? "#5B59E0" : "#4B5563",
+                    border: `1px solid ${active ? "#134CD8" : "#E5E7EB"}`,
+                    background: active ? "#EAF0FD" : "#fff",
+                    color: active ? "#0F3DB0" : "#4B5563",
                   }}
                 >
                   {f.label}
-                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#7270FF" : "#6B7280" }}>
+                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#134CD8" : "#6B7280" }}>
                     {count}
                   </span>
                 </button>

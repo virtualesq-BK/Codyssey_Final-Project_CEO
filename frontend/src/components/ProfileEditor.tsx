@@ -81,7 +81,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
     <div className="flex flex-col gap-7">
       {GROUPS.map((group, gi) => (
         <fieldset key={group.title} className="flex flex-col gap-4 border-0 p-0 m-0" disabled={readOnly}>
-          <legend className="text-sm font-bold mb-3 p-0" style={{ color: "#7270FF" }}>
+          <legend className="text-sm font-bold mb-3 p-0" style={{ color: "#134CD8" }}>
             {group.title}
           </legend>
 

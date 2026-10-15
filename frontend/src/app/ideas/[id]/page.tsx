@@ -137,7 +137,7 @@ export default function IdeaDetailPage() {
                 <div className="text-text-secondary text-sm">
                   {error ?? "삭제됐거나 다른 계정·브라우저에 저장된 아이디어일 수 있어요."}
                 </div>
-                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#2F2B4A" }}>
+                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#111111" }}>
                   MY아이디어로 ›
                 </Link>
               </>
@@ -356,7 +356,7 @@ export default function IdeaDetailPage() {
                     onClick={beginInterview}
                     disabled={busy || !memoDraft.trim()}
                     className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                    style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+                    style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
                   >
                     {busy ? "첫 질문 준비 중…" : "인터뷰 시작"}
                   </button>
@@ -374,7 +374,7 @@ export default function IdeaDetailPage() {
                 <Link
                   href={loginHref}
                   className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
-                  style={{ background: "#7270FF", textDecoration: "none" }}
+                  style={{ background: "#134CD8", textDecoration: "none" }}
                 >
                   로그인하고 인터뷰 시작
                 </Link>
@@ -458,8 +458,8 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
             className="rounded-xl px-4 py-3 text-sm font-semibold"
             style={{
               background: active ? "#F3F4F6" : "#fff",
-              color: active ? "#1C1A2C" : done ? "#2F2B4A" : "#6B7280",
-              border: `1px solid ${active ? "#2F2B4A" : "#E5E7EB"}`,
+              color: active ? "#111111" : done ? "#111111" : "#6B7280",
+              border: `1px solid ${active ? "#111111" : "#E5E7EB"}`,
             }}
           >
             {done ? "✓ " : `${i + 1}. `}

@@ -44,7 +44,7 @@ interface Props {
   onDiagnose: () => void;
 }
 
-const ink = "#2F2B4A";
+const ink = "#111111";
 const slate = "#4B5563";
 const iron = "#6B7280";
 const line = "#E5E7EB";
@@ -140,7 +140,7 @@ export default function ProfileWorkspace(props: Props) {
         </h2>
         <div className="flex items-center gap-2">
           {s.badge && (
-            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#111111" }}>
               {s.badge}
             </span>
           )}
@@ -182,7 +182,7 @@ export default function ProfileWorkspace(props: Props) {
                       onChange={(e) => setEditValue(e.target.value)}
                       aria-label={r.label}
                       className="h-10 rounded-lg px-3 text-sm bg-white focus:outline-none self-start"
-                      style={{ border: "1.5px solid #7270FF" }}
+                      style={{ border: "1.5px solid #134CD8" }}
                     >
                       {REGIONS.map((x) => (
                         <option key={x}>{x}</option>
@@ -196,7 +196,7 @@ export default function ProfileWorkspace(props: Props) {
                     placeholder={r.hint}
                     rows={Math.min(10, Math.max(2, editValue.split("\n").length + 1, Math.ceil(editValue.length / 45)))}
                     className="rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed"
-                    style={{ border: "1.5px solid #7270FF" }}
+                    style={{ border: "1.5px solid #134CD8" }}
                   />
                   )}
                 </div>
@@ -277,8 +277,8 @@ export default function ProfileWorkspace(props: Props) {
               // 보고서가 나온 뒤의 다음 할 일이라 그때만 강조색
               style={
                 latest
-                  ? { background: "#7270FF", color: "#fff", textDecoration: "none" }
-                  : { background: "#fff", border: "1px solid #D9DBDA", color: "#2F2B4A", textDecoration: "none" }
+                  ? { background: "#134CD8", color: "#fff", textDecoration: "none" }
+                  : { background: "#fff", border: "1px solid #D9DBDA", color: "#111111", textDecoration: "none" }
               }
             >
               이 아이템으로 공고 찾기
@@ -306,8 +306,8 @@ export default function ProfileWorkspace(props: Props) {
               style={{
                 background: "none",
                 border: "none",
-                borderBottom: `2px solid ${tab === key ? "#7270FF" : "transparent"}`,
-                color: tab === key ? "#5B59E0" : slate,
+                borderBottom: `2px solid ${tab === key ? "#134CD8" : "transparent"}`,
+                color: tab === key ? "#0F3DB0" : slate,
                 cursor: "pointer",
               }}
             >
@@ -335,7 +335,7 @@ export default function ProfileWorkspace(props: Props) {
                     onClick={saveAll}
                     disabled={busy}
                     className="min-h-[36px] px-4 rounded-xl text-xs font-bold text-white disabled:opacity-50"
-                    style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+                    style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
                   >
                     모두 저장
                   </button>
@@ -398,7 +398,7 @@ export default function ProfileWorkspace(props: Props) {
                         onClick={onDiagnose}
                         disabled={!canDiagnose}
                         className="min-h-[44px] px-6 rounded-xl text-sm font-bold bg-white disabled:opacity-50"
-                        style={{ border: "1px solid #2F2B4A", color: "#2F2B4A", cursor: "pointer" }}
+                        style={{ border: "1px solid #111111", color: "#111111", cursor: "pointer" }}
                       >
                         상세분석하기 (유료)
                       </button>
@@ -429,7 +429,7 @@ export default function ProfileWorkspace(props: Props) {
                     style={{
                       cursor: "pointer",
                       border: "1px solid #E5E7EB",
-                      background: r.id === selectedReport?.id ? "#2F2B4A" : "#fff",
+                      background: r.id === selectedReport?.id ? "#111111" : "#fff",
                       color: r.id === selectedReport?.id ? "#fff" : slate,
                     }}
                   >
@@ -466,7 +466,7 @@ export default function ProfileWorkspace(props: Props) {
               </p>
               {idea.interview.messages.map((m, i) => (
                 <p key={i} className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
-                  <b style={{ color: m.role === "user" ? "#1C1A2C" : slate }}>{m.role === "user" ? "나" : "인터뷰어"}</b>{" "}
+                  <b style={{ color: m.role === "user" ? "#111111" : slate }}>{m.role === "user" ? "나" : "인터뷰어"}</b>{" "}
                   {m.content}
                 </p>
               ))}
@@ -506,7 +506,7 @@ export default function ProfileWorkspace(props: Props) {
                 {isLocked ? (
                   <span className="text-xs">잠김</span>
                 ) : (
-                  <span className="font-semibold" style={{ color: n === s.rows.length ? "#2F2B4A" : ink }}>
+                  <span className="font-semibold" style={{ color: n === s.rows.length ? "#111111" : ink }}>
                     {n}/{s.rows.length}
                   </span>
                 )}
@@ -529,13 +529,13 @@ export default function ProfileWorkspace(props: Props) {
             style={{ color: slate, textDecoration: "none" }}
           >
             <span>{latest ? "이 아이템으로 지원서 만들기" : "MY지원서"}</span>
-            <span className="underline" style={{ color: "#2F2B4A" }}>
+            <span className="underline" style={{ color: "#111111" }}>
               {latest ? "만들기 ›" : "보기 ›"}
             </span>
           </Link>
           <Link href="/programs" className="flex justify-between no-underline" style={{ color: slate, textDecoration: "none" }}>
             <span>맞춤 공고 추천</span>
-            <span className="underline" style={{ color: "#2F2B4A" }}>보기 ›</span>
+            <span className="underline" style={{ color: "#111111" }}>보기 ›</span>
           </Link>
         </div>
       </aside>
@@ -552,7 +552,7 @@ function RowValue({ value }: { field?: keyof IdeaProfile; value: string }) {
 function Plain({ value }: { value: string }) {
   // "· 기능1\n· 기능2"처럼 목록으로 온 값만 칩으로 보여준다
   const parts = value.trim().startsWith("·") ? value.split(/\s*·\s+/).filter((t) => t.trim()) : [];
-  // "(AI 추정)" 뒤 문장(마침표·줄바꿈까지)만 보라색 점선 밑줄로 — 글 중간에 배지를 넣지 않는다
+  // "(AI 추정)" 뒤 문장(마침표·줄바꿈까지)만 점선 밑줄로 — 글 중간에 배지를 넣지 않는다
   const highlight = (t: string) =>
     t.split(/(\(AI 추정\)\s*[^.!?\n]*[.!?]?|\(미확인\))/).map((x, i) => {
       if (x === "(미확인)") {
@@ -566,8 +566,8 @@ function Plain({ value }: { value: string }) {
         return (
           <span
             key={i}
-            title="보라색 밑줄은 AI가 추정한 내용이에요"
-            style={{ color: "#2F2B4A", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
+            title="점선 밑줄은 AI가 추정한 내용이에요"
+            style={{ color: "#111111", textDecoration: "underline dotted", textUnderlineOffset: 3 }}
           >
             {x.replace(/^\(AI 추정\)\s*/, "")}
           </span>
@@ -579,7 +579,7 @@ function Plain({ value }: { value: string }) {
     return (
       <div className="flex flex-wrap gap-1.5">
         {parts.map((t, i) => (
-          <span key={i} className="px-2.5 py-1 rounded-full text-[13px]" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
+          <span key={i} className="px-2.5 py-1 rounded-full text-[13px]" style={{ background: "#F3F4F6", color: "#111111" }}>
             {highlight(t.trim())}
           </span>
         ))}
@@ -603,7 +603,7 @@ function SourceBadge({
   const base = "inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap";
   if (sectionFromReport) {
     return row.fromReport && !empty ? (
-      <span className={base} style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
+      <span className={base} style={{ background: "#F3F4F6", color: "#111111" }}>
         상세분석 v{row.fromReport}
       </span>
     ) : (
@@ -625,11 +625,11 @@ function SourceBadge({
   }
   return (
     row.value.includes("(AI 추정)") ? (
-      <span className={base} title="보라색 밑줄은 AI가 추정한 내용이에요" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
+      <span className={base} title="점선 밑줄은 AI가 추정한 내용이에요" style={{ background: "#F3F4F6", color: "#111111" }}>
         AI 추정 포함
       </span>
     ) : (
-    <span className={base} style={{ background: fromInterview ? "#F3F4F6" : "#F3F4F6", color: fromInterview ? "#2F2B4A" : "#4B5563" }}>
+    <span className={base} style={{ background: fromInterview ? "#F3F4F6" : "#F3F4F6", color: fromInterview ? "#111111" : "#4B5563" }}>
       {fromInterview ? "인터뷰 · AI" : "직접 입력"}
     </span>
     )
@@ -661,9 +661,9 @@ function DiagnosisCard({
   const decision = dr ? DECISION_META[dr.decision] : idea.latestReport?.decision ? DECISION_META[idea.latestReport.decision] : null;
 
   return (
-    <div className="bg-white rounded-lg p-5 flex flex-col gap-4" style={{ border: "1px solid #2F2B4A" }}>
+    <div className="bg-white rounded-lg p-5 flex flex-col gap-4" style={{ border: "1px solid #111111" }}>
       <div className="flex items-center justify-between gap-2">
-        <b className="text-lg" style={{ color: "#2F2B4A" }}>
+        <b className="text-lg" style={{ color: "#111111" }}>
           진단
         </b>
         {status === "diagnosing" ? (
@@ -686,7 +686,7 @@ function DiagnosisCard({
           </p>
           <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
             {AGENT_ORDER.map((a) => (
-              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F3F4F6", color: "#2F2B4A" }}>
+              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F3F4F6", color: "#111111" }}>
                 {AGENT_LABELS[a] ?? a}
               </span>
             ))}
@@ -703,13 +703,13 @@ function DiagnosisCard({
               <div className="h-1.5 rounded-full" style={{ width: `${Math.round(dr.confidence * 100)}%`, background: decision?.color }} />
             </div>
           </div>
-          <p className="text-sm m-0 leading-relaxed" style={{ color: "#2F2B4A" }}>
+          <p className="text-sm m-0 leading-relaxed" style={{ color: "#111111" }}>
             {dr.summary}
           </p>
           {[
-            ["가장 강한 점", dr.strengths[0], "#F9FAFB", "#2F2B4A"],
-            ["가장 큰 약점", dr.weaknesses[0], "#F9FAFB", "#2F2B4A"],
-            ["지금 할 일", dr.action_plan[0], "#F3F4F6", "#2F2B4A"],
+            ["가장 강한 점", dr.strengths[0], "#F9FAFB", "#111111"],
+            ["가장 큰 약점", dr.weaknesses[0], "#F9FAFB", "#111111"],
+            ["지금 할 일", dr.action_plan[0], "#F3F4F6", "#111111"],
           ]
             .filter(([, text]) => text)
             .map(([title, text, bg, fg]) => (
@@ -717,14 +717,14 @@ function DiagnosisCard({
                 <b className="block text-xs mb-1" style={{ color: fg }}>
                   {title}
                 </b>
-                <span style={{ color: "#2F2B4A" }}>{text}</span>
+                <span style={{ color: "#111111" }}>{text}</span>
               </div>
             ))}
           <button
             type="button"
             onClick={onOpenReport}
             className="min-h-[48px] rounded-xl text-sm font-bold bg-white"
-            style={{ border: "1px solid #D9DBDA", color: "#2F2B4A", cursor: "pointer" }}
+            style={{ border: "1px solid #D9DBDA", color: "#111111", cursor: "pointer" }}
           >
             진단 전체 보기 ›
           </button>
@@ -745,7 +745,7 @@ function DiagnosisCard({
             onClick={onDiagnose}
             disabled={!canDiagnose}
             className="min-h-[48px] rounded-xl text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
           >
             {status === "failed" ? "다시 분석 (유료)" : label}
           </button>
@@ -759,7 +759,7 @@ function DiagnosisCard({
         </div>
       )}
       {!loggedIn && (
-        <Link href={`/login?next=/ideas/${idea.id}`} className="text-sm font-semibold underline" style={{ color: "#2F2B4A" }}>
+        <Link href={`/login?next=/ideas/${idea.id}`} className="text-sm font-semibold underline" style={{ color: "#111111" }}>
           로그인하면 고치고 분석할 수 있어요 ›
         </Link>
       )}

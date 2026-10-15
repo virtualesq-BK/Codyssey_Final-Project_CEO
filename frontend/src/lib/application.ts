@@ -21,7 +21,7 @@ export interface Application {
 export const APPLICATION_STATUS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {
   draft: { label: "작성 중", color: "#B45309", bg: "#FFF4E5" },
   submitted: { label: "제출 완료", color: "#1D4ED8", bg: "#E8F1FF" },
-  selected: { label: "선정", color: "#FFFFFF", bg: "#7270FF" },
+  selected: { label: "선정", color: "#FFFFFF", bg: "#134CD8" },
   rejected: { label: "탈락", color: "#4B5563", bg: "#F3F4F6" },
 };
 
