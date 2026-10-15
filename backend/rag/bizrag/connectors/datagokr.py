@@ -133,7 +133,15 @@ class DataGoKr(Connector):
 
     def _aggregate(self, d: dict, title: str, v: dict, rows: list[dict]) -> None:
         cfg = d["aggregate"]
-        keys = cfg["group_by"]  # 예: ["물품명", "청구이유"]
+        raw_keys = cfg["group_by"]  # 예: ["물품명", "청구이유"]
+        aliases = {"물품명": ["물품소분류", "품목명", "품목"]}
+        keys = []
+        for k in raw_keys:
+            if rows and k not in rows[0] and k in aliases:
+                alt = next((a for a in aliases[k] if a in rows[0]), k)
+                keys.append(alt)
+            else:
+                keys.append(k)
         missing = [k for k in keys if rows and k not in rows[0]]
         if missing:
             raise ApiError("config", f"{d['id']} aggregate.group_by 필드 없음: {missing}",
