@@ -104,19 +104,19 @@ export interface IdeaReport {
 
 // 상태 배지: 단계별 은은한 색 — 메모 회색, 인터뷰 주황, 프로필 파랑, 보고서 바이올렛 (디자인 A안)
 export const STATUS_META: Record<IdeaStatus, { label: string; color: string; bg: string; dot: string }> = {
-  memo: { label: "메모", color: "#4B5563", bg: "#F3F4F6", dot: "#9CA3AF" },
+  memo: { label: "메모", color: "#485876", bg: "#F3F4F6", dot: "#9CA3AF" },
   interviewing: { label: "인터뷰 중", color: "#B45309", bg: "#FFF4E5", dot: "#F59E0B" },
   profiling: { label: "프로필 만드는 중", color: "#B45309", bg: "#FFF4E5", dot: "#F59E0B" },
   profile: { label: "프로필", color: "#1D4ED8", bg: "#E8F1FF", dot: "#3B82F6" },
   diagnosing: { label: "진단 중", color: "#1D4ED8", bg: "#E8F1FF", dot: "#3B82F6" },
-  report: { label: "보고서", color: "#FFFFFF", bg: "#7270FF", dot: "#FFFFFF" },
+  report: { label: "보고서", color: "#FFFFFF", bg: "#1B57EA", dot: "#FFFFFF" },
   failed: { label: "실패", color: "#B42318", bg: "#FEF2F2", dot: "#B42318" },
 };
 
 export const DECISION_META: Record<Decision, { label: string; color: string }> = {
   GO: { label: "GO", color: "#1A7A4A" },
   PIVOT: { label: "PIVOT", color: "#856404" },
-  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#4B5563" },
+  VALIDATE_MORE: { label: "VALIDATE MORE", color: "#485876" },
   STOP: { label: "STOP", color: "#B42318" },
 };
 

@@ -137,7 +137,7 @@ export default function IdeaDetailPage() {
                 <div className="text-text-secondary text-sm">
                   {error ?? "삭제됐거나 다른 계정·브라우저에 저장된 아이디어일 수 있어요."}
                 </div>
-                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#2F2B4A" }}>
+                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#08183F" }}>
                   MY아이디어로 ›
                 </Link>
               </>
@@ -289,7 +289,7 @@ export default function IdeaDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <StatusPill status={status} />
             {current.profile.industry && (
-              <span className="text-sm font-semibold" style={{ color: "#4B5563" }}>
+              <span className="text-sm font-semibold" style={{ color: "#485876" }}>
                 {current.profile.industry} · {current.profile.location}
               </span>
             )}
@@ -313,7 +313,7 @@ export default function IdeaDetailPage() {
         {atProfile || atInterview ? (
           current.memo && (
             <section className="bg-white border border-border rounded-lg shadow-card px-6 py-4 text-sm">
-              <span className="font-semibold mr-2" style={{ color: "#4B5563" }}>
+              <span className="font-semibold mr-2" style={{ color: "#485876" }}>
                 처음 메모
               </span>
               <span className="text-text-secondary whitespace-pre-wrap">{current.memo}</span>
@@ -336,7 +336,7 @@ export default function IdeaDetailPage() {
                 onClick={saveMemo}
                 disabled={busy || memoDraft.trim() === current.memo}
                 className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
-                style={{ border: "1.5px solid #E5E7EB", color: "#4B5563", cursor: "pointer" }}
+                style={{ border: "1.5px solid #E5E7EB", color: "#485876", cursor: "pointer" }}
               >
                 메모 저장
               </button>
@@ -356,7 +356,7 @@ export default function IdeaDetailPage() {
                     onClick={beginInterview}
                     disabled={busy || !memoDraft.trim()}
                     className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                    style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+                    style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
                   >
                     {busy ? "첫 질문 준비 중…" : "인터뷰 시작"}
                   </button>
@@ -365,7 +365,7 @@ export default function IdeaDetailPage() {
                     onClick={startProfile}
                     disabled={busy || !memoDraft.trim()}
                     className="text-sm underline disabled:opacity-50"
-                    style={{ background: "none", border: "none", color: "#4B5563", cursor: "pointer" }}
+                    style={{ background: "none", border: "none", color: "#485876", cursor: "pointer" }}
                   >
                     인터뷰 없이 직접 작성
                   </button>
@@ -374,7 +374,7 @@ export default function IdeaDetailPage() {
                 <Link
                   href={loginHref}
                   className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
-                  style={{ background: "#7270FF", textDecoration: "none" }}
+                  style={{ background: "#1B57EA", textDecoration: "none" }}
                 >
                   로그인하고 인터뷰 시작
                 </Link>
@@ -458,8 +458,8 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
             className="rounded-xl px-4 py-3 text-sm font-semibold"
             style={{
               background: active ? "#F3F4F6" : "#fff",
-              color: active ? "#1C1A2C" : done ? "#2F2B4A" : "#6B7280",
-              border: `1px solid ${active ? "#2F2B4A" : "#E5E7EB"}`,
+              color: active ? "#08183F" : done ? "#08183F" : "#6B7280",
+              border: `1px solid ${active ? "#08183F" : "#E5E7EB"}`,
             }}
           >
             {done ? "✓ " : `${i + 1}. `}

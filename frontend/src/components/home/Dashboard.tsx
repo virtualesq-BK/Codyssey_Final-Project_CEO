@@ -13,11 +13,11 @@ import { createMemo, listIdeas } from "@/lib/ideaStore";
 import { type NewsItem, fetchNews } from "@/lib/news";
 import { type Program, fetchPrograms } from "@/lib/programs";
 
-const ink = "#2F2B4A";
-const slate = "#4B5563";
+const ink = "#08183F";
+const slate = "#485876";
 const iron = "#6B7280";
 const line = "#E5E7EB";
-const violet = "#7270FF";
+const brand = "#1B57EA";
 const card = "bg-white rounded-lg shadow-card p-5 flex flex-col gap-3";
 
 type NextStep = { idea: Idea | null; title: string; desc: string; cta: string; href: string };
@@ -172,8 +172,8 @@ export default function Dashboard({ user }: { user: User }) {
         actions={
           <Link
             href="/ideas"
-            className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white no-underline inline-flex items-center"
-            style={{ background: violet, textDecoration: "none" }}
+            className="min-h-[44px] px-5 rounded-xl text-sm font-bold no-underline inline-flex items-center bg-white"
+            style={{ color: brand, textDecoration: "none" }}
           >
             + 새 아이디어
           </Link>
@@ -184,8 +184,8 @@ export default function Dashboard({ user }: { user: User }) {
         {/* ── 왼쪽 ── */}
         <div className="flex flex-col gap-5 min-w-0">
           {/* 다음 할 일 */}
-          <section className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-3" style={{ border: `1.5px solid ${violet}` }}>
-            <span className="text-xs font-bold" style={{ color: violet }}>
+          <section className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-3" style={{ border: `1.5px solid ${brand}` }}>
+            <span className="self-start text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#FFF6DE", color: "#08183F" }}>
               다음 할 일
             </span>
             <h2 className="text-xl font-bold m-0" style={{ color: ink }}>
@@ -200,7 +200,7 @@ export default function Dashboard({ user }: { user: User }) {
                   <Link
                     href={next.href}
                     className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white no-underline inline-flex items-center"
-                    style={{ background: violet, textDecoration: "none" }}
+                    style={{ background: brand, textDecoration: "none" }}
                   >
                     {next.cta} ›
                   </Link>
@@ -227,7 +227,7 @@ export default function Dashboard({ user }: { user: User }) {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {stages.map((s) => (
-                <div key={s.label} className="rounded-lg py-3 text-center" style={{ background: "#F7F7FB" }}>
+                <div key={s.label} className="rounded-lg py-3 text-center" style={{ background: "#F5F7FC" }}>
                   <div className="text-2xl font-bold" style={{ color: s.n ? ink : "#C4C4D0" }}>
                     {s.n}
                   </div>
@@ -360,7 +360,7 @@ export default function Dashboard({ user }: { user: User }) {
               type="submit"
               disabled={!memo.trim() || saving}
               className="min-h-[40px] rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: violet, border: "none", cursor: "pointer" }}
+              style={{ background: brand, border: "none", cursor: "pointer" }}
             >
               {saving ? "저장 중…" : "메모 저장"}
             </button>

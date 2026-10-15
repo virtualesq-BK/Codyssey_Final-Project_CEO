@@ -82,7 +82,7 @@ export default function LoungePage() {
                 <div className="flex items-center gap-2">
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded"
-                    style={{ background: "#F3F4F6", color: "#4B5563" }}
+                    style={{ background: "#F3F4F6", color: "#485876" }}
                   >
                     {n.tag}
                   </span>
@@ -111,7 +111,7 @@ export default function LoungePage() {
                     >
                       <div
                         className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-sm text-white"
-                        style={{ background: "#2F2B4A" }}
+                        style={{ background: "#08183F" }}
                       >
                         {item.name[0]}
                       </div>
@@ -128,7 +128,7 @@ export default function LoungePage() {
             {/* CTA */}
             <div
               className="rounded-lg p-5 flex flex-col gap-3"
-              style={{ background: "#2F2B4A" }}
+              style={{ background: "#08183F" }}
             >
               <div className="text-white font-bold">내 아이디어 AI 진단받기</div>
               <div className="text-white/70 text-sm leading-relaxed">
@@ -137,7 +137,7 @@ export default function LoungePage() {
               <Link
                 href="/"
                 className="bg-white text-center rounded-xl py-2.5 text-sm font-bold no-underline"
-                style={{ color: "#2F2B4A", textDecoration: "underline" }}
+                style={{ color: "#08183F", textDecoration: "underline" }}
               >
                 무료로 시작하기
               </Link>

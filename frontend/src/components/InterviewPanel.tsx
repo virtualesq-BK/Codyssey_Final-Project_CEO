@@ -53,7 +53,32 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
         aria-label="딥 인터뷰 대화"
       >
         <div className="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: "#E5E7EB" }}>
-          <b>딥 인터뷰</b>
+          <div className="flex items-center gap-4 flex-wrap">
+            <b>딥 인터뷰</b>
+            {/* 진행 — 헤더에 붙여 대화 중에도 눈에 띄게 */}
+            <div
+              className="flex items-center gap-2"
+              title="컨설턴트가 답을 따라가며 필요한 만큼 물어봐요. 충분히 파악하면 그 전에 끝나기도 해요."
+            >
+              <div
+                className="h-2 w-32 sm:w-40 rounded-full"
+                style={{ background: "#E5E7EB" }}
+                role="progressbar"
+                aria-label="인터뷰 진행"
+                aria-valuemin={0}
+                aria-valuemax={INTERVIEW_MAX_QUESTIONS}
+                aria-valuenow={Math.min(asked, INTERVIEW_MAX_QUESTIONS)}
+              >
+                <div
+                  className="h-2 rounded-full transition-all"
+                  style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#1B57EA" }}
+                />
+              </div>
+              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#08183F" }}>
+                질문 {Math.min(asked, INTERVIEW_MAX_QUESTIONS)} <span className="font-normal" style={{ color: "#6B7280" }}>/ 최대 {INTERVIEW_MAX_QUESTIONS}</span>
+              </span>
+            </div>
+          </div>
           <span className="text-xs text-text-muted">답할 때마다 저장돼요 · 나중에 이어서 할 수 있어요</span>
         </div>
 
@@ -61,28 +86,28 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
           {interview.messages.map((m, i) =>
             m.role === "assistant" ? (
               <div key={i} className="self-start max-w-[80%]">
-                <div className="text-xs mb-1" style={{ color: "#4B5563" }}>
+                <div className="text-xs mb-1" style={{ color: "#485876" }}>
                   나도사장 인터뷰어
                 </div>
                 <div
                   className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
                   style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: "4px 16px 16px 16px" }}
                 >
-                  {m.content}
+                  <QuestionText text={m.content} />
                 </div>
               </div>
             ) : (
               <div
                 key={i}
                 className="self-end max-w-[80%] px-4 py-3 text-sm leading-relaxed text-white whitespace-pre-wrap"
-                style={{ background: "#2F2B4A", borderRadius: "16px 4px 16px 16px" }}
+                style={{ background: "#08183F", borderRadius: "16px 4px 16px 16px" }}
               >
                 {m.content}
               </div>
             ),
           )}
           {busy && !locked && (
-            <div className="self-start text-xs animate-pulse" style={{ color: "#4B5563" }}>
+            <div className="self-start text-xs animate-pulse" style={{ color: "#485876" }}>
               인터뷰어가 다음 질문을 고르는 중…
             </div>
           )}
@@ -94,7 +119,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                   type="button"
                   onClick={() => send(q)}
                   className="min-h-[36px] px-3 rounded-full text-xs bg-white"
-                  style={{ border: "1px solid #D9DBDA", color: "#2F2B4A", cursor: "pointer" }}
+                  style={{ border: "1px solid #D9DBDA", color: "#08183F", cursor: "pointer" }}
                 >
                   {q}
                 </button>
@@ -130,7 +155,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
                 rows={2}
                 disabled={disabled}
                 className="w-full rounded-lg p-3 text-sm resize-y focus:outline-none leading-relaxed disabled:bg-surface"
-                style={{ border: `1.5px solid ${speech.listening ? "#7270FF" : "#E5E7EB"}` }}
+                style={{ border: `1.5px solid ${speech.listening ? "#1B57EA" : "#E5E7EB"}` }}
               />
               {speech.error && (
                 <span role="alert" className="block mt-1 text-xs" style={{ color: "#B42318" }}>
@@ -153,8 +178,8 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               }
               className={`min-h-[48px] w-12 rounded-xl flex items-center justify-center disabled:opacity-40 ${speech.listening ? "animate-pulse" : ""}`}
               style={{
-                border: `1px solid ${speech.listening ? "#7270FF" : "#E5E7EB"}`,
-                background: speech.listening ? "#EEEEFF" : "#fff",
+                border: `1px solid ${speech.listening ? "#1B57EA" : "#E5E7EB"}`,
+                background: speech.listening ? "#EAF0FD" : "#fff",
                 cursor: "pointer",
               }}
             >
@@ -164,7 +189,7 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
               type="submit"
               disabled={disabled || !answer.trim()}
               className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#2F2B4A", border: "none", cursor: "pointer" }}
+              style={{ background: "#08183F", border: "none", cursor: "pointer" }}
             >
               보내기
             </button>
@@ -173,36 +198,18 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
       </section>
 
       <aside className="flex flex-col gap-4" style={{ flex: "1 1 280px", maxWidth: 360 }}>
-        <div className="bg-white border border-border rounded-lg p-5 flex flex-col gap-2">
-          <div className="flex justify-between items-baseline">
-            <b className="text-sm">진행</b>
-            <span className="text-xs text-text-muted">
-              질문 {Math.min(asked, INTERVIEW_MAX_QUESTIONS)} / 최대 {INTERVIEW_MAX_QUESTIONS}
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full my-1" style={{ background: "#E5E7EB" }}>
-            <div
-              className="h-1.5 rounded-full transition-all"
-              style={{ width: `${(Math.min(asked, INTERVIEW_MAX_QUESTIONS) / INTERVIEW_MAX_QUESTIONS) * 100}%`, background: "#7270FF" }}
-            />
-          </div>
-          <p className="text-xs m-0 leading-relaxed" style={{ color: "#6B7280" }}>
-            컨설턴트가 답을 따라가며 필요한 만큼 물어봐요. 충분히 파악하면 그 전에 끝나기도 해요.
-          </p>
-        </div>
-
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3" style={{ border: "1px solid #E5E7EB" }}>
           <button
             type="button"
             onClick={onFinish}
             disabled={disabled || !answered}
             className="min-h-[52px] rounded-xl text-base font-bold text-white disabled:opacity-50"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
           >
             {locked ? "프로필 만드는 중…" : "인터뷰 마치고 프로필 만들기"}
           </button>
           <p className="text-xs text-text-secondary m-0 leading-relaxed">
-            언제든 마칠 수 있어요. 대화에서 나오지 않은 부분은 AI가 현실적으로 채워 넣고, 만든 프로필은 직접 고칠 수 있어요.
+            컨설턴트가 답을 따라가며 필요한 만큼 물어보고, 충분히 파악하면 그 전에 끝나기도 해요. 언제든 마칠 수 있어요. 대화에서 나오지 않은 부분은 AI가 현실적으로 채워 넣고, 만든 프로필은 직접 고칠 수 있어요.
           </p>
         </div>
       </aside>
@@ -212,10 +219,43 @@ export default function InterviewPanel({ interview, onAnswer, onFinish, busy, lo
 
 function MicIcon({ active }: { active: boolean }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#7270FF" : "#4B5563"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#1B57EA" : "#485876"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="9" y="3" width="6" height="11" rx="3" />
       <path d="M5 11a7 7 0 0 0 14 0" />
       <path d="M12 18v3" />
     </svg>
+  );
+}
+
+/**
+ * 인터뷰어 말: "짚기\n질문\n(영역 · 의도)" 모양이면 영역·의도를 맨 위에 굵은 키컬러로, 짚기는 작게, 질문은 굵게 나눠 그린다.
+ * 그 모양이 아닌 예전 기록·마무리 인사는 그대로 보여준다.
+ */
+function QuestionText({ text }: { text: string }) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const tag = lines.length > 1 ? lines[lines.length - 1].match(/^\(([^()]+)\)$/) : null;
+  if (!tag || !tag[1].includes("·")) return <>{text}</>;
+  const body = lines.slice(0, -1);
+  const ack = body.length > 1 ? body[0] : "";
+  const question = (body.length > 1 ? body.slice(1) : body).join(" ");
+  const cut = tag[1].indexOf("·");
+  const area = tag[1].slice(0, cut).trim();
+  const why = tag[1].slice(cut + 1).trim();
+  return (
+    <span className="flex flex-col gap-1 whitespace-normal">
+      {/* 영역 · 의도 — 질문 위 첫 줄, 굵게 키컬러 */}
+      <span className="text-[13px] font-bold mb-0.5" style={{ color: "#1B57EA" }}>
+        {area}
+        {why && ` · ${why}`}
+      </span>
+      {ack && (
+        <span className="text-[13px]" style={{ color: "#485876" }}>
+          {ack}
+        </span>
+      )}
+      <span className="text-[15px] font-bold leading-snug" style={{ color: "#08183F" }}>
+        {question}
+      </span>
+    </span>
   );
 }

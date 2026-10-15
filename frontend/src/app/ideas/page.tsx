@@ -116,7 +116,7 @@ export default function IdeasPage() {
             type="submit"
             disabled={saving || !memo.trim()}
             className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50 shrink-0"
-            style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+            style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
           >
             {saving ? "저장 중…" : "메모 추가"}
           </button>
@@ -130,10 +130,10 @@ export default function IdeasPage() {
         {!authLoading && !user && ideas.length > 0 && (
           <div
             className="mb-6 rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
-            style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#4B5563" }}
+            style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#485876" }}
           >
             <span>이 브라우저에만 저장돼 있어요. 로그인하면 계정으로 옮겨져요.</span>
-            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#2F2B4A" }}>
+            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#08183F" }}>
               로그인 ›
             </Link>
           </div>
@@ -174,13 +174,13 @@ export default function IdeasPage() {
                   className="min-h-[36px] px-4 rounded-xl text-sm font-semibold"
                   style={{
                     cursor: "pointer",
-                    border: `1px solid ${active ? "#7270FF" : "#E5E7EB"}`,
-                    background: active ? "#EEEEFF" : "#fff",
-                    color: active ? "#5B59E0" : "#4B5563",
+                    border: `1px solid ${active ? "#1B57EA" : "#E5E7EB"}`,
+                    background: active ? "#EAF0FD" : "#fff",
+                    color: active ? "#1446C4" : "#485876",
                   }}
                 >
                   {f.label}
-                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#7270FF" : "#6B7280" }}>
+                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#1B57EA" : "#6B7280" }}>
                     {count}
                   </span>
                 </button>

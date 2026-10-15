@@ -97,7 +97,7 @@ export default function ProgramsPage() {
           <button
             type="submit"
             className="h-11 px-6 rounded-xl text-sm font-bold text-white"
-            style={{ background: "#7270FF" }}
+            style={{ background: "#1B57EA" }}
           >
             검색
           </button>
@@ -121,7 +121,7 @@ export default function ProgramsPage() {
                       onClick={() => setSelected(p)}
                       className="bg-white rounded-lg shadow-card p-5 cursor-pointer hover:shadow-md transition-shadow"
                       style={{
-                        border: selected?.id === p.id ? "2px solid #2F2B4A" : "1px solid #E5E7EB",
+                        border: selected?.id === p.id ? "2px solid #08183F" : "1px solid #E5E7EB",
                       }}
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -143,7 +143,7 @@ export default function ProgramsPage() {
                         <div className="text-right shrink-0">
                           <div className="text-xs text-text-muted">마감일</div>
                           <div className="text-sm font-semibold">{p.ends_on}</div>
-                          <div className="text-xs font-bold mt-1" style={{ color: "#2F2B4A" }}>{p.amount}</div>
+                          <div className="text-xs font-bold mt-1" style={{ color: "#08183F" }}>{p.amount}</div>
                         </div>
                       </div>
                     </div>
@@ -186,7 +186,7 @@ export default function ProgramsPage() {
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-text-muted">지원금액</span>
-                  <span className="font-semibold" style={{ color: "#2F2B4A" }}>{selected.amount}</span>
+                  <span className="font-semibold" style={{ color: "#08183F" }}>{selected.amount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">접수기간</span>
@@ -215,7 +215,7 @@ export default function ProgramsPage() {
               <Link
                 href={`/applications?new=1&program=${selected.id}`}
                 className="flex items-center justify-center h-11 rounded-xl font-bold text-sm text-white"
-                style={{ background: "#7270FF", textDecoration: "none" }}
+                style={{ background: "#1B57EA", textDecoration: "none" }}
               >
                 이 공고로 지원서 만들기
               </Link>
@@ -224,7 +224,7 @@ export default function ProgramsPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center h-11 rounded-xl font-semibold text-sm bg-white"
-                style={{ border: "1px solid #E5E7EB", color: "#2F2B4A", textDecoration: "none" }}
+                style={{ border: "1px solid #E5E7EB", color: "#08183F", textDecoration: "none" }}
               >
                 공고 원문 보기 →
               </a>

@@ -12,10 +12,10 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<AgentStatus, string> = {
-  success: "#2F2B4A",
+  success: "#08183F",
   partial: "#B45309",
   failed: "#B42318",
-  running: "#4B5563",
+  running: "#485876",
   pending: "#6B7280",
   skipped: "#6B7280",
 };
@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<AgentStatus, string> = {
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
-  const color = value >= 0.7 ? "#2F2B4A" : value >= 0.4 ? "#B45309" : "#B42318";
+  const color = value >= 0.7 ? "#08183F" : value >= 0.4 ? "#B45309" : "#B42318";
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-2 bg-[#E5E7EB] rounded-full overflow-hidden">

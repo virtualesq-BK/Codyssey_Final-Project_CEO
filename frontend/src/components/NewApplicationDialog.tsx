@@ -54,8 +54,8 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
   }
 
   const choice = (active: boolean) => ({
-    border: `1px solid ${active ? "#7270FF" : line}`,
-    background: active ? "#EEEEFF" : "#fff",
+    border: `1px solid ${active ? "#1B57EA" : line}`,
+    background: active ? "#EAF0FD" : "#fff",
     cursor: "pointer",
   });
 
@@ -100,9 +100,9 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: 360 }}>
               {ideas.length === 0 ? (
-                <div className="rounded-lg p-4 text-sm" style={{ background: "#F3F4F6", color: "#4B5563" }}>
+                <div className="rounded-lg p-4 text-sm" style={{ background: "#F3F4F6", color: "#485876" }}>
                   아직 보고서가 있는 아이템이 없어요.{" "}
-                  <Link href="/ideas" className="underline font-semibold" style={{ color: "#2F2B4A" }}>
+                  <Link href="/ideas" className="underline font-semibold" style={{ color: "#08183F" }}>
                     MY아이디어에서 상세분석하기 ›
                   </Link>
                 </div>
@@ -117,7 +117,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
                     className="text-left rounded-lg px-4 py-3"
                     style={choice(ideaId === i.id)}
                   >
-                    <div className="text-sm font-semibold" style={{ color: "#2F2B4A" }}>
+                    <div className="text-sm font-semibold" style={{ color: "#08183F" }}>
                       {displayTitle(i)}
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
@@ -156,7 +156,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
                   className="text-left rounded-lg px-4 py-3"
                   style={choice(programId === p.id)}
                 >
-                  <div className="text-sm font-semibold" style={{ color: "#2F2B4A" }}>
+                  <div className="text-sm font-semibold" style={{ color: "#08183F" }}>
                     {p.title}
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
@@ -174,7 +174,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
         </div>
 
         <div className="px-6 py-4 border-t flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: line }}>
-          <span className="text-sm" style={{ color: error ? "#B42318" : "#4B5563" }}>
+          <span className="text-sm" style={{ color: error ? "#B42318" : "#485876" }}>
             {error ?? (idea && program ? `${displayTitle(idea)} → ${program.title}` : "아이템과 지원사업을 하나씩 골라주세요")}
           </span>
           <div className="flex gap-2">
@@ -182,7 +182,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
               type="button"
               onClick={onClose}
               className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white"
-              style={{ border: `1px solid ${line}`, color: "#2F2B4A", cursor: "pointer" }}
+              style={{ border: `1px solid ${line}`, color: "#08183F", cursor: "pointer" }}
             >
               취소
             </button>
@@ -191,7 +191,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
               onClick={submit}
               disabled={!idea || !program || saving}
               className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#7270FF", border: "none", cursor: "pointer" }}
+              style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
             >
               {saving ? "만드는 중…" : "지원서 만들기"}
             </button>
