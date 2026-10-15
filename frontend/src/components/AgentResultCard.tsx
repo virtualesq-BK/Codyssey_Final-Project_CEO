@@ -89,7 +89,7 @@ export default function AgentResultCard({ agentName, result }: Props) {
       {!isFailed && result.recommendations.length > 0 && (
         <div>
           <div className="text-xs font-semibold text-text-muted mb-2">권장 사항</div>
-          <ul className="m-0 pl-4 flex flex-col gap-1">
+          <ul className="m-0 pl-5 list-disc flex flex-col gap-1">
             {result.recommendations.slice(0, 3).map((rec, i) => (
               <li key={i} className="text-sm text-text-secondary leading-relaxed">
                 {rec}

@@ -71,7 +71,7 @@ export default function DecisionBanner({ result }: Props) {
         {result.strengths.length > 0 && (
           <div>
             <div className="font-semibold mb-2">강점</div>
-            <ul className="m-0 pl-4 flex flex-col gap-1">
+            <ul className="m-0 pl-5 list-disc flex flex-col gap-1">
               {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
             </ul>
           </div>
@@ -79,7 +79,7 @@ export default function DecisionBanner({ result }: Props) {
         {result.weaknesses.length > 0 && (
           <div>
             <div className="font-semibold mb-2">약점</div>
-            <ul className="m-0 pl-4 flex flex-col gap-1">
+            <ul className="m-0 pl-5 list-disc flex flex-col gap-1">
               {result.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
             </ul>
           </div>
@@ -89,7 +89,7 @@ export default function DecisionBanner({ result }: Props) {
       {result.action_plan.length > 0 && (
         <div>
           <div className="font-semibold mb-3">다음 행동</div>
-          <ol className="m-0 pl-5 flex flex-col gap-2 text-sm leading-relaxed">
+          <ol className="m-0 pl-5 list-decimal flex flex-col gap-2 text-sm leading-relaxed">
             {result.action_plan.map((action, i) => (
               <li key={i}>{action}</li>
             ))}
