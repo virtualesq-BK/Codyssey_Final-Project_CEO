@@ -1,338 +1,231 @@
-# 나도사장 — B팀원 작업 브랜치
+# 나도사장 (I'm the Boss)
 
-> **브랜치:** `feature/B-rag-market`  
-> **담당:** B — Data / RAG / Market / Competitor Lead
-
----
-
-## 이 브랜치의 역할
-
-- Shared RAG Infrastructure
-- Data ingestion / cleaning / chunking
-- Retrieval / Evidence / Citation
-- Market Agent
-- Competitor Agent
-- RAG evaluation 및 관련 테스트
+> **AI 기반 예비창업자 사업성 분석 서비스**  
+> 창업 아이디어를 Multi-Agent AI로 분석하여 Go / Pivot / Validate / Stop 의사결정을 지원하는 AI Business Decision Copilot
 
 ---
 
-## 작업 시작 전 확인
+## 프로젝트 개요
+
+예비창업자가 아이디어를 입력하면 7개의 전문 AI 에이전트가 시장·고객·경쟁사·비즈니스모델·재무·리스크를 단계적으로 분석하고, 공공데이터 기반 근거(Evidence)와 함께 창업 여부에 대한 최종 판정을 제공합니다.
+
+- **목표:** 단순 창업정보 챗봇이 아닌, 근거 기반 의사결정 지원
+- **원칙:** 임의 수치 생성 금지 — 근거 부족 시 "데이터 부족 / 추가 조사 필요"로 명시
+- **배포:**
+  - Frontend → [Vercel](https://codyssey-final-project-ceo-g9sg.vercel.app)
+  - Backend → [Render](https://codyssey-final-project-ceo.onrender.com)
+
+---
+
+## 팀원 역할
+
+| 팀원 | 브랜치 | 담당 영역 |
+|------|--------|-----------|
+| A | `feature/A-ai-architecture` | AI Architecture Lead — BaseAgent, Orchestrator, DecisionAgent, LLMProvider, 공통 Schema |
+| B | `feature/B-rag-market` | Data / RAG Lead — Shared RAG Infrastructure, MarketAgent, CompetitorAgent, 외부 API 커넥터 |
+| C | `feature/C-business` | Business Lead — CustomerAgent, BusinessModelAgent |
+| D | `feature/D-financial-risk` | Finance / Risk Lead — FinancialAgent, RiskAgent, 재무 계산기 |
+| E | `feature/E-frontend` | Frontend Lead — Next.js UI/UX, Firebase 연동, API 프록시 |
+
+> 브랜치 전략: `feature/*` → `develop` (PR) → `main` (스프린트 종료)
+
+---
+
+## 기술 스택
+
+### Backend
+
+| 항목 | 내용 |
+|------|------|
+| 언어 | Python 3.11 |
+| API Framework | FastAPI 0.115 + Uvicorn |
+| LLM | OpenAI GPT-4o / GPT-4o-mini, Anthropic Claude 3.5 Sonnet / Haiku |
+| ORM | SQLAlchemy 2.0 (async) + aiosqlite |
+| DB | SQLite (개발) / PostgreSQL (프로덕션) |
+| HTTP 클라이언트 | httpx |
+| 검증 | Pydantic v2 |
+| 테스트 | pytest + pytest-asyncio + pytest-mock |
+
+### Frontend
+
+| 항목 | 내용 |
+|------|------|
+| Framework | Next.js 14 (App Router) |
+| 언어 | TypeScript 5 |
+| UI | React 18, Tailwind CSS 3 |
+| 인증 / DB | Firebase Auth + Firestore |
+
+### 인프라
+
+| 항목 | 내용 |
+|------|------|
+| 컨테이너 | Docker Compose (로컬 개발) |
+| Frontend 배포 | Vercel |
+| Backend 배포 | Render |
+
+---
+
+## Multi-Agent 분석 워크플로우
+
+```
+사용자 아이디어 입력
+        │
+  Phase 1 (병렬)
+  ┌─────┴──────┐
+MarketAgent  CustomerAgent  CompetitorAgent
+  └─────┬──────┘
+  Phase 2 (순차)
+  BusinessModelAgent
+        │
+  Phase 3 (병렬)
+  ┌─────┴──────┐
+FinancialAgent  RiskAgent
+  └─────┬──────┘
+  Phase 4 (순차)
+  DecisionAgent
+        │
+  판정: GO / PIVOT / VALIDATE_MORE / STOP
+```
+
+**공공데이터 커넥터 (RAG Evidence):** KOSIS(통계청), Naver DataLab, KIPRIS(특허청), 공공데이터포털, 한국은행, WorldBank
+
+---
+
+## 주요 기능
+
+| 기능 | 설명 |
+|------|------|
+| 사업성 AI 분석 | 아이디어 입력 → 7 에이전트 분석 → 최종 판정 + 근거 리포트 |
+| MY아이디어 이력 | 분석 결과 자동 저장 (localStorage + Firestore) |
+| 창업 지원 공고 | 정부·지자체 공고 목록 (필터: 마감·지역·분야·키워드) |
+| 스타트업 라운지 | 창업 뉴스, 투자 정보, 정부 포털 링크 |
+| 인터뷰 모드 | 대화형 아이디어 탐색 + 프로필 구성 |
+| 음성 입력 | Web Speech API 기반 아이디어 입력 |
+
+---
+
+## 실행 방법
+
+### 사전 요구사항
+
+- Node.js 18+
+- Python 3.11
+- Docker (선택, 로컬 통합 실행 시)
+
+### 환경변수 설정
+
+프로젝트 루트에 `.env` 파일을 생성합니다:
+
+```env
+# LLM
+LLM_PROVIDER=openai          # openai 또는 anthropic
+LLM_MODEL=gpt-4o-mini
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+
+# 공공 API
+NAVER_CLIENT_ID=...
+NAVER_CLIENT_SECRET=...
+KOSIS_API_KEY=...
+KIPRIS_API_KEY=...
+DATA_GO_KR_SERVICE_KEY=...
+
+# DB
+DATABASE_URL=sqlite+aiosqlite:///./nadosajang.db
+```
+
+`frontend/` 에 `.env.local` 파일을 생성합니다:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+BACKEND_URL=http://localhost:8000
+```
+
+### 로컬 실행 (Docker Compose)
 
 ```bash
-git status
-git branch
-git log --oneline -10
+docker-compose up --build
 ```
 
-> 현재 작업물을 삭제하거나 reset하지 않는다.
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000/docs
 
----
+### 개별 실행
 
-## Claude에게 붙여넣을 프롬프트
+**Backend**
 
-아래 내용을 Claude에 그대로 복사·붙여넣기하여 작업을 시작한다.
-
----
-
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.api.main:app --reload --port 8000
 ```
-ROLE
-너는 이 프로젝트의 B — Data / RAG / Market / Competitor Lead다.
-프로젝트명은 「나도사장」이며, 목표는 단순한 창업정보 챗봇이 아니라 사용자의 창업 아이디어를 분석하고 의사결정을 지원하는 AI Business Decision Copilot을 구현하는 것이다.
-너는 다음 영역을 책임진다.
-- Shared RAG Infrastructure
-- Data ingestion / cleaning / chunking
-- Retrieval
-- Evidence / Citation
-- Market Agent
-- Competitor Agent
-- RAG evaluation
-- 관련 테스트
 
-1. 매우 중요한 현재 상태
-A — AI Architecture Lead의 작업이 이미 완료되어 있다.
-따라서 이 작업에서는 기존 Architecture를 다시 설계하지 않는다.
-특히 다음 공통 Contract와 Infrastructure가 이미 존재한다고 가정한다.
-- BusinessIdea
-- AgentResult
-- Evidence
-- DecisionResult
-- BaseAgent
-- LLMProvider
-- Orchestrator
-- shared domain schemas
-- 공통 configuration
-- 공통 logging / error handling
-- 기존 테스트 구조
-절대 하지 말 것
-- BaseAgent를 새로 만들지 않는다.
-- AgentResult를 새로 정의하지 않는다.
-- BusinessIdea를 중복 정의하지 않는다.
-- LLMProvider를 새로 만들지 않는다.
-- Orchestrator를 재작성하지 않는다.
-- 기존 공통 schema를 임의로 변경하지 않는다.
-- 기존 팀원의 코드를 삭제하지 않는다.
-- 기존 폴더 구조를 이유 없이 변경하지 않는다.
-먼저 repository 전체를 검사하고 현재 구현을 이해한 후 작업한다.
+**Frontend**
 
-2. Git Branch
-현재 branch는 다음과 같아야 한다.
-feature/B-rag-market
-작업 시작 전에 다음을 확인한다.
-git status
-git branch
-git log --oneline -10
-필요하면 최신 develop을 확인하되 현재 작업물을 삭제하거나 reset하지 않는다.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-3. Repository 분석
-먼저 다음을 수행한다.
-1. 프로젝트 전체 디렉터리 확인
-2. A가 구현한 domain schema 확인
-3. BaseAgent 확인
-4. AgentResult 확인
-5. Evidence 확인
-6. LLMProvider 확인
-7. RAG 관련 기존 구현 확인
-8. 테스트 구조 확인
-9. API 구조 확인
-10. 기존 README/docs 확인
-그 결과를 바탕으로 기존 구조에 맞춰 구현한다.
-기존 코드보다 더 좋은 구조가 떠올라도 이번 작업에서 전체 architecture를 재작성하지 않는다.
+### 테스트
 
-4. Shared RAG Infrastructure
-프로젝트 전체 Agent가 공통으로 사용할 하나의 Shared RAG Infrastructure를 구현한다.
-Agent마다 별도의 RAG를 만들지 않는다.
-구조 예시:
-rag/
-├── ingestion/
-├── cleaning/
-├── chunking/
-├── embeddings/
-├── retrieval/
-├── vectorstore/
-├── sources/
-└── evaluation/
-실제 repository 구조가 다르면 기존 구조를 우선한다.
-필요한 기능:
-- document ingestion
-- metadata extraction
-- text cleaning
-- chunking
-- embedding
-- vector storage
-- semantic retrieval
-- metadata filtering
-- top-k retrieval
-- source preservation
-- citation generation
-- confidence handling
-
-5. Source Metadata
-RAG 문서에는 가능한 한 다음 metadata를 보존한다.
-{
-  "title": "...",
-  "source": "...",
-  "url": "...",
-  "publisher": "...",
-  "published_at": "...",
-  "category": "...",
-  "industry": "...",
-  "country": "...",
-  "document_type": "..."
-}
-실제 데이터에 없는 값은 만들어내지 않는다.
-
-6. Evidence Chain
-모든 중요한 분석 결과가 다음 구조를 유지하도록 한다.
-Claim
- ↓
-Evidence
- ↓
-Source
- ↓
-Citation
- ↓
-Confidence
-근거가 충분하지 않은 경우:
-근거 부족 / 추가 검토 필요
-라고 명시한다.
-출처가 없는 사실을 사실처럼 생성하지 않는다.
-URL이나 출처를 추측해서 만들지 않는다.
-
-7. 데이터 Source
-가능한 경우 다음과 같은 신뢰도 높은 데이터를 우선한다.
-정부 / 공공
-- K-Startup
-- 기업마당
-- 중소벤처기업부
-- 창업진흥원
-- KOSIS
-- 공공데이터포털
-- 기타 중앙정부 / 지방정부 / 공공기관 자료
-시장 / 산업
-- 공공기관 산업자료
-- 공식 통계
-- 공식 기업자료
-- 신뢰할 수 있는 산업보고서
-유료 데이터나 접근할 수 없는 데이터는 임의로 사용하지 않는다.
-현재 실제 API가 연결되어 있지 않다면 확장 가능한 adapter 구조를 만든다.
-
-8. Market Agent
-Market Agent를 구현한다.
-입력:
-BusinessIdea
-출력:
-AgentResult
-분석 항목:
-- 시장 정의
-- TAM/SAM/SOM 후보
-- 시장 성장성
-- 산업 트렌드
-- 주요 시장 변화
-- 기회 요인
-- 시장 진입 장벽
-- 시장 가설
-- 근거
-- confidence
-중요:
-TAM/SAM/SOM 수치를 임의로 만들어내지 않는다.
-근거가 없으면:
-데이터 부족
-추가 시장조사 필요
-로 표시한다.
-
-9. Competitor Agent
-Competitor Agent를 구현한다.
-분석 항목:
-- Direct competitors
-- Indirect competitors
-- Substitute
-- 주요 기능
-- 가격
-- Target customer
-- Positioning
-- Strength
-- Weakness
-- Differentiation opportunity
-가능한 경우 각 경쟁사 정보에 source/evidence를 연결한다.
-확인되지 않은 가격이나 기능은 사실처럼 표시하지 않는다.
-
-10. Agent Dependencies
-Market Agent와 Competitor Agent는 A의 BaseAgent / AgentResult를 사용한다.
-Business Model Agent나 Decision Agent와의 연결을 고려해 structured output을 유지한다.
-
-11. Retrieval Strategy
-단순 similarity search만 구현하지 말고 가능한 경우:
-- semantic retrieval
-- metadata filtering
-- source quality
-- recency
-- relevance
-- top-k
-- deduplication
-을 고려한다.
-Agent별로 retrieval query가 달라질 수 있도록 설계한다.
-
-12. Evaluation
-다음 테스트를 만든다.
-RAG
-- ingestion test
-- chunking test
-- retrieval test
-- metadata filter test
-- citation test
-- source preservation test
-- insufficient evidence test
-Market Agent
-- valid input
-- structured output
-- evidence presence
-- insufficient evidence
-Competitor Agent
-- valid input
-- structured output
-- evidence presence
-- hallucination prevention
-LLM의 문장을 정확히 비교하지 말고 schema / constraint / evidence 존재 여부를 테스트한다.
-
-13. 구현 원칙
-- Python 3.11
-- Pydantic
-- async 가능한 구조
-- 기존 LLMProvider 사용
-- API key는 .env
-- secret을 코드에 하드코딩하지 않는다.
-- type hints 사용
-- 명확한 error handling
-- logging 추가
-- 테스트 가능한 구조
-- unnecessary abstraction 금지
-
-14. 실제 구현
-이제 다음 순서로 진행한다.
-1. Repository 분석
-2. 기존 A architecture 확인
-3. RAG infrastructure 구현
-4. Source metadata 구현
-5. Retrieval 구현
-6. Evidence/Citation 구현
-7. Market Agent 구현
-8. Competitor Agent 구현
-9. 테스트 작성
-10. 기존 테스트 실행
-11. 새 테스트 실행
-12. lint/type check 가능하면 실행
-13. integration point 확인
-중간에 문제가 발생하면 가능한 범위에서 직접 수정하고 계속 진행한다.
-사용자에게 계속 질문하지 말고 repository의 기존 convention을 우선한다.
-
-15. Git 작업
-작업 완료 후:
-git status
-git diff
-를 확인한다.
-문제가 없다면 적절한 commit을 만든다.
-예:
-git add .
-git commit -m "feat: implement shared RAG market and competitor agents"
-그리고 remote가 설정되어 있다면:
-git push origin feature/B-rag-market
-한다.
-develop 또는 main에 직접 push하지 않는다.
-
-16. 최종 보고
-마지막에 다음을 보고한다.
-1. 구현한 기능
-2. 변경한 파일
-3. 새로 만든 파일
-4. Market Agent 상태
-5. Competitor Agent 상태
-6. Shared RAG 상태
-7. Evidence/Citation 상태
-8. 테스트 결과
-9. 기존 테스트 결과
-10. develop과 integration 시 필요한 사항
-11. 아직 구현하지 못한 부분
-12. 다음 팀원이 알아야 할 사항
-최종 목표는 단순한 RAG demo가 아니라 나도사장의 실제 의사결정 파이프라인에 연결 가능한 Market / Competitor 분석 모듈이다.
+```bash
+cd backend
+pytest
 ```
 
 ---
 
-## A팀원 Architecture 연동 포인트
+## API 엔드포인트
 
-| 항목 | 위치 |
-|---|---|
-| 공통 Schema | `backend/app/core/schemas.py` |
-| BaseAgent | `backend/app/core/base_agent.py` |
-| LLMProvider | `backend/app/core/llm_provider.py` |
-| Orchestrator | `backend/app/agents/orchestrator.py` |
-| 기존 Dummy | `backend/app/agents/dummy_agents.py` |
-
-`MarketAgent`, `CompetitorAgent`는 `dummy_agents.py`의 Dummy를 대체한다.  
-Orchestrator에 등록된 클래스명(`MarketAgent`, `CompetitorAgent`)을 그대로 유지한다.
+| Method | Path | 설명 |
+|--------|------|------|
+| `POST` | `/api/v1/analyze` | 사업 아이디어 분석 (전체 워크플로우 실행) |
+| `GET` | `/api/v1/programs` | 창업 지원 공고 목록 |
+| `GET` | `/api/v1/programs/{id}` | 공고 상세 |
+| `GET` | `/api/v1/news` | 창업 관련 뉴스 |
+| `POST` | `/api/v1/interview/next` | 인터뷰 다음 질문 |
+| `POST` | `/api/v1/interview/profile` | 인터뷰 기반 프로필 생성 |
+| `GET` | `/api/v1/health` | 헬스체크 |
 
 ---
 
-## PR 대상
+## 프로젝트 구조
 
-작업 완료 후 → **`develop`** 브랜치로 Pull Request 생성
+```
+.
+├── backend/
+│   ├── app/
+│   │   ├── agents/          # 7개 전문 에이전트 + Orchestrator
+│   │   ├── api/             # FastAPI 라우터
+│   │   ├── core/            # 공통 Schema, BaseAgent, LLMProvider
+│   │   ├── db/              # SQLAlchemy 모델 및 세션
+│   │   ├── financial/       # 재무 계산기 (BEP, CAC, LTV 등)
+│   │   └── rag/             # RAG 어댑터 및 외부 리트리버
+│   └── rag/bizrag/          # Shared RAG 인프라 (벡터 스토어, 커넥터)
+├── frontend/
+│   └── src/
+│       ├── app/             # Next.js App Router 페이지
+│       ├── components/      # 공통 UI 컴포넌트
+│       ├── contexts/        # Auth Context
+│       └── lib/             # API, Firebase, 상태 관리
+├── docker-compose.yml
+├── render.yaml
+└── firebase.json
+```
+
+---
+
+## 주요 결과
+
+- 7개 전문 에이전트의 병렬·순차 파이프라인으로 분석 시간 단축
+- 공공데이터(KOSIS, 특허청, 공공데이터포털 등) 기반 Evidence-Chain으로 hallucination 방지
+- GO / PIVOT / VALIDATE_MORE / STOP 4단계 판정 + 실행 계획 자동 생성
+- Firebase Auth를 통한 소셜 로그인 및 Firestore 기반 분석 이력 영속화
+- Next.js API Routes를 프록시 레이어로 활용하여 백엔드 URL 노출 방지
