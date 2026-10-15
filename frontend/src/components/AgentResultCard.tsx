@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { AgentResult } from "@/lib/api";
+import { SHOW_CONFIDENCE } from "@/lib/agents";
 
 const AGENT_LABELS: Record<string, string> = {
   MarketAgent: "시장",
@@ -51,15 +52,21 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
       style={{ borderColor: "#E5E7EB" }}
     >
       {/* 완료·부분 완료 상태 표시는 개발 중 임시로 숨김 */}
-      <div className="flex items-center gap-3">
-        {!hideLabel && <span className="font-bold text-base shrink-0">{label}</span>}
-        <span className="text-xs shrink-0" style={{ color: "#6B7280" }}>
-          신뢰도
-        </span>
-        <div className="flex-1">
-          <ConfidenceBar value={result.confidence} />
+      {(!hideLabel || SHOW_CONFIDENCE) && (
+        <div className="flex items-center gap-3">
+          {!hideLabel && <span className="font-bold text-base shrink-0">{label}</span>}
+          {SHOW_CONFIDENCE && (
+            <>
+              <span className="text-xs shrink-0" style={{ color: "#6B7280" }}>
+                신뢰도
+              </span>
+              <div className="flex-1">
+                <ConfidenceBar value={result.confidence} />
+              </div>
+            </>
+          )}
         </div>
-      </div>
+      )}
 
 
       {!hideSummary && result.summary && (

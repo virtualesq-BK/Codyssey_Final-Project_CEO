@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
-import ReportView from "@/components/ReportView";
+import ReportView, { SectionNav, reportNavItems } from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
 import type { AnalyzeJob } from "@/lib/api";
 import { type FinancePlan, financeSummary } from "@/lib/financePlan";
 import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
-import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
+import { AGENT_LABELS, AGENT_ORDER, SHOW_CONFIDENCE } from "@/lib/agents";
 import { progressOf } from "@/lib/diagnosisRunner";
 import {
   DECISION_META,
@@ -281,7 +281,8 @@ export default function ProfileWorkspace(props: Props) {
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8 grid gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[220px_minmax(0,1fr)_320px] items-start">
       {/* ── 왼쪽: 내 아이디어 ── */}
-      <aside className="hidden xl:flex flex-col gap-2 bg-white rounded-lg shadow-card p-4" style={{ border: `1px solid ${line}` }}>
+      <div className="hidden xl:flex flex-col gap-4 self-stretch">
+      <aside className="flex flex-col gap-2 bg-white rounded-lg shadow-card p-4" style={{ border: `1px solid ${line}` }}>
         <div className="text-xs px-2 pb-1" style={{ color: iron }}>
           내 아이디어
         </div>
@@ -309,6 +310,13 @@ export default function ProfileWorkspace(props: Props) {
           + 새 아이디어
         </Link>
       </aside>
+      {/* 보고서를 볼 때는 섹션 목차가 스크롤을 따라온다 */}
+      {tab === "report" && selectedReport && (
+        <div className="sticky top-[76px] bg-white rounded-lg shadow-card p-3" style={{ border: `1px solid ${line}` }}>
+          <SectionNav vertical items={reportNavItems(selectedReport)} />
+        </div>
+      )}
+      </div>
 
       {/* ── 가운데: 프로필 ── */}
       <main className="min-w-0 flex flex-col gap-5">
@@ -766,15 +774,17 @@ function DiagnosisCard({
         <DiagnosingMini job={job} startedAt={idea.statusChangedAt} onShowProgress={onShowProgress} />
       ) : dr ? (
         <>
-          <div>
-            <div className="flex justify-between text-xs mb-1" style={{ color: "#485876" }}>
-              <span>확신도</span>
-              <span className="font-semibold">{dr.confidence.toFixed(2)}</span>
+          {SHOW_CONFIDENCE && (
+            <div>
+              <div className="flex justify-between text-xs mb-1" style={{ color: "#485876" }}>
+                <span>확신도</span>
+                <span className="font-semibold">{dr.confidence.toFixed(2)}</span>
+              </div>
+              <div className="h-1.5 rounded-full" style={{ background: "#E5E7EB" }}>
+                <div className="h-1.5 rounded-full" style={{ width: `${Math.round(dr.confidence * 100)}%`, background: decision?.color }} />
+              </div>
             </div>
-            <div className="h-1.5 rounded-full" style={{ background: "#E5E7EB" }}>
-              <div className="h-1.5 rounded-full" style={{ width: `${Math.round(dr.confidence * 100)}%`, background: decision?.color }} />
-            </div>
-          </div>
+          )}
           <p className="text-sm m-0 leading-relaxed" style={{ color: "#08183F" }}>
             {dr.summary}
           </p>

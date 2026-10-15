@@ -1,5 +1,6 @@
 "use client";
 
+import { SHOW_CONFIDENCE } from "@/lib/agents";
 import type { DecisionResult } from "@/lib/api";
 
 const DECISION_CONFIG = {
@@ -49,11 +50,13 @@ export default function DecisionBanner({ result }: Props) {
           >
             {cfg.label}
           </span>
-          <span className="text-sm text-text-muted">
-            신뢰도 {result.confidence.toFixed(2)}
-          </span>
+          {SHOW_CONFIDENCE && (
+            <span className="text-sm text-text-muted">
+              신뢰도 {result.confidence.toFixed(2)}
+            </span>
+          )}
         </div>
-        <div className="flex-1 h-2 max-w-32 bg-white/60 rounded-full overflow-hidden">
+        <div className={`flex-1 h-2 max-w-32 bg-white/60 rounded-full overflow-hidden ${SHOW_CONFIDENCE ? "" : "hidden"}`}>
           <div
             className="h-2 rounded-full"
             style={{
