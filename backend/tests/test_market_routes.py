@@ -33,3 +33,10 @@ def test_build_converts_and_computes_without_trusting_model_math():
 def test_tam_not_in_evidence_is_dropped():
     out = build(SizingDraft(tam=TamIn(raw="500조원", evidence_index=0), sam=SamIn(share=0.5), som=SomIn()), EV)
     assert out.tam.value is None and out.tam.display == "자료 부족" and out.sam.value is None
+
+
+def test_old_series_are_dropped():
+    old = [EvidenceIn(title="옛 통계", content="2003년 1조원, 2009년 2조원")]
+    out = build(SizingDraft(tam=TamIn(), sam=SamIn(), som=SomIn(), series=[
+        SeriesIn(name="옛", evidence_index=0, points=[PointIn(year=2003, raw="1조원"), PointIn(year=2009, raw="2조원")])]), old)
+    assert out.series == []

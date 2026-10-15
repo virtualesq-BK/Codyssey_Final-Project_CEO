@@ -218,6 +218,8 @@ export interface MarketSizing {
   som: MarketTier;
   series: MarketSeries[];
   usd_krw: number;
+  /** evidence_index가 가리키는 출처 (보고서 근거 + 최신 웹 근거). 예전 저장본엔 없을 수 있다 */
+  sources?: { title: string; source: string; url?: string | null }[];
 }
 
 export async function suggestMarketSizing(req: {

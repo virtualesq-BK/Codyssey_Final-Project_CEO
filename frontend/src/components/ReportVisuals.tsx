@@ -759,7 +759,7 @@ export function MarketPanel({
     <div className="flex flex-col gap-4" aria-label="시장 규모">
       {loading && (
         <div className="rounded-lg px-4 py-6 text-sm text-center animate-pulse" style={{ background: "#F5F7FC", color: blue }}>
-          근거에서 시장 규모를 정리하는 중…
+          최신 시장 자료를 찾아 규모를 정리하는 중… (20초 안팎)
         </div>
       )}
       {error && (
@@ -773,21 +773,29 @@ export function MarketPanel({
       {data && !loading && (
         <>
           <div className="grid gap-3 md:grid-cols-3">
-            <TierCard code="TAM" name="전체 시장" tier={data.tam} evidence={evidence} />
-            <TierCard code="SAM" name="닿을 수 있는 시장" tier={data.sam} evidence={evidence} />
-            <TierCard code="SOM" name="3년 안에 확보할 몫" tier={data.som} evidence={evidence} />
+            <TierCard code="TAM" name="전체 시장" tier={data.tam} evidence={data.sources ?? evidence} />
+            <TierCard code="SAM" name="닿을 수 있는 시장" tier={data.sam} evidence={data.sources ?? evidence} />
+            <TierCard code="SOM" name="3년 안에 확보할 몫" tier={data.som} evidence={data.sources ?? evidence} />
           </div>
           {data.series.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2">
               {data.series.map((s, i) => (
-                <TrendChart key={i} series={s} evidence={evidence} />
+                <TrendChart key={i} series={s} evidence={data.sources ?? evidence} />
               ))}
             </div>
           ) : (
             <p className="m-0 text-xs" style={{ color: gray }}>
-              근거에 연도별 시장 규모가 두 개 이상 나오지 않아 추세 그래프는 그리지 않았어요.
+              최근 몇 년 안의 연도별 시장 규모가 두 개 이상 나오지 않아 추세 그래프는 그리지 않았어요.
             </p>
           )}
+          <button
+            type="button"
+            onClick={load}
+            className="self-start text-xs font-semibold"
+            style={{ background: "none", border: "none", color: blue, cursor: "pointer", padding: 0 }}
+          >
+            ↻ 최신 자료로 다시 정리
+          </button>
         </>
       )}
     </div>
