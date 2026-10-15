@@ -12,8 +12,9 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   "마감": { bg: "#F3F4F6", text: "#6B7280" },
 };
 
-const REGIONS = ["전체", "전국", "서울", "경기", "부산", "인천", "대구", "대전", "광주"];
-const CATEGORIES = ["전체", "창업지원", "청년창업", "기술창업", "공간지원", "소셜임팩트", "글로벌", "헬스케어"];
+// K-Startup 공고의 지원 지역·분야 값과 맞춘다 (지역을 고르면 '전국' 공고도 함께 나온다)
+const REGIONS = ["전체", "전국", "서울", "경기", "인천", "부산", "대구", "대전", "광주", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
+const CATEGORIES = ["전체", "사업화", "멘토링", "시설", "행사", "창업교육", "기술개발", "판로", "글로벌", "융자", "인력"];
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -143,7 +144,7 @@ export default function ProgramsPage() {
                         <div className="text-right shrink-0">
                           <div className="text-xs text-text-muted">마감일</div>
                           <div className="text-sm font-semibold">{p.ends_on}</div>
-                          <div className="text-xs font-bold mt-1" style={{ color: "#08183F" }}>{p.amount}</div>
+                          {p.amount && <div className="text-xs font-bold mt-1" style={{ color: "#08183F" }}>{p.amount}</div>}
                         </div>
                       </div>
                     </div>
@@ -184,10 +185,12 @@ export default function ProgramsPage() {
               </div>
 
               <div className="flex flex-col gap-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-text-muted">지원금액</span>
-                  <span className="font-semibold" style={{ color: "#08183F" }}>{selected.amount}</span>
-                </div>
+                {selected.amount && (
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">지원금액</span>
+                    <span className="font-semibold" style={{ color: "#08183F" }}>{selected.amount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-text-muted">접수기간</span>
                   <span className="font-medium">{selected.starts_on} ~ {selected.ends_on}</span>
