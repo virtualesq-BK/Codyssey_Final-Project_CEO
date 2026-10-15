@@ -106,3 +106,21 @@ def test_profile_route_requires_a_user_answer():
         json={"memo": MEMO, "messages": [{"role": "assistant", "content": "질문"}]},
     )
     assert res.status_code == 400
+
+
+def test_compose_message_splits_ack_question_and_tag():
+    from app.agents.interview_agent import InterviewTurn, compose_message
+
+    turn = InterviewTurn(ack="학습지를 따로 준비하시는군요", question="비용은 누가 내게 될까요?", area="수익 모델", intent="돈 내는 사람 확인")
+    assert compose_message(turn) == "학습지를 따로 준비하시는군요\n비용은 누가 내게 될까요?\n(수익 모델 · 돈 내는 사람 확인)"
+    # 마무리: 질문이 없으면 괄호 줄도 없다
+    assert compose_message(InterviewTurn(ack="고마워요. 프로필을 만들어 볼게요.", area="고객")) == "고마워요. 프로필을 만들어 볼게요."
+    # 예전 형식(message만)도 그대로
+    assert compose_message(InterviewTurn(message=" 예전 질문 ")) == "예전 질문"
+
+
+def test_section_text_joins_summary_and_points():
+    from app.agents.interview_agent import ProfileSection, section_text
+
+    sec = ProfileSection(summary="평일 낮 산책을 맡길 곳이 없다", points=["· 출근 시간 공백", "지인 부탁은 자주 어긋남", " "])
+    assert section_text(sec) == "평일 낮 산책을 맡길 곳이 없다\n· 출근 시간 공백\n· 지인 부탁은 자주 어긋남"

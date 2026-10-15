@@ -227,23 +227,40 @@ function MicIcon({ active }: { active: boolean }) {
   );
 }
 
-/** 질문 끝의 "(영역 · 의도)" 줄은 본문과 구분해 작고 흐리게 보여준다 */
+/**
+ * 인터뷰어 말: "짚기\n질문\n(영역 · 의도)" 모양이면 짚기는 작게, 질문은 굵게, 영역·의도는 꼬리표로 나눠 그린다.
+ * 그 모양이 아닌 예전 기록·마무리 인사는 그대로 보여준다.
+ */
 function QuestionText({ text }: { text: string }) {
-  const m = text.match(/^([\s\S]*?)\n?\s*\(([^()\n]+)\)\s*$/);
-  if (!m || !m[2].includes("·")) return <>{text}</>;
-  // 첫 "·"만 영역과 의도의 경계로 본다 (의도 안의 "·"는 그대로 둔다)
-  const cut = m[2].indexOf("·");
-  const area = m[2].slice(0, cut).trim();
-  const why = m[2].slice(cut + 1).trim();
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const tag = lines.length > 1 ? lines[lines.length - 1].match(/^\(([^()]+)\)$/) : null;
+  if (!tag || !tag[1].includes("·")) return <>{text}</>;
+  const body = lines.slice(0, -1);
+  const ack = body.length > 1 ? body[0] : "";
+  const question = (body.length > 1 ? body.slice(1) : body).join(" ");
+  const cut = tag[1].indexOf("·");
+  const area = tag[1].slice(0, cut).trim();
+  const why = tag[1].slice(cut + 1).trim();
   return (
-    <>
-      {m[1].trim()}
-      <span className="block mt-2 text-xs" style={{ color: "#6B7280" }}>
-        <b className="font-semibold" style={{ color: "#1B57EA" }}>
-          {area}
-        </b>
-        {why && ` · ${why}`}
+    <span className="flex flex-col gap-1 whitespace-normal">
+      {ack && (
+        <span className="text-[13px]" style={{ color: "#485876" }}>
+          {ack}
+        </span>
+      )}
+      <span className="text-[15px] font-bold leading-snug" style={{ color: "#08183F" }}>
+        {question}
       </span>
-    </>
+      <span className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#EAF0FD", color: "#1446C4" }}>
+          {area}
+        </span>
+        {why && (
+          <span className="text-xs" style={{ color: "#6B7280" }}>
+            {why}
+          </span>
+        )}
+      </span>
+    </span>
   );
 }

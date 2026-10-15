@@ -575,6 +575,23 @@ function Plain({ value }: { value: string }) {
       }
       return <span key={i}>{x}</span>;
     });
+  // "요약 한 줄\n· 근거\n· 근거" 모양: 요약은 굵게, 근거는 목록으로
+  const lines = value.split("\n").map((l) => l.trim()).filter(Boolean);
+  const bullets = lines.filter((l) => /^[·•\-]\s/.test(l));
+  if (lines.length >= 2 && !/^[·•\-]\s/.test(lines[0]) && bullets.length === lines.length - 1) {
+    return (
+      <div>
+        <div className="font-bold leading-snug" style={{ color: "#08183F" }}>
+          {highlight(lines[0])}
+        </div>
+        <ul className="m-0 mt-1.5 pl-4 list-disc flex flex-col gap-0.5" style={{ color: "#485876" }}>
+          {bullets.map((b, i) => (
+            <li key={i}>{highlight(b.replace(/^[·•\-]\s+/, ""))}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
   if (parts.length >= 2) {
     return (
       <div className="flex flex-wrap gap-1.5">
