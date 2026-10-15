@@ -25,13 +25,99 @@ def _safe(fn):
 
 
 class Knowledge:
-    def __init__(self, app: App | None = None):
+    def __init__(self, app: App | None = None, pinecone_store: Any | None = None):
         self.app = app or App()
         self.store = self.app.store
+        self._pinecone = pinecone_store
+
+    @property
+    def pinecone(self):
+        if self._pinecone is None:
+            api_key = self.app.env.get("PINECONE_API_KEY")
+            if api_key:
+                from .pinecone_store import PineconeStore
+                from .embeddings import EmbeddingProvider
+
+                emb = EmbeddingProvider(
+                    provider=self.app.env.get("EMBEDDING_PROVIDER", "openai"),
+                    model=self.app.env.get("EMBEDDING_MODEL"),
+                    api_key=self.app.env.get("OPENAI_API_KEY") or self.app.env.get("GEMINI_API_KEY"),
+                )
+                self._pinecone = PineconeStore(
+                    api_key=api_key,
+                    index_name=self.app.env.get("PINECONE_INDEX_NAME", "bizrag-market"),
+                    namespace=self.app.env.get("PINECONE_NAMESPACE", "bizrag"),
+                    embedding_provider=emb,
+                    cloud=self.app.env.get("PINECONE_CLOUD", "aws"),
+                    region=self.app.env.get("PINECONE_REGION", "us-east-1"),
+                )
+        return self._pinecone
 
     # ------------------------------------------------ 저장된 지식 조회
-    def search_knowledge(self, query: str, sources: list[str] | None = None,
-                         doc_types: list[str] | None = None, limit: int = 8) -> list[dict]:
+    def search_knowledge(
+        self,
+        query: str,
+        sources: list[str] | None = None,
+        doc_types: list[str] | None = None,
+        limit: int = 8,
+        mode: str = "auto",
+    ) -> list[dict]:
+        """문서 검색 (mode: 'keyword' | 'semantic' | 'hybrid' | 'auto')."""
+        mode = mode.lower()
+        if mode == "auto":
+            mode = "hybrid" if (self.pinecone is not None and self.app.env.get("PINECONE_API_KEY")) else "keyword"
+
+        if mode == "keyword" or self.pinecone is None:
+            return self.store.search(query, sources=sources, doc_types=doc_types, limit=limit)
+
+        if mode == "semantic":
+            try:
+                return self.pinecone.search(query, sources=sources, doc_types=doc_types, limit=limit)
+            except Exception:
+                # Pinecone 오류 시 SQLite FTS로 fallback
+                return self.store.search(query, sources=sources, doc_types=doc_types, limit=limit)
+
+        if mode == "hybrid":
+            try:
+                # SQLite FTS 검색
+                kw_results = self.store.search(query, sources=sources, doc_types=doc_types, limit=limit * 2)
+            except Exception:
+                kw_results = []
+            try:
+                # Pinecone 시맨틱 검색
+                sem_results = self.pinecone.search(query, sources=sources, doc_types=doc_types, limit=limit * 2)
+            except Exception:
+                sem_results = []
+
+            if not sem_results:
+                return kw_results[:limit]
+            if not kw_results:
+                return sem_results[:limit]
+
+            # Reciprocal Rank Fusion (RRF, k=60)
+            k = 60
+            scores: dict[str, float] = {}
+            doc_map: dict[str, dict] = {}
+
+            for rank, item in enumerate(kw_results):
+                cid = item.get("chunk_id") or item.get("doc_id")
+                scores[cid] = scores.get(cid, 0.0) + (1.0 / (k + rank + 1))
+                doc_map[cid] = item
+
+            for rank, item in enumerate(sem_results):
+                cid = item.get("chunk_id") or item.get("doc_id")
+                scores[cid] = scores.get(cid, 0.0) + (1.0 / (k + rank + 1))
+                if cid not in doc_map:
+                    doc_map[cid] = item
+
+            sorted_cids = sorted(scores.keys(), key=lambda c: scores[c], reverse=True)
+            merged = []
+            for cid in sorted_cids[:limit]:
+                d = dict(doc_map[cid])
+                d["hybrid_score"] = round(scores[cid], 4)
+                merged.append(d)
+            return merged
+
         return self.store.search(query, sources=sources, doc_types=doc_types, limit=limit)
 
     def get_series(self, dataset: str | None = None, series_contains: str | None = None,

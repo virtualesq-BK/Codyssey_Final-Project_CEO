@@ -32,9 +32,11 @@ def build(k: Knowledge | None = None):
 
     @server.tool()
     def search_knowledge(query: str, sources: list[str] | None = None,
-                         doc_types: list[str] | None = None, limit: int = 8) -> list[dict]:
-        """저장된 문서 전문검색. sources 예: law, kipris, kosis, datagokr. doc_types 예: law_article, patent, stat_table, consumer_complaint."""
-        return k.search_knowledge(query, sources, doc_types, limit)
+                         doc_types: list[str] | None = None, limit: int = 8,
+                         mode: str = "auto") -> list[dict]:
+        """저장된 문서 검색 (mode: 'auto' | 'semantic' | 'keyword' | 'hybrid').
+        sources 예: law, kipris, kosis, datagokr. doc_types 예: law_article, patent, stat_table, consumer_complaint."""
+        return k.search_knowledge(query, sources, doc_types, limit, mode=mode)
 
     @server.tool()
     def get_series(dataset: str | None = None, series_contains: str | None = None,

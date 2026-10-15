@@ -142,3 +142,56 @@ tests/              모의 응답 테스트 (python -m unittest discover -s test
 ```
 검색은 별도 키가 필요 없는 SQLite 전문검색입니다. 문서가 수만 건을 넘어 의미 검색이 필요해지면 `chunks` 테이블에
 임베딩 열을 추가하는 방식으로 확장할 수 있습니다.
+
+## 8. Pinecone Vector DB (pinecone.io) RAG 연동
+
+`feature/B-rag-market`의 수집기가 모은 문서(법령 조문, 특허 초록, 한국은행/소비자원 요약 등)를
+**Pinecone Serverless Vector DB**에 임베딩하여 시맨틱(의미 기반) 검색 및 하이브리드 검색을 수행할 수 있습니다.
+
+### ① 키 및 환경변수 설정 (`.env`)
+```bash
+# Pinecone API 키 (https://app.pinecone.io)
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_INDEX_NAME=bizrag-market
+PINECONE_NAMESPACE=bizrag
+PINECONE_CLOUD=aws
+PINECONE_REGION=us-east-1
+
+# 임베딩 프로바이더 (openai 또는 gemini)
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=text-embedding-3-small
+OPENAI_API_KEY=your_openai_api_key
+```
+
+### ② 의존성 설치
+```bash
+pip install -r requirements.txt
+```
+
+### ③ Pinecone 인덱스 생성 및 동기화
+```bash
+# 1. Pinecone Serverless 인덱스 확인/자동 생성
+python -m bizrag pinecone-init
+
+# 2. 수집기로 수집된 SQLite 문서를 Pinecone에 일괄 임베딩 & 업서트
+python -m bizrag pinecone-sync
+
+# 3. Pinecone 시맨틱 검색 테스트
+python -m bizrag pinecone-search "헬스장 중도해지 위약금"
+
+# 4. 하이브리드 검색 (BM25 + Pinecone RRF 앙상블)
+python -m bizrag search "헬스장 계약해제" --mode hybrid
+```
+
+### ④ Python 코드 및 에이전트 연동 예시
+```python
+from bizrag.knowledge import Knowledge
+
+k = Knowledge()
+
+# 하이브리드 검색 (키워드 + 시맨틱)
+docs = k.search_knowledge("온라인 쇼핑몰 환불 규정", mode="hybrid", limit=5)
+for doc in docs:
+    print(f"[{doc['source']}] {doc['title']} (score: {doc.get('hybrid_score')})")
+    print(doc['text'])
+```

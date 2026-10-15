@@ -254,3 +254,21 @@ sources:
   inbox:
     enabled: true
     path: inbox
+
+# ── Pinecone Vector DB RAG 설정 ─────────────────────────────────────────
+# RAG 벡터 유사도 검색 및 하이브리드 검색(BM25 + Semantic) 설정
+# API 키 및 세부 시크릿은 .env에서 관리합니다.
+pinecone:
+  enabled: true
+  index_name: bizrag-market
+  namespace: bizrag
+  cloud: aws
+  region: us-east-1
+  embedding:
+    provider: openai          # openai | gemini | mock
+    model: text-embedding-3-small
+    batch_size: 100
+  search:
+    default_mode: auto        # auto | hybrid | semantic | keyword
+    rrf_k: 60                 # Reciprocal Rank Fusion 상수
+    default_limit: 8
