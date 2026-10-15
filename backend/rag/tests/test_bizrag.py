@@ -160,9 +160,9 @@ class Router:
             return FakeResp(body=[{"TBL_NM": "상거래현대화수준", "PRD_DE": "2024", "C1_NM": "POS 기기",
                                    "C2_NM": "서울", "ITM_NM": "보급률", "UNIT_NM": "%", "DT": "42.1"}])
         if "statisticsParameterData.do" in url:
-            if p.get("prdSe") != "M":  # 수록주기 자동 탐색 검증
+            if p.get("tblId") == "DT_1KE10041" and p.get("prdSe") != "M":  # 수록주기 자동 탐색 검증
                 return FakeResp(body={"err": "30", "errMsg": "데이터가 존재하지 않습니다."})
-            return FakeResp(body=[{"TBL_NM": "온라인쇼핑 거래액", "PRD_DE": f"2026{m:02d}", "C1_NM": "식품",
+            return FakeResp(body=[{"TBL_NM": "통계표", "PRD_DE": f"2026{m:02d}", "C1_NM": "식품",
                                    "ITM_NM": "거래액", "UNIT_NM": "백만원", "DT": str(1000 + m)} for m in range(1, 7)])
         if "lawSearch.do" in url:
             if p.get("OC") == "bad":
