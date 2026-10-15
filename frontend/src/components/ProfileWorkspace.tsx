@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import ReportView from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
+import type { AnalyzeJob } from "@/lib/api";
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
+import { progressOf } from "@/lib/diagnosisRunner";
 import {
   DECISION_META,
   type Idea,
@@ -42,6 +44,11 @@ interface Props {
   missingCount: number;
   onSaveProfile: (profile: IdeaProfile) => Promise<void>;
   onDiagnose: () => void;
+  /** 진행 중인 상세분석 작업 (단계별 진행) */
+  diagnosisJob?: AnalyzeJob | null;
+  onShowProgress?: () => void;
+  /** 값이 바뀌면 보고서 탭으로 넘긴다 (진행 모달의 '보고서 보기') */
+  openReportSignal?: number;
 }
 
 const ink = "#08183F";
@@ -50,7 +57,7 @@ const iron = "#6B7280";
 const line = "#E5E7EB";
 
 export default function ProfileWorkspace(props: Props) {
-  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose } = props;
+  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal } = props;
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null);
   // 프로필 전체를 한 번에 고친다: 편집 모드 + 칸별 초안
@@ -66,6 +73,9 @@ export default function ProfileWorkspace(props: Props) {
   useEffect(() => {
     setSelectedReportId(reports[0]?.id ?? null);
   }, [reports]);
+  useEffect(() => {
+    if (openReportSignal) setTab("report");
+  }, [openReportSignal]);
   useEffect(() => {
     listIdeas(user).then(setIdeas).catch(() => setIdeas([]));
   }, [user, idea.updatedAt]);
@@ -488,6 +498,8 @@ export default function ProfileWorkspace(props: Props) {
           label={diagnoseLabel}
           onDiagnose={onDiagnose}
           onOpenReport={() => setTab("report")}
+          job={diagnosisJob ?? null}
+          onShowProgress={onShowProgress}
         />
 
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2" style={{ border: `1px solid ${line}` }}>
@@ -663,6 +675,8 @@ function DiagnosisCard({
   label,
   onDiagnose,
   onOpenReport,
+  job,
+  onShowProgress,
 }: {
   idea: Idea;
   status: IdeaStatus;
@@ -673,6 +687,8 @@ function DiagnosisCard({
   label: string;
   onDiagnose: () => void;
   onOpenReport: () => void;
+  job: AnalyzeJob | null;
+  onShowProgress?: () => void;
 }) {
   const dr = latest?.response.workflow_result.decision_result;
   const decision = dr ? DECISION_META[dr.decision] : idea.latestReport?.decision ? DECISION_META[idea.latestReport.decision] : null;
@@ -697,18 +713,7 @@ function DiagnosisCard({
       </div>
 
       {status === "diagnosing" ? (
-        <>
-          <p className="text-sm m-0 leading-relaxed" style={{ color: "#485876" }}>
-            6개 분야를 근거와 함께 진단하고 있어요. 보통 2~3분 걸려요. 이 화면을 닫지 말아주세요.
-          </p>
-          <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
-            {AGENT_ORDER.map((a) => (
-              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F3F4F6", color: "#08183F" }}>
-                {AGENT_LABELS[a] ?? a}
-              </span>
-            ))}
-          </div>
-        </>
+        <DiagnosingMini job={job} startedAt={idea.statusChangedAt} onShowProgress={onShowProgress} />
       ) : dr ? (
         <>
           <div>
@@ -798,5 +803,60 @@ function LockIcon() {
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>
+  );
+}
+
+/** 진단 카드 안의 작은 진행 표시 — 단계별 상태 + 진행 모달 열기 */
+function DiagnosingMini({ job, startedAt, onShowProgress }: { job: AnalyzeJob | null; startedAt: string; onShowProgress?: () => void }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const { percent } = progressOf(job, startedAt);
+  return (
+    <>
+      <div>
+        <div className="flex justify-between text-xs mb-1" style={{ color: "#485876" }}>
+          <span>6개 분야 진단 중</span>
+          <span className="font-semibold tabular-nums">{percent}%</span>
+        </div>
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#E5E7EB" }}>
+          <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${percent}%`, background: "#1B57EA" }} />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
+        {AGENT_ORDER.map((a) => {
+          const st = job?.stages[a]?.state ?? "waiting";
+          const style =
+            st === "done"
+              ? { background: "#EAF0FD", color: "#1446C4" }
+              : st === "running"
+                ? { background: "#fff", color: "#1B57EA", boxShadow: "inset 0 0 0 1.5px #1B57EA" }
+                : st === "failed"
+                  ? { background: "#FEF2F2", color: "#B42318" }
+                  : { background: "#F3F4F6", color: "#6B7280" };
+          return (
+            <span key={a} className={`rounded py-1.5 font-semibold ${st === "running" ? "animate-pulse" : ""}`} style={style}>
+              {st === "done" ? "✓ " : ""}
+              {AGENT_LABELS[a] ?? a}
+            </span>
+          );
+        })}
+      </div>
+      <p className="text-xs m-0 leading-relaxed" style={{ color: "#485876" }}>
+        다른 화면으로 가거나 창을 닫아도 계속돼요. 끝나면 알려드려요.
+      </p>
+      {onShowProgress && (
+        <button
+          type="button"
+          onClick={onShowProgress}
+          className="min-h-[44px] rounded-xl text-sm font-bold bg-white"
+          style={{ border: "1px solid #D9DBDA", color: "#08183F", cursor: "pointer" }}
+        >
+          진행 상황 크게 보기
+        </button>
+      )}
+    </>
   );
 }

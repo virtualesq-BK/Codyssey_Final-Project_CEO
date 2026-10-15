@@ -60,6 +60,49 @@ export interface AnalyzeResponse {
   workflow_result: WorkflowResult;
 }
 
+/** 상세분석 백그라운드 작업 — 화면을 떠나도 서버에서 계속 돈다 */
+export type StageState = "waiting" | "running" | "done" | "failed";
+
+export interface StageProgress {
+  state: StageState;
+  status: AgentStatus | null;
+  summary: string;
+  evidence: number;
+  elapsed_ms: number;
+}
+
+export interface AnalyzeJob {
+  job_id: string;
+  status: "running" | "done" | "failed";
+  started_at: string;
+  finished_at: string | null;
+  stages: Record<string, StageProgress>;
+  result: AnalyzeResponse | null;
+  error: string | null;
+}
+
+export class JobGoneError extends Error {}
+
+export async function startAnalyzeJob(req: AnalyzeRequest): Promise<string> {
+  const res = await fetch("/api/v1/analyze/jobs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "알 수 없는 오류" }));
+    throw new Error(err.detail ?? "분석을 시작하지 못했어요.");
+  }
+  return (await res.json()).job_id;
+}
+
+export async function getAnalyzeJob(jobId: string): Promise<AnalyzeJob> {
+  const res = await fetch(`/api/v1/analyze/jobs/${encodeURIComponent(jobId)}`, { cache: "no-store" });
+  if (res.status === 404) throw new JobGoneError("분석 작업이 끊겼어요. 서버가 다시 시작됐을 수 있어요.");
+  if (!res.ok) throw new Error("진행 상황을 불러오지 못했어요.");
+  return res.json();
+}
+
 export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
   const res = await fetch("/api/v1/analyze", {
     method: "POST",

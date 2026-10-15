@@ -15,3 +15,13 @@ body {
   background: #F3F4F6;
   margin: 0;
 }
+
+/* 길이를 모르는 진행 막대 (상세분석 단계 카드) */
+@keyframes indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[indeterminate_1\.4s_ease-in-out_infinite\] { animation: none; }
+}

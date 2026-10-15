@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import DiagnosisWatcher from "@/components/DiagnosisWatcher";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
@@ -19,7 +20,10 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <DiagnosisWatcher />
+        </AuthProvider>
       </body>
     </html>
   );

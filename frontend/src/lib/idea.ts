@@ -85,6 +85,10 @@ export interface Idea {
   /** 진행 중 상태가 너무 오래 멈춰 있는지 판단하는 기준 */
   statusChangedAt: string;
   latestReport: ReportSummary | null;
+  /** 진행 중인 상세분석 작업 (서버 백그라운드). 화면을 떠났다 와도 이어서 결과를 받는다 */
+  diagnosisJobId?: string | null;
+  /** 상세분석 작업을 시작할 때 보낸 입력 — 보고서에 함께 남긴다 */
+  diagnosisInput?: AnalyzeRequest | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
   createdAt: string;
