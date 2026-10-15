@@ -268,6 +268,19 @@ class Store:
             for r in rows
         ]
 
+    def get_all_chunks(self, limit: int | None = None, offset: int = 0) -> list[dict]:
+        """문서 메타데이터와 결합된 청크 목록 반환 (Pinecone 동기화용)."""
+        sql = """SELECT c.chunk_id, c.doc_id, c.seq, c.text,
+                        d.source, d.doc_type, d.title, d.url,
+                        d.published_at, d.retrieved_at, d.license
+                 FROM chunks c
+                 JOIN documents d ON d.doc_id = c.doc_id
+                 ORDER BY c.doc_id, c.seq"""
+        if limit is not None:
+            sql += f" LIMIT {int(limit)} OFFSET {int(offset)}"
+        rows = self.conn.execute(sql).fetchall()
+        return [dict(r) for r in rows]
+
     # ---------------------------------------------------------- observations
     def upsert_observations(self, rows: Iterable[dict]) -> int:
         n = 0
