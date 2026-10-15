@@ -236,7 +236,13 @@ export default function ProfileWorkspace(props: Props) {
                 </div>
               ) : r.id === "fin:summary" ? (
                 <div className="flex flex-col gap-2 items-start">
-                  <span>{financeSummary(idea.financePlan) ?? (r.value || "이번 분석에서 나오지 않았어요")}</span>
+                  {financeSummary(idea.financePlan) ? (
+                    <RowValue value={financeBullets(financeSummary(idea.financePlan)!)} />
+                  ) : r.value ? (
+                    <RowValue value={r.value} />
+                  ) : (
+                    <span>이번 분석에서 나오지 않았어요</span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setTab("report")}
@@ -934,4 +940,11 @@ function DiagnosingMini({ job, startedAt, onShowProgress }: { job: AnalyzeJob | 
       )}
     </>
   );
+}
+
+/** "월 매출 169만원 · 비용 112만원 · 영업이익 58만원 (34%) · 손익분기 …" → 영업이익을 요약으로, 나머지는 불렛 */
+function financeBullets(summary: string) {
+  const parts = summary.split(" · ").map((x) => x.trim()).filter(Boolean);
+  const head = parts.find((x) => x.startsWith("영업이익")) ?? parts[0];
+  return [head, ...parts.filter((x) => x !== head).map((x) => `· ${x}`)].join("\n");
 }

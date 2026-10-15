@@ -158,22 +158,53 @@ function findingOf(report: IdeaReport | null, agent: string, key: string): Findi
 }
 
 /** 상세분석에서 가져오는 줄 — 분석 전이면 값이 비어 있다 */
+/**
+ * 보고서의 긴 문단 → 1~3번 칸과 같은 "요약 한 줄\n· 근거" 모양 (프로필 화면이 굵은 요약 + 불렛으로 그린다)
+ * 첫 문장을 요약으로, 나머지 문장을 불렛으로 쓴다. 한 문장뿐이면 그대로 둔다.
+ */
+export function toSummaryBullets(text: string, max = 4): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const sentences = t
+    .split(/(?<=[다요음임됨함]\.|[.!?])\s+|\s*\/\s+|;\s*/)
+    .map((x) => x.trim().replace(/[.。]$/, ""))
+    .filter(Boolean);
+  // 첫 문장이 길면 '~며, ~지만, ~고,'에서 한 번 더 끊어 요약을 짧게
+  if (sentences[0].length > 55) {
+    const m = sentences[0].match(/^(.{12,}?(?:되며|하며|이며|으며|지만|되고|하고|이고|으나|이나|는데)),\s*(.+)$/);
+    if (m) sentences.splice(0, 1, m[1], m[2]);
+  }
+  if (sentences.length < 2) return t;
+  return [sentences[0], ...sentences.slice(1, max + 1).map((x) => `· ${x}`)].join("\n");
+}
+
+const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+
 export function reportRows(report: IdeaReport | null) {
   const market = findingOf(report, "MarketAgent", "market_analysis");
   const competition = findingOf(report, "CompetitorAgent", "competition_analysis");
   const v = report?.version;
-  const competitors = [
-    ...(((competition?.direct_competitors as Finding[]) ?? []).map((c) => c.name as string)),
-    ...(((competition?.indirect_competitors as Finding[]) ?? []).map((c) => `${c.name as string} (간접)`)),
-  ].filter(Boolean);
-  const market_ = (k: string) => ((market?.[k] as Claim)?.text ?? "").trim();
+  const direct = (competition?.direct_competitors as Finding[]) ?? [];
+  const indirect = (competition?.indirect_competitors as Finding[]) ?? [];
+  // 경쟁사: 몇 곳인지 요약 + 경쟁사마다 한 줄 설명
+  const competitorLines = [...direct.map((c) => ({ c, kind: "직접" })), ...indirect.map((c) => ({ c, kind: "간접" }))]
+    .filter(({ c }) => c.name)
+    .slice(0, 5)
+    .map(({ c, kind }) => {
+      const desc = ((c.description as Claim)?.text ?? "").trim();
+      return `· ${c.name as string} (${kind})${desc ? ` — ${clip(desc, 60)}` : ""}`;
+    });
+  const competitorsValue = competitorLines.length
+    ? [`직접 경쟁 ${direct.length}곳 · 간접 경쟁 ${indirect.length}곳`, ...competitorLines].join("\n")
+    : toSummaryBullets((competition?.summary as string) ?? "");
+  const market_ = (k: string) => toSummaryBullets(((market?.[k] as Claim)?.text ?? "").trim());
 
   const agent = (name: string) => report?.response.workflow_result.agent_results[name];
   const risks = findingOf(report, "RiskAgent", "top_risks") as unknown as { label: string; risk: string; level: string }[] | null;
 
   return {
     finance: [
-      { id: "fin:summary", label: "재무 요약", value: (agent("FinancialAgent")?.summary ?? "").trim(), hint: "유닛 이코노믹스 · 손익분기 · 필요 자금", fromReport: v },
+      { id: "fin:summary", label: "재무 요약", value: toSummaryBullets((agent("FinancialAgent")?.summary ?? "").trim()), hint: "유닛 이코노믹스 · 손익분기 · 필요 자금", fromReport: v },
     ] as ProfileRow[],
     risk: [
       {
@@ -194,14 +225,14 @@ export function reportRows(report: IdeaReport | null) {
       {
         id: "comp:list",
         label: "주요 경쟁사",
-        value: competitors.join(" · ") || ((competition?.summary as string) ?? ""),
+        value: competitorsValue,
         hint: "경쟁·대체 서비스 비교",
         fromReport: v,
       },
       {
         id: "comp:position",
         label: "경쟁 포지션",
-        value: ((competition?.competitive_position as Claim)?.text ?? "").trim(),
+        value: toSummaryBullets(((competition?.competitive_position as Claim)?.text ?? "").trim()),
         hint: "우리가 설 자리",
         fromReport: v,
       },
