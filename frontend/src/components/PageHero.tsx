@@ -11,7 +11,7 @@ interface Props {
 /** 목록 화면 맨 위 미니 히어로 — 키컬러(로열 블루) 띠로 아래 내용과 섹션을 나눈다. 안의 버튼은 흰 바탕으로 */
 export default function PageHero({ eyebrow, title, description, actions }: Props) {
   return (
-    <section className="relative overflow-hidden" style={{ background: "linear-gradient(100deg, #134CD8 0%, #0F3DB0 100%)" }}>
+    <section className="relative overflow-hidden" style={{ background: "linear-gradient(100deg, #1B57EA 0%, #1446C4 100%)" }}>
       {/* 오른쪽 끝에 은은한 빛 */}
       <div
         aria-hidden="true"
@@ -32,7 +32,7 @@ export default function PageHero({ eyebrow, title, description, actions }: Props
             className="inline-flex items-center gap-2 self-start px-3 py-1 rounded-full text-xs font-semibold"
             style={{ color: "#fff", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#fff" }} />
+            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#FDB71A" }} />
             {eyebrow}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold m-0 tracking-tight" style={{ color: "#fff" }}>

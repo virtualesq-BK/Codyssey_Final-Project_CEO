@@ -22,7 +22,7 @@ const DECISION_LABEL: Record<string, string> = {
   GO: "GO", PIVOT: "PIVOT", VALIDATE_MORE: "VALIDATE MORE", STOP: "STOP",
 };
 const DECISION_COLOR: Record<string, string> = {
-  GO: "#1A7A4A", PIVOT: "#856404", VALIDATE_MORE: "#134CD8", STOP: "#B42318",
+  GO: "#1A7A4A", PIVOT: "#856404", VALIDATE_MORE: "#1B57EA", STOP: "#B42318",
 };
 
 export default function MyPage() {
@@ -83,7 +83,7 @@ export default function MyPage() {
         >
           <div
             className="w-16 h-16 rounded-lg flex items-center justify-center text-2xl font-bold text-white shrink-0"
-            style={{ background: "#134CD8" }}
+            style={{ background: "#1B57EA" }}
           >
             {avatarLetter}
           </div>
@@ -100,7 +100,7 @@ export default function MyPage() {
               <button
                 onClick={() => router.push("/login")}
                 className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
-                style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
+                style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
               >
                 로그인
               </button>
@@ -109,7 +109,7 @@ export default function MyPage() {
           {user && (
             <div
               className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium"
-              style={{ background: "#F3F4F6", color: "#4B5563" }}
+              style={{ background: "#F3F4F6", color: "#485876" }}
             >
               클라우드 저장 활성
             </div>
@@ -141,7 +141,7 @@ export default function MyPage() {
               <div className="text-xs text-text-muted">{stat.label}</div>
               <div
                 className="text-2xl font-bold"
-                style={{ color: stat.color ?? "#111111" }}
+                style={{ color: stat.color ?? "#08183F" }}
               >
                 {stat.value}
               </div>
@@ -157,7 +157,7 @@ export default function MyPage() {
             <Link
               href="/ideas"
               className="text-sm font-semibold no-underline"
-              style={{ color: "#111111", textDecoration: "underline" }}
+              style={{ color: "#08183F", textDecoration: "underline" }}
             >
               전체 보기 →
             </Link>
@@ -167,7 +167,7 @@ export default function MyPage() {
           ) : ideas.length === 0 ? (
             <div className="text-center py-8 text-text-muted text-sm">
               아직 분석한 아이디어가 없습니다.{" "}
-              <Link href="/ideas" style={{ color: "#111111" }}>지금 시작하기 →</Link>
+              <Link href="/ideas" style={{ color: "#08183F" }}>지금 시작하기 →</Link>
             </div>
           ) : (
             <div className="flex flex-col gap-3">

@@ -87,11 +87,11 @@ export default function LoginPage() {
           <Link href="/" className="inline-flex items-center gap-2 no-underline" style={{ textDecoration: "none" }}>
             <span
               className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-white text-lg font-bold"
-              style={{ background: "#134CD8" }}
+              style={{ background: "#1B57EA" }}
             >
               나
             </span>
-            <span className="text-2xl font-bold" style={{ color: "#111111" }}>나도사장</span>
+            <span className="text-2xl font-bold" style={{ color: "#08183F" }}>나도사장</span>
           </Link>
           <p className="text-sm mt-2" style={{ color: "#6B7280" }}>AI 창업 사업성 진단 서비스</p>
         </div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
                 style={{
                   background: mode === m ? "#fff" : "transparent",
-                  color: mode === m ? "#111111" : "#6B7280",
+                  color: mode === m ? "#08183F" : "#6B7280",
                   border: "none",
                   cursor: "pointer",
                   boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
@@ -129,7 +129,7 @@ export default function LoginPage() {
                   placeholder="홍길동"
                   className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
                   style={{ border: "1.5px solid #E5E7EB" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#134CD8")}
+                  onFocus={(e) => (e.target.style.borderColor = "#1B57EA")}
                   onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                 />
               </label>
@@ -145,7 +145,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
                 style={{ border: "1.5px solid #E5E7EB" }}
-                onFocus={(e) => (e.target.style.borderColor = "#134CD8")}
+                onFocus={(e) => (e.target.style.borderColor = "#1B57EA")}
                 onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
             </label>
@@ -161,7 +161,7 @@ export default function LoginPage() {
                 minLength={mode === "signup" ? 6 : undefined}
                 className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
                 style={{ border: "1.5px solid #E5E7EB" }}
-                onFocus={(e) => (e.target.style.borderColor = "#134CD8")}
+                onFocus={(e) => (e.target.style.borderColor = "#1B57EA")}
                 onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
             </label>
@@ -172,7 +172,7 @@ export default function LoginPage() {
                 onClick={handleReset}
                 disabled={loading}
                 className="self-end -mt-2 text-xs font-medium disabled:opacity-60"
-                style={{ background: "none", border: "none", color: "#4B5563", cursor: "pointer", textDecoration: "underline" }}
+                style={{ background: "none", border: "none", color: "#485876", cursor: "pointer", textDecoration: "underline" }}
               >
                 비밀번호를 잊으셨나요?
               </button>
@@ -185,7 +185,7 @@ export default function LoginPage() {
             )}
 
             {notice && (
-              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F3F4F6", color: "#111111" }}>
+              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F3F4F6", color: "#08183F" }}>
                 {notice}
               </div>
             )}
@@ -194,7 +194,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="h-12 rounded-xl font-bold text-sm text-white transition-opacity disabled:opacity-60"
-              style={{ background: "#134CD8", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+              style={{ background: "#1B57EA", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
             >
               {loading ? "처리 중…" : mode === "login" ? "로그인" : "회원가입"}
             </button>
@@ -210,7 +210,7 @@ export default function LoginPage() {
             onClick={handleGoogle}
             disabled={loading}
             className="w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-3 transition-colors disabled:opacity-60"
-            style={{ border: "1.5px solid #E5E7EB", background: "#fff", cursor: loading ? "not-allowed" : "pointer", color: "#111111" }}
+            style={{ border: "1.5px solid #E5E7EB", background: "#fff", cursor: loading ? "not-allowed" : "pointer", color: "#08183F" }}
           >
             <GoogleIcon />
             Google로 계속하기

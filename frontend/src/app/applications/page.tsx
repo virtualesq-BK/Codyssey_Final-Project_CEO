@@ -99,7 +99,7 @@ export default function ApplicationsPage() {
             type="button"
             onClick={() => (user ? setDialog({}) : (window.location.href = "/login?next=/applications"))}
             className="min-h-[44px] px-5 rounded-xl text-sm font-bold bg-white"
-            style={{ color: "#134CD8", border: "none", cursor: "pointer" }}
+            style={{ color: "#1B57EA", border: "none", cursor: "pointer" }}
           >
             + 새 지원서
           </button>
@@ -109,7 +109,7 @@ export default function ApplicationsPage() {
       <div className="max-w-[1200px] mx-auto px-6 py-8">
 
         {notice && (
-          <div role="status" className="mb-5 rounded-lg p-4 text-sm flex justify-between gap-3" style={{ background: "#fff", border: `1px solid ${line}`, color: "#4B5563" }}>
+          <div role="status" className="mb-5 rounded-lg p-4 text-sm flex justify-between gap-3" style={{ background: "#fff", border: `1px solid ${line}`, color: "#485876" }}>
             <span>{notice}</span>
             <button type="button" onClick={() => setNotice(null)} aria-label="닫기" style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280" }}>
               ✕
@@ -130,10 +130,10 @@ export default function ApplicationsPage() {
               보고서가 나온 아이템으로 지원사업을 골라 지원서를 만들어 보세요.
             </div>
             <div className="flex gap-2 mt-2">
-              <Link href="/programs" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#111111", textDecoration: "none" }}>
+              <Link href="/programs" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#08183F", textDecoration: "none" }}>
                 공고 찾기
               </Link>
-              <Link href="/ideas" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#111111", textDecoration: "none" }}>
+              <Link href="/ideas" className="min-h-[40px] px-4 rounded-xl text-sm font-semibold no-underline inline-flex items-center bg-white" style={{ border: `1px solid ${line}`, color: "#08183F", textDecoration: "none" }}>
                 MY아이디어
               </Link>
             </div>
@@ -154,13 +154,13 @@ export default function ApplicationsPage() {
                     className="min-h-[36px] px-4 rounded-xl text-sm font-semibold"
                     style={{
                       cursor: "pointer",
-                      border: `1px solid ${active ? "#134CD8" : line}`,
+                      border: `1px solid ${active ? "#1B57EA" : line}`,
                       background: active ? "#EAF0FD" : "#fff",
-                      color: active ? "#0F3DB0" : "#4B5563",
+                      color: active ? "#1446C4" : "#485876",
                     }}
                   >
                     {f.label}
-                    <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#134CD8" : "#6B7280" }}>
+                    <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#1B57EA" : "#6B7280" }}>
                       {count}
                     </span>
                   </button>
@@ -205,7 +205,7 @@ export default function ApplicationsPage() {
                         </div>
 
                         <div className="min-w-0">
-                          <div className="font-bold text-base line-clamp-2" style={{ color: "#111111" }}>
+                          <div className="font-bold text-base line-clamp-2" style={{ color: "#08183F" }}>
                             {a.programTitle}
                           </div>
                           <div className="text-xs mt-1" style={{ color: "#6B7280" }}>
@@ -213,15 +213,15 @@ export default function ApplicationsPage() {
                           </div>
                         </div>
 
-                        <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "#4B5563" }}>
-                          <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded shrink-0" style={{ background: "#F3F4F6", color: "#4B5563" }}>
+                        <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "#485876" }}>
+                          <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded shrink-0" style={{ background: "#F3F4F6", color: "#485876" }}>
                             아이템
                           </span>
                           <span className="truncate">{a.ideaName}</span>
                         </div>
 
                         <div className="mt-auto pt-3 flex items-center justify-between gap-2" style={{ borderTop: `1px solid ${line}` }}>
-                          <span className="text-xs" style={{ color: left === "마감" ? "#B42318" : "#4B5563" }}>
+                          <span className="text-xs" style={{ color: left === "마감" ? "#B42318" : "#485876" }}>
                             마감 {a.programDeadline} {left && `· ${left}`}
                           </span>
                           <label className="pointer-events-auto text-xs" style={{ color: "#6B7280" }}>
@@ -230,7 +230,7 @@ export default function ApplicationsPage() {
                               value={a.status}
                               onChange={(e) => changeStatus(a, e.target.value as ApplicationStatus)}
                               className="h-8 rounded-lg px-2 text-xs bg-white focus:outline-none"
-                              style={{ border: `1px solid ${line}`, color: "#111111" }}
+                              style={{ border: `1px solid ${line}`, color: "#08183F" }}
                             >
                               {(Object.keys(APPLICATION_STATUS) as ApplicationStatus[]).map((k) => (
                                 <option key={k} value={k}>

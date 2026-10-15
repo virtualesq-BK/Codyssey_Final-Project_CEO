@@ -13,11 +13,11 @@ import { createMemo, listIdeas } from "@/lib/ideaStore";
 import { type NewsItem, fetchNews } from "@/lib/news";
 import { type Program, fetchPrograms } from "@/lib/programs";
 
-const ink = "#111111";
-const slate = "#4B5563";
+const ink = "#08183F";
+const slate = "#485876";
 const iron = "#6B7280";
 const line = "#E5E7EB";
-const brand = "#134CD8";
+const brand = "#1B57EA";
 const card = "bg-white rounded-lg shadow-card p-5 flex flex-col gap-3";
 
 type NextStep = { idea: Idea | null; title: string; desc: string; cta: string; href: string };
@@ -185,7 +185,7 @@ export default function Dashboard({ user }: { user: User }) {
         <div className="flex flex-col gap-5 min-w-0">
           {/* 다음 할 일 */}
           <section className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-3" style={{ border: `1.5px solid ${brand}` }}>
-            <span className="text-xs font-bold" style={{ color: brand }}>
+            <span className="self-start text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#FFF6DE", color: "#08183F" }}>
               다음 할 일
             </span>
             <h2 className="text-xl font-bold m-0" style={{ color: ink }}>

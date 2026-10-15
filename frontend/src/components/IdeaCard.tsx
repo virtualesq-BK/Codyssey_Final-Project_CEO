@@ -169,7 +169,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
                   key={a.label}
                   aria-disabled="true"
                   className={circle}
-                  style={{ background: "rgba(255,255,255,0.7)", color: "#4B5563", cursor: "not-allowed" }}
+                  style={{ background: "rgba(255,255,255,0.7)", color: "#485876", cursor: "not-allowed" }}
                 >
                   {inner}
                 </span>
@@ -182,7 +182,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
                 key={a.label}
                 href={href}
                 className={`${circle} hover:scale-105`}
-                style={{ background: "#fff", color: "#111111", textDecoration: "none" }}
+                style={{ background: "#fff", color: "#08183F", textDecoration: "none" }}
               >
                 {inner}
               </Link>
