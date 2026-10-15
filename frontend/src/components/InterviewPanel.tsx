@@ -228,7 +228,7 @@ function MicIcon({ active }: { active: boolean }) {
 }
 
 /**
- * 인터뷰어 말: "짚기\n질문\n(영역 · 의도)" 모양이면 짚기는 작게, 질문은 굵게, 영역·의도는 꼬리표로 나눠 그린다.
+ * 인터뷰어 말: "짚기\n질문\n(영역 · 의도)" 모양이면 영역·의도를 맨 위에 굵은 키컬러로, 짚기는 작게, 질문은 굵게 나눠 그린다.
  * 그 모양이 아닌 예전 기록·마무리 인사는 그대로 보여준다.
  */
 function QuestionText({ text }: { text: string }) {
@@ -243,6 +243,11 @@ function QuestionText({ text }: { text: string }) {
   const why = tag[1].slice(cut + 1).trim();
   return (
     <span className="flex flex-col gap-1 whitespace-normal">
+      {/* 영역 · 의도 — 질문 위 첫 줄, 굵게 키컬러 */}
+      <span className="text-[13px] font-bold mb-0.5" style={{ color: "#1B57EA" }}>
+        {area}
+        {why && ` · ${why}`}
+      </span>
       {ack && (
         <span className="text-[13px]" style={{ color: "#485876" }}>
           {ack}
@@ -250,16 +255,6 @@ function QuestionText({ text }: { text: string }) {
       )}
       <span className="text-[15px] font-bold leading-snug" style={{ color: "#08183F" }}>
         {question}
-      </span>
-      <span className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#EAF0FD", color: "#1446C4" }}>
-          {area}
-        </span>
-        {why && (
-          <span className="text-xs" style={{ color: "#6B7280" }}>
-            {why}
-          </span>
-        )}
       </span>
     </span>
   );
