@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import ReportView from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
-import type { AnalyzeJob } from "@/lib/api";
+import type { AnalyzeJob, FinanceInputs } from "@/lib/api";
+import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
 import { progressOf } from "@/lib/diagnosisRunner";
 import {
@@ -31,6 +32,8 @@ interface Section {
   rows: ProfileRow[];
   /** 상세분석에서 채워지는 섹션 */
   fromReport?: boolean;
+  /** 이 섹션을 채우는 에이전트 (근거 수 표시용) */
+  agent?: string;
 }
 
 interface Props {
@@ -49,6 +52,8 @@ interface Props {
   onShowProgress?: () => void;
   /** 값이 바뀌면 보고서 탭으로 넘긴다 (진행 모달의 '보고서 보기') */
   openReportSignal?: number;
+  /** 보고서 재무 시나리오에 넣은 숫자 저장 */
+  onSaveFinance?: (inputs: FinanceInputs) => Promise<void>;
 }
 
 const ink = "#08183F";
@@ -57,7 +62,7 @@ const iron = "#6B7280";
 const line = "#E5E7EB";
 
 export default function ProfileWorkspace(props: Props) {
-  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal } = props;
+  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal, onSaveFinance } = props;
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null);
   // 프로필 전체를 한 번에 고친다: 편집 모드 + 칸별 초안
@@ -95,10 +100,10 @@ export default function ProfileWorkspace(props: Props) {
     { no: 1, title: "아이템", badge: "", rows: base.item },
     { no: 2, title: "문제 · 고객", badge: "P 문제인식", rows: base.customer },
     { no: 3, title: "해결 · 솔루션", badge: "S 실현가능성 · BM", rows: base.solution },
-    { no: 4, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true },
-    { no: 5, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true },
-    { no: 6, title: "재무", badge: "S 자금 소요", rows: fromReport.finance, fromReport: true },
-    { no: 7, title: "리스크", badge: "", rows: fromReport.risk, fromReport: true },
+    { no: 4, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true, agent: "MarketAgent" },
+    { no: 5, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true, agent: "CompetitorAgent" },
+    { no: 6, title: "재무", badge: "S 자금 소요", rows: fromReport.finance, fromReport: true, agent: "FinancialAgent" },
+    { no: 7, title: "리스크", badge: "", rows: fromReport.risk, fromReport: true, agent: "RiskAgent" },
   ];
   const filled = (rows: ProfileRow[]) => rows.filter((r) => !isUnknown(r.value)).length;
   const toFill = sections
@@ -154,10 +159,26 @@ export default function ProfileWorkspace(props: Props) {
               {s.badge}
             </span>
           )}
-          {!sectionLocked && (
-            <span className="text-xs" style={{ color: iron }}>
-              {filled(s.rows)}/{s.rows.length}
+          {!sectionLocked && s.fromReport && s.agent && latest && (
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#E7F6EF", color: "#0F7B6C" }}>
+              근거 {latest.response.workflow_result.agent_results[s.agent]?.evidence?.length ?? 0}건
             </span>
+          )}
+          {!sectionLocked && s.fromReport ? (
+            <button
+              type="button"
+              onClick={() => setTab("report")}
+              className="text-xs font-semibold"
+              style={{ background: "none", border: "none", color: "#1B57EA", cursor: "pointer", padding: 0 }}
+            >
+              보고서에서 자세히 ›
+            </button>
+          ) : (
+            !sectionLocked && (
+              <span className="text-xs" style={{ color: iron }}>
+                {filled(s.rows)}/{s.rows.length}
+              </span>
+            )
           )}
         </div>
       </div>
@@ -209,6 +230,34 @@ export default function ProfileWorkspace(props: Props) {
                     style={{ border: "1.5px solid #1B57EA" }}
                   />
                   )}
+                </div>
+              ) : r.id === "fin:summary" ? (
+                <div className="flex flex-col gap-2 items-start">
+                  <span>{r.value || "이번 분석에서 나오지 않았어요"}</span>
+                  <button
+                    type="button"
+                    onClick={() => setTab("report")}
+                    className="min-h-[36px] px-3 rounded-lg text-xs font-bold"
+                    style={{ background: "#EAF0FD", color: "#1446C4", border: "none", cursor: "pointer" }}
+                  >
+                    {idea.financeInputs ? "재무 시나리오 보기 ›" : "숫자 넣고 손익 계산하기 ›"}
+                  </button>
+                </div>
+              ) : r.id === "risk:top" && latest && risksOf(latest).length > 0 ? (
+                <div className="flex gap-4 items-start flex-wrap">
+                  <RiskMatrix risks={risksOf(latest)} size="sm" />
+                  <ol className="m-0 p-0 list-none flex flex-col gap-1 min-w-0 flex-1">
+                    {risksOf(latest)
+                      .slice(0, 3)
+                      .map((x, i) => (
+                        <li key={i} className="flex gap-2 items-baseline">
+                          <span className="text-[11px] font-bold shrink-0" style={{ color: x.score >= 15 ? "#C2341C" : x.score >= 8 ? "#C27A0E" : "#0F7B6C" }}>
+                            {i + 1}. {x.score}점
+                          </span>
+                          <span className="min-w-0">{x.risk || x.label}</span>
+                        </li>
+                      ))}
+                  </ol>
                 </div>
               ) : empty && !r.value.includes("(미확인)") ? (
                 <span>{s.fromReport ? "이번 분석에서 나오지 않았어요" : "미입력"}</span>
@@ -449,7 +498,7 @@ export default function ProfileWorkspace(props: Props) {
               </div>
             )}
             {selectedReport ? (
-              <ReportView report={selectedReport} />
+              <ReportView report={selectedReport} financeInputs={idea.financeInputs} onSaveFinanceInputs={onSaveFinance} />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
                 <div className="font-bold">

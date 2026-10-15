@@ -2,11 +2,21 @@
 
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
+import { CompetitionPanel, EvidenceOverview, FinancePanel, RiskPanel } from "@/components/ReportVisuals";
+import type { FinanceInputs } from "@/lib/api";
 import { AGENT_ORDER, STATUS_BG, STATUS_TEXT } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
 
-/** 상세 진단 보고서 한 버전 — 판정 배너 + 분야별 카드 */
-export default function ReportView({ report }: { report: IdeaReport }) {
+/** 상세 진단 보고서 한 버전 — 판정 배너 + 한눈에 보기(근거·리스크·경쟁·재무) + 분야별 카드 */
+export default function ReportView({
+  report,
+  financeInputs,
+  onSaveFinanceInputs,
+}: {
+  report: IdeaReport;
+  financeInputs?: FinanceInputs | null;
+  onSaveFinanceInputs?: (inputs: FinanceInputs) => Promise<void> | void;
+}) {
   const wf = report.response.workflow_result;
   const orderedAgents = AGENT_ORDER.filter((k) => k in wf.agent_results);
   return (
@@ -37,6 +47,15 @@ export default function ReportView({ report }: { report: IdeaReport }) {
           종합 판정을 내리지 못했어요. 분야별 결과만 확인할 수 있어요.
         </div>
       )}
+
+      <div className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold m-0">한눈에 보기</h3>
+        <EvidenceOverview report={report} />
+        <RiskPanel report={report} />
+        <CompetitionPanel report={report} />
+        {/* 보고서 버전이 바뀌면 입력칸도 새로 */}
+        <FinancePanel key={report.id} report={report} saved={financeInputs} onSave={onSaveFinanceInputs} />
+      </div>
 
       <div>
         <h3 className="text-lg font-bold mb-4 mt-0">분야별 진단</h3>
