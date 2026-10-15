@@ -253,13 +253,8 @@ export default function IdeaDetailPage() {
       setProgressOpen(true);
     });
 
-  // 보고서가 있으면 프로필을 고쳤을 때만 새로 작성할 수 있다
-  const canDiagnose =
-    !!user &&
-    !busy &&
-    status !== "diagnosing" &&
-    missing.length === 0 &&
-    (!hasReport || current.profileChangedSinceReport || profileDirty || status === "failed");
+  // 보고서가 있어도 언제든 새 버전을 작성할 수 있다 (근거 수집이 바뀌었거나 다시 보고 싶을 때)
+  const canDiagnose = !!user && !busy && status !== "diagnosing" && missing.length === 0;
 
   handlersRef.current = { beginInterview, startProfile, diagnose, canDiagnose };
 

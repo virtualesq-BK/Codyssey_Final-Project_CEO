@@ -760,14 +760,19 @@ function DiagnosisCard({
         </p>
       )}
 
-      {status !== "diagnosing" && loggedIn && (!dr || idea.profileChangedSinceReport || status === "failed") && (
+      {status !== "diagnosing" && loggedIn && (
         <div className="flex flex-col gap-1.5">
           <button
             type="button"
             onClick={onDiagnose}
             disabled={!canDiagnose}
-            className="min-h-[48px] rounded-xl text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
+            className="min-h-[48px] rounded-xl text-sm font-bold disabled:opacity-50"
+            // 보고서가 있고 프로필이 그대로면 보조 버튼으로 (강조는 진짜 다음 할 일에만)
+            style={
+              dr && !idea.profileChangedSinceReport && status !== "failed"
+                ? { background: "#fff", color: "#08183F", border: "1px solid #D9DBDA", cursor: "pointer" }
+                : { background: "#1B57EA", color: "#fff", border: "none", cursor: "pointer" }
+            }
           >
             {status === "failed" ? "다시 분석 (유료)" : label}
           </button>
@@ -776,7 +781,9 @@ function DiagnosisCard({
               ? "* 필수 항목을 채우면 분석할 수 있어요"
               : idea.profileChangedSinceReport
                 ? "프로필이 바뀌었어요. 새 보고서를 만들 수 있어요"
-                : "보통 2~3분 걸려요"}
+                : dr
+                  ? "이전 보고서는 버전으로 남아요 · 3분 안팎"
+                  : "보통 3분 안팎 걸려요"}
           </span>
         </div>
       )}
