@@ -89,30 +89,45 @@ export default function DecisionBanner({ result }: Props) {
       {result.action_plan.length > 0 && (
         <div>
           <div className="font-semibold mb-3">다음 행동</div>
-          <ol className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-relaxed">
-            {result.action_plan.map((action, i) => {
-              // "1단계 (주 1~4): 할 일" 이면 단계 이름을 따로 빼서 번호가 두 번 붙지 않게 한다
-              const m = action.match(/^\s*(\d+\s*단계)\s*(\([^)]*\))?\s*[:：]\s*([\s\S]*)$/);
-              const step = m ? m[1].replace(/\s+/g, "") : `${i + 1}단계`;
-              const when = m?.[2]?.slice(1, -1);
-              const body = m ? m[3] : action;
-              return (
-                <li key={i} className="flex gap-3 items-start">
-                  <span className="shrink-0 w-[68px] mt-0.5 flex flex-col items-start">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-md whitespace-nowrap" style={{ background: "#EAF0FD", color: "#1446C4" }}>
-                      {step}
-                    </span>
-                    {when && (
-                      <span className="text-[11px] mt-0.5 whitespace-nowrap" style={{ color: "#6B7280" }}>
-                        {when}
-                      </span>
-                    )}
-                  </span>
-                  <span className="min-w-0">{body}</span>
-                </li>
-              );
-            })}
-          </ol>
+          <div className="rounded-xl overflow-x-auto bg-white" style={{ border: "1px solid #E5E7EB" }}>
+            <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 560 }}>
+              <caption className="sr-only">다음 행동 단계별 계획</caption>
+              <thead>
+                <tr style={{ background: "#F5F7FC", color: "#485876" }}>
+                  <th scope="col" className="text-left font-semibold text-xs px-3 py-2 w-[72px]">단계</th>
+                  <th scope="col" className="text-left font-semibold text-xs px-3 py-2 w-[84px]">기간</th>
+                  <th scope="col" className="text-left font-semibold text-xs px-3 py-2">할 일</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.action_plan.map((action, i) => {
+                  const step = parseStep(action, i);
+                  return (
+                    <tr key={i} style={{ borderTop: "1px solid #E5E7EB" }}>
+                      <td className="px-3 py-2.5 align-top">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-md whitespace-nowrap" style={{ background: "#EAF0FD", color: "#1446C4" }}>
+                          {step.step}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 align-top text-xs whitespace-nowrap" style={{ color: "#485876" }}>
+                        {step.when || "—"}
+                      </td>
+                      <td className="px-3 py-2.5 align-top leading-relaxed">
+                        {step.title && (
+                          <b className="block" style={{ color: "#08183F" }}>
+                            {step.title}
+                          </b>
+                        )}
+                        <span className="text-[13px]" style={{ color: step.title ? "#485876" : "#08183F" }}>
+                          {step.detail}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -138,4 +153,15 @@ export default function DecisionBanner({ result }: Props) {
       </p>
     </section>
   );
+}
+
+/** "1단계(1개월): 고객 검증 시작 - 담임 인터뷰…" → 단계 · 기간 · 제목 · 세부 */
+function parseStep(action: string, i: number) {
+  const m = action.match(/^\s*(\d+)\s*단계\s*(?:\(([^)]*)\))?\s*[:：]\s*([\s\S]*)$/);
+  const body = (m ? m[3] : action).trim();
+  // 제목과 세부는 " - " 또는 첫 ": " 로 나뉘어 오는 경우가 많다
+  const cut = body.search(/\s[-–—]\s|[:：]\s/);
+  const title = cut > 0 && cut <= 40 ? body.slice(0, cut).trim() : "";
+  const detail = title ? body.slice(cut).replace(/^\s*[-–—:：]\s*/, "") : body;
+  return { step: `${m ? m[1] : i + 1}단계`, when: m?.[2]?.trim() ?? "", title, detail };
 }
