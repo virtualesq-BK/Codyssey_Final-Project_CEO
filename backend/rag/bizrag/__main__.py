@@ -7,6 +7,7 @@
   python -m bizrag search "검색어"      저장된 문서 검색 (--mode auto|keyword|semantic|hybrid)
   python -m bizrag try "키워드"         검색 시 수집(on-demand) 시험: 네이버·특허·법령·KOSIS
   python -m bizrag discover 15083256    공공데이터포털 파일데이터의 버전/자동API 확인
+  python -m bizrag precedent-search "키워드"  법원 판례 on-demand 검색 (결과 DB 저장)
   python -m bizrag pinecone-init        Pinecone Serverless 인덱스 점검 및 자동 생성
   python -m bizrag pinecone-sync        SQLite 문서 청크들을 Pinecone으로 일괄 임베딩 & 전송
   python -m bizrag pinecone-search "질의" Pinecone 벡터 유사도 검색 테스트
@@ -185,6 +186,31 @@ def cmd_discover(app, args):
     print("\nsources.yaml > datagokr > file_datasets 에 id를 추가하면 정기 수집됩니다.\n")
 
 
+def cmd_precedent_search(app, args):
+    from .knowledge import Knowledge
+    k = Knowledge(app)
+    query = args.query
+    display = args.display
+    print(f"\n[법원 판례 검색: '{query}' (최대 {display}건)]\n")
+    results = k.precedent_search(query, display)
+    if isinstance(results, dict) and "error" in results:
+        print(f"❌ [{results['kind']}] {results['error']}")
+        if results.get("hint"):
+            print(f"   → {results['hint']}")
+        return
+    if not results:
+        print("  검색 결과가 없습니다.")
+        return
+    for i, r in enumerate(results, 1):
+        print(f"#{i} [{r.get('court')}] {r.get('case_no')} — {r.get('case_name')}  ({r.get('decided')})")
+        summary = (r.get("summary") or "").replace("\n", " ")[:200]
+        if summary:
+            print(f"   {summary}")
+        if r.get("url"):
+            print(f"   {r['url']}")
+    print(f"\n총 {len(results)}건 (결과는 DB에 캐시됩니다)\n")
+
+
 def cmd_mcp(app, args):
     from .knowledge import Knowledge
     from .mcp_server import build
@@ -203,6 +229,9 @@ def main(argv=None):
     s.add_argument("--mode", choices=["auto", "keyword", "semantic", "hybrid"], default="auto")
     s = sub.add_parser("try"); s.add_argument("keyword")
     s = sub.add_parser("discover"); s.add_argument("dataset_id")
+    s = sub.add_parser("precedent-search")
+    s.add_argument("query")
+    s.add_argument("--display", type=int, default=20, help="검색 결과 최대 건수")
     sub.add_parser("mcp")
 
     # Pinecone Vector RAG 전용 커맨드
@@ -227,6 +256,7 @@ def main(argv=None):
         "try": cmd_try,
         "discover": cmd_discover,
         "mcp": cmd_mcp,
+        "precedent-search": cmd_precedent_search,
         "pinecone-init": cmd_pinecone_init,
         "pinecone-sync": cmd_pinecone_sync,
         "pinecone-search": cmd_pinecone_search,

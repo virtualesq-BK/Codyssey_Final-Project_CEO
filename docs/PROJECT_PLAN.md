@@ -121,6 +121,10 @@ Agent → LLMProvider → OpenAI GPT / Anthropic Claude
 | **Naver DataLab** | 키워드 검색 트렌드 (검색 비율·추이) |
 | **KIPRIS (특허정보)** | 관련 기술·특허 동향 |
 | **공공데이터포털** | 창업 지원 공고 실데이터 |
+| **한국은행 ECOS** | 기업경기조사(BSI), 소비자동향(CSI), 업종별 재무분석 |
+| **WorldBank** | 국가별 GDP·소비·인구 지표 |
+| **국가법령정보 (법제처)** | 창업·소비자·식품 관련 법령 조문 및 법원 판례 |
+| **Pinecone Vector DB** | 수집된 공공데이터 시맨틱·하이브리드 RAG 검색 |
 
 ---
 
@@ -209,21 +213,22 @@ BusinessIdea (Pydantic)
 - 외부 API Evidence Retriever 연결 (KOSIS ✅)
 
 **2주차**
-- MarketAgent RAG 파이프라인 완성 (B팀원)
-- Vector DB 구축 (시장 통계, 뉴스, 산업 보고서)
-- CustomerAgent / CompetitorAgent / BusinessModelAgent LLM 연결 (C팀원)
+- MarketAgent RAG 파이프라인 완성 (조경학)
+- Pinecone Serverless Vector DB 구축 및 시맨틱·하이브리드 검색 연동 (조경학)
+- CustomerAgent / CompetitorAgent / BusinessModelAgent LLM 연결 (유상우)
 - Firebase 로그인 / Firestore 분석 결과 저장 통합
 
 **3주차**
-- FinancialAgent 완성 — 재무 계산 로직 + 단위 테스트 (D팀원)
-- RiskAgent 완성 — 리스크 매트릭스 (D팀원)
-- 창업 공고 실데이터 연동 (api_catalog → /api/v1/programs) (E팀원)
+- FinancialAgent 완성 — 재무 계산 로직 + 단위 테스트 (전선형)
+- RiskAgent 완성 — 리스크 매트릭스 (전선형)
+- 법원 판례 수집기 연동 (law.go.kr DRF API, 10개 주제 정기 수집) (조경학)
+- 창업 공고 실데이터 연동 (api_catalog → /api/v1/programs) (전지영)
 - Naver DataLab / KIPRIS API 권한 활성화
 - Token usage DB 저장 연동
 
 **4주차**
 - 전체 E2E 통합 테스트
-- UI/UX 개선 및 반응형 최적화 (E팀원)
+- UI/UX 개선 및 반응형 최적화 (전지영)
 - PostgreSQL 마이그레이션 (SQLite → Render PostgreSQL)
 - CI/CD 파이프라인 구성 (GitHub Actions)
 - 발표 자료 및 데모 시나리오 준비
@@ -232,11 +237,11 @@ BusinessIdea (Pydantic)
 
 | 팀원 | 역할 | 담당 |
 |---|---|---|
-| A | AI Architecture Lead & Frontend | Orchestrator, 공통 스키마, 전체 Frontend, 배포 |
-| B | RAG & Market Agent | MarketAgent RAG, Vector DB |
-| C | Business Analysis Agent | Customer·Competitor·BusinessModel Agent |
-| D | Financial & Risk Agent | FinancialAgent, RiskAgent |
-| E | 추가 기능 지원 | 공고 실데이터 연동, UI/UX 개선 |
+| 김병국 | AI Architecture Lead & Frontend | Orchestrator, 공통 스키마, 전체 Frontend, 배포 |
+| 조경학 | RAG & Market Agent | MarketAgent RAG, Pinecone Vector DB, 법원 판례 수집기 |
+| 유상우 | Business Analysis Agent | Customer·Competitor·BusinessModel Agent |
+| 전선형 | Financial & Risk Agent | FinancialAgent, RiskAgent |
+| 전지영 | 추가 기능 지원 | 공고 실데이터 연동, UI/UX 개선 |
 
 ---
 

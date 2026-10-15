@@ -12,7 +12,7 @@
 - **목표:** 단순 창업정보 챗봇이 아닌, 근거 기반 의사결정 지원
 - **원칙:** 임의 수치 생성 금지 — 근거 부족 시 "데이터 부족 / 추가 조사 필요"로 명시
 - **배포:**
-  - Frontend → [Vercel](https://codyssey-final-project-ceo-g9sg.vercel.app)
+  - Frontend → [Vercel](https://codyssey-final-project-ceo-g9sg.vercel.app/) https://codyssey-final-project-ceo-g9sg.vercel.app/
   - Backend → [Render](https://codyssey-final-project-ceo.onrender.com)
 
 ---
@@ -21,11 +21,11 @@
 
 | 팀원 | 브랜치 | 담당 영역 |
 |------|--------|-----------|
-| A | `feature/A-ai-architecture` | AI Architecture Lead — BaseAgent, Orchestrator, DecisionAgent, LLMProvider, 공통 Schema |
-| B | `feature/B-rag-market` | Data / RAG Lead — Shared RAG Infrastructure, MarketAgent, CompetitorAgent, 외부 API 커넥터 |
-| C | `feature/C-business` | Business Lead — CustomerAgent, BusinessModelAgent |
-| D | `feature/D-financial-risk` | Finance / Risk Lead — FinancialAgent, RiskAgent, 재무 계산기 |
-| E | `feature/E-frontend` | Frontend Lead — Next.js UI/UX, Firebase 연동, API 프록시 |
+| 김병국 | `feature/A-ai-architecture` | AI Architecture Lead — BaseAgent, Orchestrator, DecisionAgent, LLMProvider, 공통 Schema |
+| 조경학 | `feature/B-rag-market` | Data / RAG Lead — Shared RAG Infrastructure, MarketAgent, CompetitorAgent, 외부 API 커넥터, Pinecone Vector DB, 법원 판례 수집 |
+| 유상우 | `feature/C-business` | Business Lead — CustomerAgent, BusinessModelAgent |
+| 전선형 | `feature/D-financial-risk` | Finance / Risk Lead — FinancialAgent, RiskAgent, 재무 계산기 |
+| 전지영 | `feature/E-frontend` | Frontend Lead — Next.js UI/UX, Firebase 연동, API 프록시 |
 
 > 브랜치 전략: `feature/*` → `develop` (PR) → `main` (스프린트 종료)
 
@@ -87,7 +87,7 @@ FinancialAgent  RiskAgent
   판정: GO / PIVOT / VALIDATE_MORE / STOP
 ```
 
-**공공데이터 커넥터 (RAG Evidence):** KOSIS(통계청), Naver DataLab, KIPRIS(특허청), 공공데이터포털, 한국은행, WorldBank
+**공공데이터 커넥터 (RAG Evidence):** KOSIS(통계청), Naver DataLab, KIPRIS(특허청), 공공데이터포털, 한국은행, WorldBank, 국가법령정보(법령·판례), Pinecone Vector DB (시맨틱/하이브리드 검색)
 
 ---
 
@@ -101,6 +101,8 @@ FinancialAgent  RiskAgent
 | 스타트업 라운지 | 창업 뉴스, 투자 정보, 정부 포털 링크 |
 | 인터뷰 모드 | 대화형 아이디어 탐색 + 프로필 구성 |
 | 음성 입력 | Web Speech API 기반 아이디어 입력 |
+| 판례 기반 리스크 분석 | 법원 판례(law.go.kr) 수집 → 업종별 법적 리스크 근거 제시 |
+| 시맨틱 RAG 검색 | Pinecone Vector DB 기반 시맨틱·하이브리드 검색으로 관련 공공데이터 정밀 조회 |
 
 ---
 
@@ -225,7 +227,9 @@ pytest
 ## 주요 결과
 
 - 7개 전문 에이전트의 병렬·순차 파이프라인으로 분석 시간 단축
-- 공공데이터(KOSIS, 특허청, 공공데이터포털 등) 기반 Evidence-Chain으로 hallucination 방지
+- 공공데이터(KOSIS, 특허청, 공공데이터포털, 한국은행, 법원 판례 등) 기반 Evidence-Chain으로 hallucination 방지
 - GO / PIVOT / VALIDATE_MORE / STOP 4단계 판정 + 실행 계획 자동 생성
 - Firebase Auth를 통한 소셜 로그인 및 Firestore 기반 분석 이력 영속화
 - Next.js API Routes를 프록시 레이어로 활용하여 백엔드 URL 노출 방지
+- Pinecone Serverless Vector DB + fastembed 기반 시맨틱·하이브리드 RAG 검색 (벡터 2,773개+)
+- 국가법령정보 판례 API 연동 — 창업·소비자·식품위생 등 10개 주제 정기 수집

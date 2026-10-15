@@ -211,7 +211,8 @@
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │              Evidence Retriever (RAG)                │  │
-│  │   bizrag 어댑터  ·  KOSIS  ·  DataLab  ·  KIPRIS   │  │
+│  │  bizrag · KOSIS · DataLab · KIPRIS · 한국은행 · 판례 │  │
+│  │        Pinecone Vector DB (시맨틱·하이브리드)         │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -327,12 +328,22 @@ class WorkflowResult(BaseModel):
   → CI/CD는 Secret Manager / 플랫폼 환경변수에서 주입
 ```
 
-### 3.5 에러 처리 전략
+### 3.5 배포 URL
+
+| 레이어 | 플랫폼 | URL |
+|---|---|---|
+| Frontend | Vercel | https://codyssey-final-project-ceo-g9sg.vercel.app/ |
+| Backend | Render | https://codyssey-final-project-ceo.onrender.com |
+| 로컬 개발 | Docker Compose | localhost:3000 / localhost:8000 |
+
+### 3.6 에러 처리 전략
 
 | 오류 유형 | 처리 방식 |
 |---|---|
 | LLM API 타임아웃 | 3회 자동 재시도 후 `"분석 오류"` 메시지 반환 |
 | 외부 API (KOSIS 등) 오류 | Evidence 없이 LLM 자체 판단으로 대체, 로그 기록 |
+| Pinecone 검색 오류 | SQLite FTS 키워드 검색으로 자동 fallback |
+| 법원 판례 API 오류 | 해당 Evidence 제외 후 분석 진행, 로그 기록 |
 | 에이전트 부분 실패 | `PARTIAL` 상태로 나머지 결과 정상 반환 |
 | DB 연결 오류 | 분석은 정상 진행, 저장만 실패 (로그 기록) |
 | 프론트엔드 API 타임아웃 | 300초 후 "분석 시간 초과" 안내 메시지 표시 |
@@ -344,7 +355,7 @@ class WorkflowResult(BaseModel):
 | 항목 | 제약 |
 |---|---|
 | 개발 기간 | 4주 (총 20일) |
-| 팀 규모 | 5명 |
+| 팀 규모 | 5명 (김병국·조경학·유상우·전선형·전지영) |
 | 예산 | LLM API 비용 최소화 (Mock 모드 개발 병행) |
 | 근거 원칙 | 임의의 시장 규모·재무 수치 생성 금지 |
 | 면책 고지 | 모든 분석 결과에 "의사결정 지원 도구" 면책 표시 필수 |
