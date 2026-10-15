@@ -42,6 +42,7 @@ async def test_job_records_each_stage_and_result(monkeypatch):
     monkeypatch.setattr(analyze_jobs, "Orchestrator", FakeOrchestrator)
     monkeypatch.setattr(analyze_jobs, "get_adapters", lambda: None)
     monkeypatch.setattr(analyze_jobs, "build_external_retriever", lambda: None)
+    monkeypatch.setattr(analyze_jobs, "build_web_search_retriever", lambda: None)
     req = AnalyzeRequest(title="t", problem="p", customer="c", solution="s", industry="i")
     created = await analyze_jobs.start_job(req)
     for _ in range(50):

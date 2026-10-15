@@ -23,12 +23,15 @@ from app.api.routes import AnalyzeRequest, AnalyzeResponse
 from app.core.schemas import BusinessIdea
 from app.rag.external_retrievers import build_external_retriever
 from app.rag.providers import get_adapters
+from app.rag.web_search_retriever import CombinedRetriever, build_web_search_retriever
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/analyze/jobs")
 
 JOB_TTL_SEC = 2 * 60 * 60
+# 웹검색은 한 번에 10~25초 걸려, 에이전트의 기본 근거 대기(10초)를 늘린다
+RETRIEVAL_TIMEOUT_SEC = 60.0
 STAGES = ["MarketAgent", "CustomerAgent", "CompetitorAgent", "BusinessModelAgent", "FinancialAgent", "RiskAgent", "DecisionAgent"]
 
 StageState = Literal["waiting", "running", "done", "failed"]
@@ -99,12 +102,16 @@ def _track(job: JobState, name: str, obj: object, method: str) -> None:
 async def _run(job: JobState, req: AnalyzeRequest) -> None:
     idea = BusinessIdea(idea_id=str(uuid.uuid4()), **req.model_dump())
     adapters = get_adapters()
+    base_retriever = adapters.evidence_retriever if adapters else build_external_retriever()
+    web = build_web_search_retriever()
     orchestrator = Orchestrator(
-        evidence_retriever=adapters.evidence_retriever if adapters else build_external_retriever(),
+        evidence_retriever=CombinedRetriever(base_retriever, web) if web else base_retriever,
         benchmark_provider=adapters.benchmark_provider if adapters else None,
         risk_evidence_provider=adapters.risk_evidence_provider if adapters else None,
     )
     for name, agent in orchestrator.agents.items():
+        if web and hasattr(agent, "retrieval_timeout_sec"):
+            agent.retrieval_timeout_sec = RETRIEVAL_TIMEOUT_SEC
         if name in job.stages:
             _track(job, name, agent, "run")
     _track(job, "DecisionAgent", orchestrator._decision_agent, "decide")
