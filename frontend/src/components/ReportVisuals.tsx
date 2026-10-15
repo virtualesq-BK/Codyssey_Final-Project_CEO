@@ -281,13 +281,13 @@ export function RiskMatrix({ risks, size = "lg" }: { risks: Risk[]; size?: "sm" 
   );
 }
 
-export function RiskPanel({ report }: { report: IdeaReport }) {
+export function RiskPanel({ report, embedded }: { report: IdeaReport; embedded?: boolean }) {
   const risks = risksOf(report);
   if (!risks.length) return null;
   const high = risks.filter((r) => r.score >= 15).length;
   return (
-    <section className={card} style={{ border: `1px solid ${line}` }} aria-label="리스크 지도">
-      <SectionHead title="리스크 지도" sub="가능성(1~5) × 영향(1~5) = 점수. 오른쪽 위로 갈수록 먼저 대비할 위험" badge={`높음 ${high} · 전체 ${risks.length}`} />
+    <section className={embedded ? "flex flex-col gap-4" : card} style={embedded ? undefined : { border: `1px solid ${line}` }} aria-label="리스크 지도">
+      {!embedded && <SectionHead title="리스크 지도" sub="가능성(1~5) × 영향(1~5) = 점수. 오른쪽 위로 갈수록 먼저 대비할 위험" badge={`높음 ${high} · 전체 ${risks.length}`} />}
       <div className="grid gap-5 lg:grid-cols-[auto_minmax(0,1fr)] items-start">
         <RiskMatrix risks={risks} />
         <ol className="m-0 p-0 list-none flex flex-col gap-2.5">
@@ -319,7 +319,7 @@ export function RiskPanel({ report }: { report: IdeaReport }) {
 
 /* ───────────── 3. 경쟁 ───────────── */
 
-export function CompetitionPanel({ report }: { report: IdeaReport }) {
+export function CompetitionPanel({ report, embedded }: { report: IdeaReport; embedded?: boolean }) {
   const c = findingOf(report, "CompetitorAgent", "competition_analysis");
   if (!c) return null;
   const competitors: (Obj & { kind: string })[] = [
@@ -330,8 +330,8 @@ export function CompetitionPanel({ report }: { report: IdeaReport }) {
   const barriers = (c.entry_barriers as unknown[]) ?? [];
   const position = c.competitive_position as Claim | undefined;
   return (
-    <section className={card} style={{ border: `1px solid ${line}` }} aria-label="경쟁 구도">
-      <SectionHead title="경쟁 구도" sub="같은 문제를 푸는 서비스와 우리가 설 자리" badge={`경쟁사 ${competitors.length}`} />
+    <section className={embedded ? "flex flex-col gap-4" : card} style={embedded ? undefined : { border: `1px solid ${line}` }} aria-label="경쟁 구도">
+      {!embedded && <SectionHead title="경쟁 구도" sub="같은 문제를 푸는 서비스와 우리가 설 자리" badge={`경쟁사 ${competitors.length}`} />}
       {position?.text && (
         <div className="rounded-lg px-4 py-3 text-sm leading-relaxed flex gap-2 items-start" style={{ background: "#EAF0FD", color: navy }}>
           <span className="font-bold shrink-0" style={{ color: "#1446C4" }}>
@@ -432,10 +432,12 @@ export function FinancePanel({
   report,
   saved,
   onSave,
+  embedded,
 }: {
   report: IdeaReport;
   saved?: FinancePlan | null;
   onSave?: (plan: FinancePlan) => Promise<void> | void;
+  embedded?: boolean;
 }) {
   const guessed = guessRevenueType(report.profile?.revenueModel ?? "");
   // 예전 형식(칸 7개)으로 저장된 값은 손익계산서로 다시 만든다
@@ -507,11 +509,14 @@ export function FinancePanel({
   const t = plan ? totalsOf(plan.lines, plan.unitCount) : null;
 
   return (
-    <section className={card} style={{ border: `1px solid ${line}` }} aria-label="월 손익계산서">
-      <SectionHead
-        title="월 손익계산서"
-        sub="출시 6~12개월 차 한 달 기준"
-      />
+    <section className={embedded ? "flex flex-col gap-4" : card} style={embedded ? undefined : { border: `1px solid ${line}` }} aria-label="월 손익계산서">
+      {embedded ? (
+        <b className="text-sm" style={{ color: navy }}>
+          월 손익계산서 <span className="font-normal text-xs" style={{ color: gray }}>출시 6~12개월 차 한 달 기준</span>
+        </b>
+      ) : (
+        <SectionHead title="월 손익계산서" sub="출시 6~12개월 차 한 달 기준" />
+      )}
 
       <div role="radiogroup" aria-label="수익 방식" className="flex gap-2 flex-wrap items-center">
         <span className="text-xs font-semibold mr-1" style={{ color: slate }}>

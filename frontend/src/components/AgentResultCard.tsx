@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AgentResult, AgentStatus } from "@/lib/api";
+import type { AgentResult } from "@/lib/api";
 
 const AGENT_LABELS: Record<string, string> = {
   MarketAgent: "시장",
@@ -10,24 +10,6 @@ const AGENT_LABELS: Record<string, string> = {
   BusinessModelAgent: "수익 모델",
   FinancialAgent: "재무",
   RiskAgent: "리스크",
-};
-
-const STATUS_COLORS: Record<AgentStatus, string> = {
-  success: "#08183F",
-  partial: "#B45309",
-  failed: "#B42318",
-  running: "#485876",
-  pending: "#6B7280",
-  skipped: "#6B7280",
-};
-
-const STATUS_LABELS: Record<AgentStatus, string> = {
-  success: "완료",
-  partial: "부분 완료",
-  failed: "실패",
-  running: "분석 중",
-  pending: "대기",
-  skipped: "건너뜀",
 };
 
 function ConfidenceBar({ value }: { value: number }) {
@@ -51,13 +33,15 @@ interface Props {
   result: AgentResult;
   /** 위에 분야 제목이 따로 있을 때 카드 안 이름을 숨긴다 */
   hideLabel?: boolean;
+  /** 시각화가 요약을 대신할 때 요약 문단을 숨긴다 */
+  hideSummary?: boolean;
+  /** 요약 아래에 넣을 시각화 (경쟁 구도 · 손익계산서 · 리스크 지도) */
+  children?: React.ReactNode;
 }
 
-export default function AgentResultCard({ agentName, result, hideLabel }: Props) {
+export default function AgentResultCard({ agentName, result, hideLabel, hideSummary, children }: Props) {
   const [showAll, setShowAll] = useState(false);
   const label = AGENT_LABELS[agentName] ?? agentName;
-  const statusColor = STATUS_COLORS[result.status];
-  const statusLabel = STATUS_LABELS[result.status];
 
   const isFailed = result.status === "failed" || result.status === "skipped";
 
@@ -66,29 +50,25 @@ export default function AgentResultCard({ agentName, result, hideLabel }: Props)
       className="bg-white border rounded-lg shadow-card p-6 flex flex-col gap-4"
       style={{ borderColor: "#E5E7EB" }}
     >
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          {!hideLabel && <span className="font-bold text-base">{label}</span>}
-          <span
-            className="text-xs font-semibold px-2 py-0.5 rounded"
-            style={{
-              color: statusColor,
-              background: `${statusColor}18`,
-            }}
-          >
-            {statusLabel}
-          </span>
+      {/* 완료·부분 완료 상태 표시는 개발 중 임시로 숨김 */}
+      <div className="flex items-center gap-3">
+        {!hideLabel && <span className="font-bold text-base shrink-0">{label}</span>}
+        <span className="text-xs shrink-0" style={{ color: "#6B7280" }}>
+          신뢰도
+        </span>
+        <div className="flex-1">
+          <ConfidenceBar value={result.confidence} />
         </div>
-        {result.execution_time_ms && (
-          <span className="text-xs text-text-muted">{result.execution_time_ms}ms</span>
-        )}
       </div>
 
-      <ConfidenceBar value={result.confidence} />
 
-      <p className="text-sm leading-relaxed text-text-secondary m-0">
-        {result.summary}
-      </p>
+      {!hideSummary && result.summary && (
+        <p className="text-sm leading-relaxed text-text-secondary m-0">
+          {result.summary}
+        </p>
+      )}
+
+      {children}
 
       {!isFailed && result.recommendations.length > 0 && (
         <div>

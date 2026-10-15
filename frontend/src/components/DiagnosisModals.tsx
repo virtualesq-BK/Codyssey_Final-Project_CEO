@@ -302,7 +302,8 @@ export function DiagnosisProgressModal({
 
 function StageCard({ meta, stage, finished }: { meta: (typeof STAGES)[number]; stage?: StageProgress; finished: boolean }) {
   const state = stage?.state ?? (finished ? "done" : "waiting");
-  const partial = state === "done" && stage?.status === "partial";
+  // 완료·부분 완료 구분은 개발 중 임시로 숨긴다 (부분 완료도 완료로 표시)
+  const partial = false;
   const look =
     state === "running"
       ? { bg: "#fff", border: `2px solid ${blue}`, head: blue, mark: "분석 중" }
