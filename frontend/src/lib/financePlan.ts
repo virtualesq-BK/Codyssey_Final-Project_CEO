@@ -10,6 +10,10 @@ export type RevenueType = "subscription" | "sales" | "commission" | "b2b" | "ads
 export interface FinancePlan {
   type: RevenueType;
   values: Record<string, number | null>;
+  /** 아직 AI 예시값 그대로인 칸 (사용자가 고치면 빠진다) */
+  aiKeys?: string[];
+  /** AI 예시값의 근거 한 줄 */
+  basis?: Record<string, string>;
 }
 
 export interface PlanField {

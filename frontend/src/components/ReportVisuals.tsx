@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { type FinanceInputs, type FinanceScenario, calcScenarios } from "@/lib/api";
+import { type FinanceInputs, type FinanceScenario, calcScenarios, estimateFinance } from "@/lib/api";
 import {
   type FinancePlan,
   type PlanField,
@@ -440,11 +440,27 @@ export function FinancePanel({
   const initial = saved ?? planFromExtracted(guessed, extracted);
 
   const [type, setType] = useState<RevenueType>(initial.type);
-  // 유형마다 입력을 따로 기억해 둔다 (유형을 바꿨다 돌아와도 남게)
-  const [forms, setForms] = useState<Partial<Record<RevenueType, Record<string, string>>>>(() => ({ [initial.type]: toForm(initial.values) }));
+  // 유형마다 입력·AI 예시 표시·근거를 따로 기억해 둔다 (유형을 바꿨다 돌아와도 남게)
+  const [forms, setForms] = useState<Partial<Record<RevenueType, Record<string, string>>>>(() =>
+    saved ? { [initial.type]: toForm(initial.values) } : {},
+  );
+  const [aiKeys, setAiKeys] = useState<Partial<Record<RevenueType, string[]>>>(() => (saved?.aiKeys ? { [saved.type]: saved.aiKeys } : {}));
+  const [basis, setBasis] = useState<Partial<Record<RevenueType, Record<string, string>>>>(() => (saved?.basis ? { [saved.type]: saved.basis } : {}));
+  const [estimating, setEstimating] = useState<RevenueType | null>(null);
   const def = REVENUE_TYPES[type];
   const form = forms[type] ?? toForm(planFromExtracted(type, extracted).values);
-  const setField = (k: string, v: string) => setForms((p) => ({ ...p, [type]: { ...form, [k]: v.replace(/[^0-9.]/g, "") } }));
+  const ai = aiKeys[type] ?? [];
+  const setField = (k: string, v: string) => {
+    setForms((p) => ({ ...p, [type]: { ...form, [k]: v.replace(/[^0-9.]/g, "") } }));
+    // 직접 고친 칸은 더 이상 AI 예시가 아니다
+    setAiKeys((p) => ({ ...p, [type]: (p[type] ?? []).filter((x) => x !== k) }));
+  };
+  const planOf = (t: RevenueType, f: Record<string, string>): FinancePlan => ({
+    type: t,
+    values: fromForm(REVENUE_TYPES[t].fields, f),
+    aiKeys: aiKeys[t] ?? [],
+    basis: basis[t] ?? {},
+  });
   const [scenarios, setScenarios] = useState<FinanceScenario[] | null>(null);
   const [calcType, setCalcType] = useState<RevenueType>(initial.type);
   const [busy, setBusy] = useState(false);
@@ -466,11 +482,58 @@ export function FinancePanel({
     }
   }
 
-  // 저장된 값이 있으면 열 때 바로 계산해 보여준다
+  /** AI가 이 아이템에 맞는 예시 수치를 채운다 → 바로 계산 (저장도 해서 다음엔 다시 부르지 않음) */
+  async function fillExample(t: RevenueType) {
+    setEstimating(t);
+    setError(null);
+    try {
+      const d = REVENUE_TYPES[t];
+      const est = await estimateFinance({
+        revenue_type: `${d.label} (${d.desc})`,
+        fields: d.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit })),
+        idea: {
+          name: report.profile?.name ?? "",
+          customer: report.profile?.customer ?? "",
+          problem: report.profile?.problem ?? "",
+          solution: report.profile?.solution ?? "",
+          revenue_model: report.profile?.revenueModel ?? "",
+          industry: report.profile?.industry ?? "",
+        },
+        context: reportContext(report),
+      });
+      const values: Record<string, string> = {};
+      const why: Record<string, string> = {};
+      for (const e of est) {
+        if (e.value == null) continue;
+        values[e.key] = String(Math.round(e.value * 100) / 100);
+        why[e.key] = e.basis;
+      }
+      const keys = Object.keys(values);
+      setForms((p) => ({ ...p, [t]: values }));
+      setAiKeys((p) => ({ ...p, [t]: keys }));
+      setBasis((p) => ({ ...p, [t]: why }));
+      const plan: FinancePlan = { type: t, values: fromForm(d.fields, values), aiKeys: keys, basis: why };
+      await run(plan, true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEstimating(null);
+    }
+  }
+
+  // 처음 열 때: 저장된 값이 있으면 그걸로 계산, 없으면 AI 예시 수치를 채운다
   useEffect(() => {
-    if (Object.values(initial.values).some((v) => v != null)) run(initial, false);
+    if (saved && Object.values(saved.values).some((v) => v != null)) run(saved, false);
+    else fillExample(initial.type);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function pickType(t: RevenueType) {
+    setType(t);
+    // 처음 고른 유형이면 그 유형의 예시 수치도 채운다
+    if (!forms[t] && estimating !== t) fillExample(t);
+    else if (forms[t]) run(planOf(t, forms[t]!), true);
+  }
 
   const base = scenarios?.find((s) => s.scenario === "base")?.metrics;
   const maxAbs = Math.max(1, ...(scenarios ?? []).flatMap((s) => [Math.abs(s.metrics.revenue ?? 0), Math.abs(s.metrics.operating_profit ?? 0)]));
@@ -490,7 +553,7 @@ export function FinancePanel({
               type="button"
               role="radio"
               aria-checked={on}
-              onClick={() => setType(t)}
+              onClick={() => pickType(t)}
               className="rounded-lg px-3 py-2.5 text-left flex flex-col gap-0.5"
               style={{ border: `1.5px solid ${on ? blue : line}`, background: on ? "#EAF0FD" : "#fff", cursor: "pointer" }}
             >
@@ -519,19 +582,23 @@ export function FinancePanel({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          run({ type, values: fromForm(def.fields, form) }, true);
+          run(planOf(type, form), true);
         }}
         className="grid gap-3"
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}
       >
         {def.fields.map((f) => (
           <label key={`${type}-${f.key}`} className="flex flex-col gap-1 text-xs font-semibold" style={{ color: slate }}>
-            <span>
+            <span className="flex items-center gap-1.5">
               {f.label}
               {f.optional && (
                 <span className="font-normal" style={{ color: gray }}>
-                  {" "}
                   (선택)
+                </span>
+              )}
+              {ai.includes(f.key) && (
+                <span className="text-[10px] font-bold px-1 rounded" style={{ background: "#FFF6DE", color: "#8A4B08" }} title={basis[type]?.[f.key]}>
+                  AI 예시
                 </span>
               )}
             </span>
@@ -548,6 +615,11 @@ export function FinancePanel({
                 {f.unit}
               </span>
             </span>
+            {ai.includes(f.key) && basis[type]?.[f.key] && (
+              <span className="text-[11px] font-normal leading-snug" style={{ color: gray }}>
+                {basis[type]![f.key]}
+              </span>
+            )}
           </label>
         ))}
         <div className="flex items-end">
@@ -557,10 +629,33 @@ export function FinancePanel({
             className="w-full min-h-[40px] rounded-lg text-sm font-bold text-white disabled:opacity-50"
             style={{ background: blue, border: "none", cursor: "pointer" }}
           >
-            {busy ? "계산 중…" : "계산하기"}
+            {busy ? "계산 중…" : "다시 계산하기"}
           </button>
         </div>
       </form>
+      <div className="flex items-center gap-3 flex-wrap -mt-1">
+        {estimating === type ? (
+          <span className="text-xs animate-pulse" style={{ color: blue }}>
+            AI가 이 아이템에 맞는 예시 수치를 채우는 중…
+          </span>
+        ) : (
+          <>
+            {ai.length > 0 && (
+              <span className="text-xs" style={{ color: slate }}>
+                <b style={{ color: "#8A4B08" }}>AI 예시</b> 칸은 시장·경쟁 근거로 잡은 출발점이에요. 아는 숫자로 고치면 &lsquo;직접 입력&rsquo;이 돼요.
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => fillExample(type)}
+              className="text-xs font-semibold"
+              style={{ background: "none", border: "none", color: blue, cursor: "pointer", padding: 0 }}
+            >
+              ↻ AI 예시값 다시 채우기
+            </button>
+          </>
+        )}
+      </div>
       {error && (
         <div className="text-sm" style={{ color: "#B42318" }}>
           {error}
@@ -597,6 +692,11 @@ export function FinancePanel({
               </div>
             ))}
           </div>
+          {base?.unit_contribution != null && base.unit_contribution <= 0 && (
+            <p className="m-0 text-xs rounded-lg px-3 py-2" style={{ background: "#FDECEA", color: "#B42318" }}>
+              {calcDef.unitNoun} 1단위당 비용이 매출보다 커서 팔수록 손해인 구조예요. 그래서 손익분기가 없어요. 가격을 올리거나 단위당 비용을 줄여 보세요.
+            </p>
+          )}
           {base && base.revenue == null && (
             <p className="m-0 text-xs" style={{ color: gray }}>
               값이 더 있어야 계산돼요. {required.slice(0, 3).map((f) => f.label).join(" · ")}부터 넣어 보세요.
@@ -609,6 +709,14 @@ export function FinancePanel({
       )}
     </section>
   );
+}
+
+/** 예시 수치 추정에 넘길 보고서 요약 — 시장·경쟁·수익 요약과 근거 몇 줄 */
+function reportContext(report: IdeaReport): string {
+  const ar = report.response.workflow_result.agent_results;
+  const sums = ["MarketAgent", "CompetitorAgent", "BusinessModelAgent"].map((a) => (ar[a]?.summary ?? "").slice(0, 400));
+  const ev = ["CompetitorAgent", "BusinessModelAgent", "MarketAgent"].flatMap((a) => ar[a]?.evidence ?? []).slice(0, 10).map((e) => `- ${e.content.slice(0, 220)}`);
+  return [...sums, ...ev].filter(Boolean).join("\n").slice(0, 5500);
 }
 
 function toForm(values: Record<string, number | null>): Record<string, string> {

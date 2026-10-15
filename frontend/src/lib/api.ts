@@ -203,3 +203,25 @@ export async function calcScenarios(inputs: FinanceInputs): Promise<FinanceScena
   if (!res.ok) throw new Error("재무 계산을 하지 못했어요.");
   return (await res.json()).scenarios;
 }
+
+export interface EstimatedValue {
+  key: string;
+  value: number | null;
+  basis: string;
+}
+
+/** 재무 칸별 예시 수치 (AI 추정 + 근거 한 줄) */
+export async function estimateFinance(req: {
+  revenue_type: string;
+  fields: { key: string; label: string; unit: string }[];
+  idea: Record<string, string>;
+  context: string;
+}): Promise<EstimatedValue[]> {
+  const res = await fetch("/api/v1/finance/estimate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error("예시 수치를 만들지 못했어요. 직접 입력해 주세요.");
+  return (await res.json()).values;
+}
