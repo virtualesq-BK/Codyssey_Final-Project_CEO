@@ -193,6 +193,15 @@ class Knowledge:
         return self.app.get("law").add_law(name)
 
     @_safe
+    def precedent_search(self, query: str, display: int = 20) -> list[dict]:
+        """키워드로 법원 판례를 검색한다 (on-demand, 30일 캐시).
+
+        결과에는 판례 요지(판시사항·판결요지)가 포함되며, 에이전트가
+        리스크 분석 근거로 직접 인용할 수 있다.
+        """
+        return self.app.get("law_precedent").search_precedents(query, display)
+
+    @_safe
     def patent_search(self, word: str, rows: int = 30) -> dict:
         return self.app.get("kipris").search_patents(word, rows)
 
