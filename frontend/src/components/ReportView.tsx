@@ -3,7 +3,8 @@
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
 import { CompetitionPanel, EvidenceOverview, FinancePanel, RiskPanel } from "@/components/ReportVisuals";
-import type { FinancePlan } from "@/lib/financePlan";
+import type { AgentResult } from "@/lib/api";
+import { type FinancePlan, financeConfidence, financeSummary } from "@/lib/financePlan";
 import { AGENT_ORDER, STATUS_BG, STATUS_TEXT } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
 
@@ -61,10 +62,23 @@ export default function ReportView({
         <h3 className="text-lg font-bold mb-4 mt-0">분야별 진단</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {orderedAgents.map((agentName) => (
-            <AgentResultCard key={agentName} agentName={agentName} result={wf.agent_results[agentName]} />
+            <AgentResultCard key={agentName} agentName={agentName} result={withFinancePlan(agentName, wf.agent_results[agentName], financePlan)} />
           ))}
         </div>
       </div>
     </div>
   );
+}
+
+/** 재무 카드는 사용자가 채운 손익계산서가 있으면 그 결과로 보여준다 (보고서를 새로 만들지 않아도) */
+function withFinancePlan(agentName: string, result: AgentResult, plan?: FinancePlan | null): AgentResult {
+  const summary = agentName === "FinancialAgent" ? financeSummary(plan) : null;
+  if (!summary || !plan) return result;
+  return {
+    ...result,
+    status: "success",
+    confidence: financeConfidence(plan),
+    summary: `${summary} — 아래 '월 손익계산서' 기준이에요.`,
+    recommendations: [],
+  };
 }

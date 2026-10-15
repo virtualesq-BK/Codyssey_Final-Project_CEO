@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 
-/** 재무 시나리오 계산 (Python 계산기, LLM 없음) */
+/** 업종별 월 손익계산서 항목 제안 (LLM) */
 export async function POST(req: NextRequest) {
   const body = await req.text();
   try {
-    const res = await fetch(`${BACKEND}/api/v1/finance/scenarios`, {
+    const res = await fetch(`${BACKEND}/api/v1/finance/statement`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(90_000),
     });
     return new NextResponse(await res.text(), { status: res.status, headers: { "Content-Type": "application/json" } });
   } catch (err) {

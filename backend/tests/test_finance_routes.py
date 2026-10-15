@@ -1,40 +1,14 @@
-from app.api.finance_routes import ScenarioRequest, scenarios
-from app.financial.calculator import FinancialInputs
-
-
-async def test_scenarios_compute_three_cases():
-    res = await scenarios(ScenarioRequest(inputs=FinancialInputs(
-        price=150000, customers=40, variable_cost_per_unit=20000, fixed_cost=3000000,
-        acquisition_cost=1000000, new_customers=8, monthly_churn_rate=0.05)))
-    names = [s.scenario.value for s in res.scenarios]
-    assert names == ["conservative", "base", "optimistic"]
-    base = res.scenarios[1].metrics
-    assert base["revenue"] == 6000000
-    assert base["breakeven_units"] == 24
-
-
-async def test_scenarios_report_missing_inputs():
-    res = await scenarios(ScenarioRequest(inputs=FinancialInputs(price=10000)))
-    assert res.scenarios[1].metrics["revenue"] is None
-    assert res.scenarios[1].issues
-
-
-async def test_estimate_keeps_only_requested_fields(monkeypatch):
+async def test_statement_caps_lines_per_group(monkeypatch):
     import json
 
     from app.api import finance_routes
-    from app.api.finance_routes import EstimateField, EstimateRequest, estimate
     from app.core.llm_provider import MockProvider
 
+    lines = [{"group": "opex", "label": f"비용{i}", "amount": 1000, "basis": ""} for i in range(9)]
+    lines.append({"group": "revenue", "label": "구독 매출", "amount": 5000000, "basis": "구독자 250명 × 2만원"})
     llm = MockProvider()
-    llm.set_responses([json.dumps({"values": [
-        {"key": "price", "value": 15000, "basis": "경쟁 서비스 참고"},
-        {"key": "customers", "value": -3, "basis": "음수는 버림"},
-        {"key": "hacked", "value": 1, "basis": "요청 안 한 칸"},
-    ]}, ensure_ascii=False)])
+    llm.set_responses([json.dumps({"unit_label": "구독자", "unit_count": 250, "lines": lines}, ensure_ascii=False)])
     monkeypatch.setattr(finance_routes, "_llm", lambda: llm)
-    res = await estimate(EstimateRequest(
-        revenue_type="구독형",
-        fields=[EstimateField(key="price", label="월 구독료", unit="원"), EstimateField(key="customers", label="구독자 수", unit="명")],
-    ))
-    assert [(v.key, v.value) for v in res.values] == [("price", 15000)]
+    res = await finance_routes.statement(finance_routes.StatementRequest(revenue_type="구독형"))
+    assert sum(1 for l in res.lines if l.group == "opex") == 6
+    assert res.unit_label == "구독자" and res.unit_count == 250

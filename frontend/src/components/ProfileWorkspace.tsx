@@ -7,7 +7,7 @@ import type { User } from "firebase/auth";
 import ReportView from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
 import type { AnalyzeJob } from "@/lib/api";
-import type { FinancePlan } from "@/lib/financePlan";
+import { type FinancePlan, financeSummary } from "@/lib/financePlan";
 import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
 import { progressOf } from "@/lib/diagnosisRunner";
@@ -234,14 +234,14 @@ export default function ProfileWorkspace(props: Props) {
                 </div>
               ) : r.id === "fin:summary" ? (
                 <div className="flex flex-col gap-2 items-start">
-                  <span>{r.value || "이번 분석에서 나오지 않았어요"}</span>
+                  <span>{financeSummary(idea.financePlan) ?? (r.value || "이번 분석에서 나오지 않았어요")}</span>
                   <button
                     type="button"
                     onClick={() => setTab("report")}
                     className="min-h-[36px] px-3 rounded-lg text-xs font-bold"
                     style={{ background: "#EAF0FD", color: "#1446C4", border: "none", cursor: "pointer" }}
                   >
-                    {idea.financePlan ? "재무 시나리오 보기 ›" : "숫자 넣고 손익 계산하기 ›"}
+                    {financeSummary(idea.financePlan) ? "손익계산서 보기 ›" : "손익계산서 만들기 ›"}
                   </button>
                 </div>
               ) : r.id === "risk:top" && latest && risksOf(latest).length > 0 ? (

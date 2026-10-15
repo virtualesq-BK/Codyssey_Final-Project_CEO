@@ -176,52 +176,22 @@ export async function healthCheck(): Promise<boolean> {
   }
 }
 
-/** 재무 입력값 — 백엔드 FinancialInputs와 같은 이름 (금액 원, 기간 월, 이탈률 0~1) */
-export interface FinanceInputs {
-  price?: number | null;
-  customers?: number | null;
-  variable_cost_per_unit?: number | null;
-  fixed_cost?: number | null;
-  acquisition_cost?: number | null;
-  new_customers?: number | null;
-  monthly_churn_rate?: number | null;
+/** 월 손익계산서 항목 — 매출 / 매출원가(변동비) / 판매관리비(고정비) */
+export type LineGroup = "revenue" | "cogs" | "opex";
+
+export interface StatementSuggestion {
+  unit_label: string;
+  unit_count: number;
+  lines: { group: LineGroup; label: string; amount: number; basis: string }[];
 }
 
-export interface FinanceScenario {
-  scenario: "conservative" | "base" | "optimistic";
-  metrics: Record<string, number | null>;
-  issues: { metric: string; kind: string; field: string; message: string }[];
-  confidence: number;
-}
-
-export async function calcScenarios(inputs: FinanceInputs): Promise<FinanceScenario[]> {
-  const res = await fetch("/api/v1/finance/scenarios", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ inputs }),
-  });
-  if (!res.ok) throw new Error("재무 계산을 하지 못했어요.");
-  return (await res.json()).scenarios;
-}
-
-export interface EstimatedValue {
-  key: string;
-  value: number | null;
-  basis: string;
-}
-
-/** 재무 칸별 예시 수치 (AI 추정 + 근거 한 줄) */
-export async function estimateFinance(req: {
-  revenue_type: string;
-  fields: { key: string; label: string; unit: string }[];
-  idea: Record<string, string>;
-  context: string;
-}): Promise<EstimatedValue[]> {
-  const res = await fetch("/api/v1/finance/estimate", {
+/** 업종·수익 방식에 맞는 손익 항목과 예시 금액 (AI 제안) */
+export async function suggestStatement(req: { revenue_type: string; idea: Record<string, string>; context: string }): Promise<StatementSuggestion> {
+  const res = await fetch("/api/v1/finance/statement", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
-  if (!res.ok) throw new Error("예시 수치를 만들지 못했어요. 직접 입력해 주세요.");
-  return (await res.json()).values;
+  if (!res.ok) throw new Error("손익 항목을 만들지 못했어요. 직접 입력해 주세요.");
+  return res.json();
 }

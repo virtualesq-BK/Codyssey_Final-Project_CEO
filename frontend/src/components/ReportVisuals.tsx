@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { type FinanceInputs, type FinanceScenario, calcScenarios, estimateFinance } from "@/lib/api";
+import { type LineGroup, suggestStatement } from "@/lib/api";
 import {
   type FinancePlan,
-  type PlanField,
+  GROUPS,
   REVENUE_TYPES,
   type RevenueType,
+  SCENARIOS,
+  type StatementLine,
   TYPE_ORDER,
+  type Totals,
   guessRevenueType,
-  planFromExtracted,
-  toCalculatorInputs,
+  newLineId,
+  totalsOf,
 } from "@/lib/financePlan";
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
@@ -409,16 +412,22 @@ export function CompetitionPanel({ report }: { report: IdeaReport }) {
   );
 }
 
-/* ───────────── 4. 재무 시나리오 ───────────── */
+/* ───────────── 4. 월 손익계산서 ───────────── */
 
-const won = (v: number | null | undefined) => {
+export const won = (v: number | null | undefined) => {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   const abs = Math.abs(v);
   const s = abs >= 1e8 ? `${(abs / 1e8).toFixed(1)}억` : abs >= 1e4 ? `${Math.round(abs / 1e4).toLocaleString()}만` : Math.round(abs).toLocaleString();
   return `${v < 0 ? "-" : ""}${s}원`;
 };
 
-const SCEN = { conservative: "보수", base: "기본", optimistic: "낙관" } as const;
+/** 예시 항목 요청에 넘길 보고서 요약 — 시장·경쟁·수익 요약과 근거 몇 줄 */
+function reportContext(report: IdeaReport): string {
+  const ar = report.response.workflow_result.agent_results;
+  const sums = ["MarketAgent", "CompetitorAgent", "BusinessModelAgent"].map((a) => (ar[a]?.summary ?? "").slice(0, 400));
+  const ev = ["CompetitorAgent", "BusinessModelAgent", "MarketAgent"].flatMap((a) => ar[a]?.evidence ?? []).slice(0, 10).map((e) => `- ${e.content.slice(0, 220)}`);
+  return [...sums, ...ev].filter(Boolean).join("\n").slice(0, 5500);
+}
 
 export function FinancePanel({
   report,
@@ -429,281 +438,267 @@ export function FinancePanel({
   saved?: FinancePlan | null;
   onSave?: (plan: FinancePlan) => Promise<void> | void;
 }) {
-  // 분석이 대화에서 뽑아 둔 계산기 값
-  const extracted = useMemo(() => {
-    const inp = findingOf(report, "FinancialAgent", "inputs") as Record<string, { value?: number | null }> | null;
-    const out: FinanceInputs = {};
-    if (inp) for (const k of Object.keys(inp)) (out as Record<string, number | null>)[k] = inp[k]?.value ?? null;
-    return out;
-  }, [report]);
   const guessed = guessRevenueType(report.profile?.revenueModel ?? "");
-  const initial = saved ?? planFromExtracted(guessed, extracted);
-
-  const [type, setType] = useState<RevenueType>(initial.type);
-  // 유형마다 입력·AI 예시 표시·근거를 따로 기억해 둔다 (유형을 바꿨다 돌아와도 남게)
-  const [forms, setForms] = useState<Partial<Record<RevenueType, Record<string, string>>>>(() =>
-    saved ? { [initial.type]: toForm(initial.values) } : {},
-  );
-  const [aiKeys, setAiKeys] = useState<Partial<Record<RevenueType, string[]>>>(() => (saved?.aiKeys ? { [saved.type]: saved.aiKeys } : {}));
-  const [basis, setBasis] = useState<Partial<Record<RevenueType, Record<string, string>>>>(() => (saved?.basis ? { [saved.type]: saved.basis } : {}));
-  const [estimating, setEstimating] = useState<RevenueType | null>(null);
-  const def = REVENUE_TYPES[type];
-  const form = forms[type] ?? toForm(planFromExtracted(type, extracted).values);
-  const ai = aiKeys[type] ?? [];
-  const setField = (k: string, v: string) => {
-    setForms((p) => ({ ...p, [type]: { ...form, [k]: v.replace(/[^0-9.]/g, "") } }));
-    // 직접 고친 칸은 더 이상 AI 예시가 아니다
-    setAiKeys((p) => ({ ...p, [type]: (p[type] ?? []).filter((x) => x !== k) }));
-  };
-  const planOf = (t: RevenueType, f: Record<string, string>): FinancePlan => ({
-    type: t,
-    values: fromForm(REVENUE_TYPES[t].fields, f),
-    aiKeys: aiKeys[t] ?? [],
-    basis: basis[t] ?? {},
-  });
-  const [scenarios, setScenarios] = useState<FinanceScenario[] | null>(null);
-  const [calcType, setCalcType] = useState<RevenueType>(initial.type);
-  const [busy, setBusy] = useState(false);
+  // 예전 형식(칸 7개)으로 저장된 값은 손익계산서로 다시 만든다
+  const valid = saved && Array.isArray(saved.lines) ? saved : null;
+  const [plan, setPlan] = useState<FinancePlan | null>(valid);
+  const [type, setType] = useState<RevenueType>(valid?.type ?? guessed);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const required = def.fields.filter((f) => !f.optional);
-  const filled = def.fields.filter((f) => form[f.key]?.trim()).length;
+  const [dirty, setDirty] = useState(false);
 
-  async function run(plan: FinancePlan, persist: boolean) {
-    setBusy(true);
-    setError(null);
-    try {
-      setScenarios(await calcScenarios(toCalculatorInputs(plan)));
-      setCalcType(plan.type);
-      if (persist) await onSave?.(plan);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  /** AI가 이 아이템에 맞는 예시 수치를 채운다 → 바로 계산 (저장도 해서 다음엔 다시 부르지 않음) */
-  async function fillExample(t: RevenueType) {
-    setEstimating(t);
+  async function generate(t: RevenueType) {
+    setLoading(true);
     setError(null);
     try {
       const d = REVENUE_TYPES[t];
-      const est = await estimateFinance({
+      const res = await suggestStatement({
         revenue_type: `${d.label} (${d.desc})`,
-        fields: d.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit })),
         idea: {
           name: report.profile?.name ?? "",
+          industry: report.profile?.industry ?? "",
           customer: report.profile?.customer ?? "",
           problem: report.profile?.problem ?? "",
           solution: report.profile?.solution ?? "",
           revenue_model: report.profile?.revenueModel ?? "",
-          industry: report.profile?.industry ?? "",
         },
         context: reportContext(report),
       });
-      const values: Record<string, string> = {};
-      const why: Record<string, string> = {};
-      for (const e of est) {
-        if (e.value == null) continue;
-        values[e.key] = String(Math.round(e.value * 100) / 100);
-        why[e.key] = e.basis;
-      }
-      const keys = Object.keys(values);
-      setForms((p) => ({ ...p, [t]: values }));
-      setAiKeys((p) => ({ ...p, [t]: keys }));
-      setBasis((p) => ({ ...p, [t]: why }));
-      const plan: FinancePlan = { type: t, values: fromForm(d.fields, values), aiKeys: keys, basis: why };
-      await run(plan, true);
+      const next: FinancePlan = {
+        type: t,
+        unitLabel: res.unit_label || "고객",
+        unitCount: res.unit_count || 0,
+        lines: res.lines.map((l) => ({ id: newLineId(), group: l.group, label: l.label, amount: Math.round(l.amount), basis: l.basis, ai: true })),
+      };
+      setPlan(next);
+      setDirty(false);
+      await onSave?.(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setEstimating(null);
+      setLoading(false);
     }
   }
 
-  // 처음 열 때: 저장된 값이 있으면 그걸로 계산, 없으면 AI 예시 수치를 채운다
+  // 처음 열 때 저장된 손익표가 없으면 AI가 업종에 맞는 항목을 만든다
   useEffect(() => {
-    if (saved && Object.values(saved.values).some((v) => v != null)) run(saved, false);
-    else fillExample(initial.type);
+    if (!valid) generate(type);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function pickType(t: RevenueType) {
-    setType(t);
-    // 처음 고른 유형이면 그 유형의 예시 수치도 채운다
-    if (!forms[t] && estimating !== t) fillExample(t);
-    else if (forms[t]) run(planOf(t, forms[t]!), true);
-  }
+  // 고친 내용은 1초 뒤 저장
+  useEffect(() => {
+    if (!plan || !dirty) return;
+    const t = setTimeout(() => {
+      onSave?.(plan);
+      setDirty(false);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [plan, dirty, onSave]);
 
-  const base = scenarios?.find((s) => s.scenario === "base")?.metrics;
-  const maxAbs = Math.max(1, ...(scenarios ?? []).flatMap((s) => [Math.abs(s.metrics.revenue ?? 0), Math.abs(s.metrics.operating_profit ?? 0)]));
-  const calcDef = REVENUE_TYPES[calcType];
+  const edit = (fn: (p: FinancePlan) => FinancePlan) => {
+    setPlan((p) => (p ? fn(p) : p));
+    setDirty(true);
+  };
+  const setLine = (id: string, patch: Partial<StatementLine>) =>
+    edit((p) => ({ ...p, lines: p.lines.map((l) => (l.id === id ? { ...l, ...patch, ai: false } : l)) }));
+  const removeLine = (id: string) => edit((p) => ({ ...p, lines: p.lines.filter((l) => l.id !== id) }));
+  const addLine = (group: LineGroup) => edit((p) => ({ ...p, lines: [...p.lines, { id: newLineId(), group, label: "", amount: 0 }] }));
+
+  const t = plan ? totalsOf(plan.lines, plan.unitCount) : null;
+  const aiCount = plan?.lines.filter((l) => l.ai).length ?? 0;
 
   return (
-    <section className={card} style={{ border: `1px solid ${line}` }} aria-label="재무 시나리오">
-      <SectionHead title="재무 시나리오" sub="수익 방식을 고르고 숫자를 넣으면 보수 · 기본 · 낙관 3가지로 계산해요 (AI 추정이 아니라 계산식)" badge={`입력 ${filled}/${def.fields.length}`} />
+    <section className={card} style={{ border: `1px solid ${line}` }} aria-label="월 손익계산서">
+      <SectionHead
+        title="월 손익계산서"
+        sub="출시 6~12개월 차 한 달 기준. 매출 − 매출원가 − 판매관리비 = 영업이익 (합계는 계산식으로 내요)"
+        badge={aiCount ? `AI 예시 ${aiCount}개` : plan ? "직접 입력" : undefined}
+      />
 
-      <div role="radiogroup" aria-label="수익 방식" className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
-        {TYPE_ORDER.map((t) => {
-          const d = REVENUE_TYPES[t];
-          const on = t === type;
+      <div role="radiogroup" aria-label="수익 방식" className="flex gap-2 flex-wrap items-center">
+        <span className="text-xs font-semibold mr-1" style={{ color: slate }}>
+          수익 방식
+        </span>
+        {TYPE_ORDER.map((k) => {
+          const on = k === type;
           return (
             <button
-              key={t}
+              key={k}
               type="button"
               role="radio"
               aria-checked={on}
-              onClick={() => pickType(t)}
-              className="rounded-lg px-3 py-2.5 text-left flex flex-col gap-0.5"
-              style={{ border: `1.5px solid ${on ? blue : line}`, background: on ? "#EAF0FD" : "#fff", cursor: "pointer" }}
+              title={REVENUE_TYPES[k].desc}
+              onClick={() => {
+                if (on || loading) return;
+                setType(k);
+                generate(k);
+              }}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
+              style={{ border: `1.5px solid ${on ? blue : line}`, background: on ? "#EAF0FD" : "#fff", color: on ? "#1446C4" : slate, cursor: "pointer" }}
             >
-              <span className="text-sm font-bold flex items-center gap-1.5" style={{ color: on ? "#1446C4" : navy }}>
-                {d.label}
-                {t === guessed && !saved && (
-                  <span className="text-[10px] font-semibold px-1 rounded" style={{ background: "#FFF6DE", color: "#8A4B08" }}>
-                    추천
-                  </span>
-                )}
-              </span>
-              <span className="text-[11px]" style={{ color: gray }}>
-                {d.desc}
-              </span>
+              {REVENUE_TYPES[k].label}
+              {k === guessed && <span style={{ color: "#C27A0E" }}>·추천</span>}
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={() => generate(type)}
+          disabled={loading}
+          className="ml-auto text-xs font-semibold disabled:opacity-50"
+          style={{ background: "none", border: "none", color: blue, cursor: "pointer", padding: 0 }}
+        >
+          ↻ AI로 항목 다시 만들기
+        </button>
       </div>
 
-      {!saved && report.profile?.revenueModel && (
-        <p className="m-0 -mt-1 text-xs leading-relaxed" style={{ color: slate }}>
-          프로필의 수익 모델 &lsquo;{report.profile.revenueModel.split("\n")[0].slice(0, 40)}&rsquo;을 보고{" "}
-          <b style={{ color: "#1446C4" }}>{REVENUE_TYPES[guessed].label}</b>으로 골라 뒀어요. 다르면 바꿔 주세요.
-        </p>
-      )}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          run(planOf(type, form), true);
-        }}
-        className="grid gap-3"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }}
-      >
-        {def.fields.map((f) => (
-          <label key={`${type}-${f.key}`} className="flex flex-col gap-1 text-xs font-semibold" style={{ color: slate }}>
-            <span className="flex items-center gap-1.5">
-              {f.label}
-              {f.optional && (
-                <span className="font-normal" style={{ color: gray }}>
-                  (선택)
-                </span>
-              )}
-              {ai.includes(f.key) && (
-                <span className="text-[10px] font-bold px-1 rounded" style={{ background: "#FFF6DE", color: "#8A4B08" }} title={basis[type]?.[f.key]}>
-                  AI 예시
-                </span>
-              )}
-            </span>
-            <span className="flex items-center rounded-lg overflow-hidden bg-white" style={{ border: `1.5px solid ${form[f.key]?.trim() ? "#C9D6F5" : line}` }}>
-              <input
-                inputMode="decimal"
-                value={form[f.key] ?? ""}
-                onChange={(e) => setField(f.key, e.target.value)}
-                placeholder={f.hint}
-                className="flex-1 min-w-0 h-10 px-3 text-sm font-normal focus:outline-none"
-                style={{ border: "none", color: navy }}
-              />
-              <span className="px-2.5 text-xs font-normal" style={{ color: gray }}>
-                {f.unit}
-              </span>
-            </span>
-            {ai.includes(f.key) && basis[type]?.[f.key] && (
-              <span className="text-[11px] font-normal leading-snug" style={{ color: gray }}>
-                {basis[type]![f.key]}
-              </span>
-            )}
-          </label>
-        ))}
-        <div className="flex items-end">
-          <button
-            type="submit"
-            disabled={busy || filled === 0}
-            className="w-full min-h-[40px] rounded-lg text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: blue, border: "none", cursor: "pointer" }}
-          >
-            {busy ? "계산 중…" : "다시 계산하기"}
-          </button>
+      {loading && (
+        <div className="rounded-lg px-4 py-6 text-sm text-center animate-pulse" style={{ background: "#F5F7FC", color: blue }}>
+          AI가 &lsquo;{report.profile?.name || "이 아이템"}&rsquo;에 맞는 매출·비용 항목과 예시 금액을 만드는 중…
         </div>
-      </form>
-      <div className="flex items-center gap-3 flex-wrap -mt-1">
-        {estimating === type ? (
-          <span className="text-xs animate-pulse" style={{ color: blue }}>
-            AI가 이 아이템에 맞는 예시 수치를 채우는 중…
-          </span>
-        ) : (
-          <>
-            {ai.length > 0 && (
-              <span className="text-xs" style={{ color: slate }}>
-                <b style={{ color: "#8A4B08" }}>AI 예시</b> 칸은 시장·경쟁 근거로 잡은 출발점이에요. 아는 숫자로 고치면 &lsquo;직접 입력&rsquo;이 돼요.
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => fillExample(type)}
-              className="text-xs font-semibold"
-              style={{ background: "none", border: "none", color: blue, cursor: "pointer", padding: 0 }}
-            >
-              ↻ AI 예시값 다시 채우기
-            </button>
-          </>
-        )}
-      </div>
+      )}
       {error && (
         <div className="text-sm" style={{ color: "#B42318" }}>
           {error}
         </div>
       )}
 
-      {scenarios && (
+      {plan && t && !loading && (
         <>
           <div className="grid gap-3 sm:grid-cols-4">
-            <Kpi label="월 매출 (기본)" value={won(base?.revenue)} />
-            <Kpi label="월 영업이익 (기본)" value={won(base?.operating_profit)} tone={base?.operating_profit == null ? undefined : base.operating_profit < 0 ? "bad" : "good"} />
-            <Kpi label={`손익분기 ${calcDef.unitNoun} 수`} value={base?.breakeven_units != null ? `${base.breakeven_units.toLocaleString()}` : "—"} />
+            <Kpi label="월 매출" value={won(t.revenue)} />
+            <Kpi label="월 비용 (원가 + 판관비)" value={won(t.cogs + t.opex)} />
             <Kpi
-              label={`${calcDef.unitNoun} 가치 / 획득 비용`}
-              value={base?.ltv_cac_ratio != null ? `${base.ltv_cac_ratio.toFixed(1)}배` : "—"}
-              tone={base?.ltv_cac_ratio == null ? undefined : base.ltv_cac_ratio >= 3 ? "good" : "bad"}
+              label={`영업이익${t.margin != null ? ` (${Math.round(t.margin * 100)}%)` : ""}`}
+              value={won(t.operating)}
+              tone={t.operating < 0 ? "bad" : "good"}
+            />
+            <Kpi
+              label="손익분기"
+              value={t.breakevenRevenue != null ? `월 ${won(t.breakevenRevenue)}` : "—"}
+              sub={t.breakevenUnits != null ? `${plan.unitLabel} ${t.breakevenUnits.toLocaleString()} 필요 (지금 ${plan.unitCount.toLocaleString()})` : undefined}
             />
           </div>
-          <div className="flex flex-col gap-3" aria-label="시나리오별 매출과 영업이익">
-            {scenarios.map((s) => (
-              <div key={s.scenario} className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 items-center">
-                <span className="text-xs font-bold" style={{ color: s.scenario === "base" ? blue : slate }}>
-                  {SCEN[s.scenario]}
-                </span>
-                <div className="flex flex-col gap-1">
-                  <Bar value={s.metrics.revenue} max={maxAbs} color="#9DB8F5" label={`매출 ${won(s.metrics.revenue)}`} />
-                  <Bar
-                    value={s.metrics.operating_profit}
-                    max={maxAbs}
-                    color={(s.metrics.operating_profit ?? 0) < 0 ? "#E5735C" : blue}
-                    label={`영업이익 ${won(s.metrics.operating_profit)}`}
-                  />
+
+          <Waterfall t={t} />
+
+          <div className="grid gap-3 lg:grid-cols-3">
+            {GROUPS.map((g) => {
+              const rows = plan.lines.filter((l) => l.group === g.key);
+              const subtotal = g.key === "revenue" ? t.revenue : g.key === "cogs" ? t.cogs : t.opex;
+              const tone = g.key === "revenue" ? blue : "#C2341C";
+              return (
+                <div key={g.key} className="rounded-xl p-4 flex flex-col gap-2.5" style={{ background: "#FAFBFD", border: `1px solid ${line}` }}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div>
+                      <b className="text-sm" style={{ color: tone }}>
+                        {g.key === "revenue" ? "＋ " : "－ "}
+                        {g.label}
+                      </b>
+                      <div className="text-[11px]" style={{ color: gray }}>
+                        {g.desc}
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums" style={{ color: navy }}>
+                      {won(subtotal)}
+                    </span>
+                  </div>
+                  {rows.map((l) => (
+                    <div key={l.id} className="flex flex-col gap-1 rounded-lg bg-white p-2.5" style={{ border: `1px solid ${line}` }}>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          value={l.label}
+                          onChange={(e) => setLine(l.id, { label: e.target.value })}
+                          placeholder="항목 이름"
+                          aria-label={`${g.label} 항목 이름`}
+                          className="flex-1 min-w-0 text-[13px] font-semibold focus:outline-none bg-transparent"
+                          style={{ border: "none", color: navy }}
+                        />
+                        {l.ai && (
+                          <span className="text-[10px] font-bold px-1 rounded shrink-0" style={{ background: "#FFF6DE", color: "#8A4B08" }}>
+                            AI 예시
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeLine(l.id)}
+                          aria-label={`${l.label || "항목"} 삭제`}
+                          className="w-6 h-6 shrink-0 rounded"
+                          style={{ background: "none", border: "none", color: gray, cursor: "pointer" }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <label className="flex items-center rounded-md overflow-hidden" style={{ border: `1px solid ${line}` }}>
+                        <span className="sr-only">{l.label} 월 금액</span>
+                        <input
+                          inputMode="numeric"
+                          value={l.amount ? l.amount.toLocaleString() : ""}
+                          onChange={(e) => setLine(l.id, { amount: Number(e.target.value.replace(/[^0-9]/g, "")) || 0 })}
+                          placeholder="0"
+                          className="flex-1 min-w-0 h-8 px-2 text-sm text-right tabular-nums focus:outline-none"
+                          style={{ border: "none", color: navy }}
+                        />
+                        <span className="px-2 text-xs" style={{ color: gray }}>
+                          원/월
+                        </span>
+                      </label>
+                      {l.basis && (
+                        <span className="text-[11px] leading-snug" style={{ color: gray }}>
+                          {l.basis}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addLine(g.key)}
+                    className="min-h-[32px] rounded-lg text-xs font-semibold"
+                    style={{ border: `1px dashed #C9D0DC`, background: "transparent", color: slate, cursor: "pointer" }}
+                  >
+                    + 항목 추가
+                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          {base?.unit_contribution != null && base.unit_contribution <= 0 && (
-            <p className="m-0 text-xs rounded-lg px-3 py-2" style={{ background: "#FDECEA", color: "#B42318" }}>
-              {calcDef.unitNoun} 1단위당 비용이 매출보다 커서 팔수록 손해인 구조예요. 그래서 손익분기가 없어요. 가격을 올리거나 단위당 비용을 줄여 보세요.
-            </p>
-          )}
-          {base && base.revenue == null && (
-            <p className="m-0 text-xs" style={{ color: gray }}>
-              값이 더 있어야 계산돼요. {required.slice(0, 3).map((f) => f.label).join(" · ")}부터 넣어 보세요.
-            </p>
-          )}
+
+          <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${line}` }}>
+            <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+              <caption className="sr-only">시나리오별 손익</caption>
+              <thead>
+                <tr style={{ background: "#F5F7FC", color: slate }}>
+                  <th className="text-left font-semibold px-3 py-2 text-xs">시나리오</th>
+                  <th className="text-right font-semibold px-3 py-2 text-xs">매출</th>
+                  <th className="text-right font-semibold px-3 py-2 text-xs">매출총이익</th>
+                  <th className="text-right font-semibold px-3 py-2 text-xs">영업이익</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SCENARIOS.map((sc) => {
+                  const x = totalsOf(plan.lines, plan.unitCount, sc.factor);
+                  return (
+                    <tr key={sc.key} style={{ borderTop: `1px solid ${line}`, fontWeight: sc.key === "base" ? 700 : 400 }}>
+                      <td className="px-3 py-2">
+                        <span style={{ color: sc.key === "base" ? blue : navy }}>{sc.label}</span>{" "}
+                        <span className="text-[11px] font-normal" style={{ color: gray }}>
+                          {sc.desc}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">{won(x.revenue)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{won(x.gross)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums" style={{ color: x.operating < 0 ? "#C2341C" : "#0F7B6C" }}>
+                        {won(x.operating)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <p className="m-0 text-[11px] leading-relaxed" style={{ color: gray }}>
-            {calcDef.label}: {calcDef.note} 보수 = {calcDef.unitNoun} 수 70% · 비용 110~120%, 낙관 = {calcDef.unitNoun} 수 130% · 비용 90~95%로 바꾼 일반적인 민감도예요.
+            시나리오는 매출과 매출원가가 같이 70% / 130%로 움직이고 판매관리비는 그대로라고 본 단순 민감도예요. 손익분기 = 판매관리비 ÷ (매출총이익 ÷ 매출).
           </p>
         </>
       )}
@@ -711,31 +706,60 @@ export function FinancePanel({
   );
 }
 
-/** 예시 수치 추정에 넘길 보고서 요약 — 시장·경쟁·수익 요약과 근거 몇 줄 */
-function reportContext(report: IdeaReport): string {
-  const ar = report.response.workflow_result.agent_results;
-  const sums = ["MarketAgent", "CompetitorAgent", "BusinessModelAgent"].map((a) => (ar[a]?.summary ?? "").slice(0, 400));
-  const ev = ["CompetitorAgent", "BusinessModelAgent", "MarketAgent"].flatMap((a) => ar[a]?.evidence ?? []).slice(0, 10).map((e) => `- ${e.content.slice(0, 220)}`);
-  return [...sums, ...ev].filter(Boolean).join("\n").slice(0, 5500);
+/** 매출에서 비용이 빠져 영업이익이 되는 흐름 (폭포 차트) */
+function Waterfall({ t }: { t: Totals }) {
+  const steps = [
+    { label: "매출", value: t.revenue, kind: "total" as const },
+    { label: "매출원가", value: -t.cogs, kind: "minus" as const },
+    { label: "매출총이익", value: t.gross, kind: "total" as const },
+    { label: "판매관리비", value: -t.opex, kind: "minus" as const },
+    { label: "영업이익", value: t.operating, kind: "result" as const },
+  ];
+  // 막대 위치: 누적 시작점과 끝점 (0 아래로 내려갈 수 있음)
+  let run = 0;
+  const bars = steps.map((s) => {
+    let from: number, to: number;
+    if (s.kind === "minus") {
+      from = run;
+      to = run + s.value;
+      run = to;
+    } else {
+      from = 0;
+      to = s.value;
+      run = s.value;
+    }
+    return { ...s, lo: Math.min(from, to), hi: Math.max(from, to) };
+  });
+  const top = Math.max(1, ...bars.map((b) => b.hi));
+  const bottom = Math.min(0, ...bars.map((b) => b.lo));
+  const H = 180;
+  const PAD = 18; // 맨 위 막대 위 금액 글자 자리
+  const y = (v: number) => PAD + ((top - v) / (top - bottom)) * H;
+  return (
+    <div role="img" aria-label={`매출 ${won(t.revenue)}, 매출원가 ${won(t.cogs)}, 판매관리비 ${won(t.opex)}, 영업이익 ${won(t.operating)}`}>
+      <div className="relative grid grid-cols-5 gap-3 px-1" style={{ height: H + PAD + 30 }}>
+        {/* 0 기준선 */}
+        <div className="absolute left-0 right-0" style={{ top: y(0), borderTop: `1px dashed #C9D0DC` }} />
+        {bars.map((b) => {
+          const color = b.kind === "minus" ? "#E5735C" : b.kind === "result" ? (b.value < 0 ? "#C2341C" : "#0F7B6C") : b.label === "매출" ? blue : "#9DB8F5";
+          return (
+            <div key={b.label} className="relative">
+              <div className="absolute left-0 right-0 rounded-md" style={{ top: y(b.hi), height: Math.max(3, y(b.lo) - y(b.hi)), background: color }} />
+              <div className="absolute left-0 right-0 text-center text-[11px] font-bold tabular-nums" style={{ top: Math.max(0, y(b.hi) - 16), color: navy }}>
+                {won(b.value)}
+              </div>
+              <div className="absolute left-0 right-0 text-center text-[11px]" style={{ top: H + PAD + 8, color: slate }}>
+                {b.label}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
-function toForm(values: Record<string, number | null>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(values)) out[k] = v == null ? "" : String(Math.round(v * 1000) / 1000);
-  return out;
-}
-
-function fromForm(fields: PlanField[], form: Record<string, string>): Record<string, number | null> {
-  const out: Record<string, number | null> = {};
-  for (const f of fields) {
-    const raw = form[f.key]?.trim();
-    const v = raw ? Number(raw) : null;
-    out[f.key] = v == null || Number.isNaN(v) ? null : v;
-  }
-  return out;
-}
-
-function Kpi({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+function Kpi({ label, value, tone, sub }: { label: string; value: string; tone?: "good" | "bad"; sub?: string }) {
   return (
     <div className="rounded-lg p-3" style={{ background: "#F5F7FC" }}>
       <div className="text-[11px]" style={{ color: gray }}>
@@ -744,18 +768,12 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone?: "goo
       <div className="text-lg font-bold tabular-nums" style={{ color: tone === "bad" ? "#C2341C" : tone === "good" ? "#0F7B6C" : navy }}>
         {value}
       </div>
+      {sub && (
+        <div className="text-[11px] mt-0.5" style={{ color: slate }}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
 
-function Bar({ value, max, color, label }: { value: number | null | undefined; max: number; color: string; label: string }) {
-  const pct = value == null ? 0 : Math.max(2, (Math.abs(value) / max) * 100);
-  return (
-    <div className="flex items-center gap-2">
-      <div className="h-3.5 rounded" style={{ width: `${pct * 0.7}%`, background: value == null ? "#EEF0F4" : color, minWidth: 4 }} />
-      <span className="text-[11px] whitespace-nowrap tabular-nums" style={{ color: slate }}>
-        {label}
-      </span>
-    </div>
-  );
-}
