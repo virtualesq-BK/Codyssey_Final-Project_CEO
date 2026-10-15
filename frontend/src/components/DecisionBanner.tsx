@@ -89,10 +89,29 @@ export default function DecisionBanner({ result }: Props) {
       {result.action_plan.length > 0 && (
         <div>
           <div className="font-semibold mb-3">다음 행동</div>
-          <ol className="m-0 pl-5 list-decimal flex flex-col gap-2 text-sm leading-relaxed">
-            {result.action_plan.map((action, i) => (
-              <li key={i}>{action}</li>
-            ))}
+          <ol className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-relaxed">
+            {result.action_plan.map((action, i) => {
+              // "1단계 (주 1~4): 할 일" 이면 단계 이름을 따로 빼서 번호가 두 번 붙지 않게 한다
+              const m = action.match(/^\s*(\d+\s*단계)\s*(\([^)]*\))?\s*[:：]\s*([\s\S]*)$/);
+              const step = m ? m[1].replace(/\s+/g, "") : `${i + 1}단계`;
+              const when = m?.[2]?.slice(1, -1);
+              const body = m ? m[3] : action;
+              return (
+                <li key={i} className="flex gap-3 items-start">
+                  <span className="shrink-0 w-[68px] mt-0.5 flex flex-col items-start">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-md whitespace-nowrap" style={{ background: "#EAF0FD", color: "#1446C4" }}>
+                      {step}
+                    </span>
+                    {when && (
+                      <span className="text-[11px] mt-0.5 whitespace-nowrap" style={{ color: "#6B7280" }}>
+                        {when}
+                      </span>
+                    )}
+                  </span>
+                  <span className="min-w-0">{body}</span>
+                </li>
+              );
+            })}
           </ol>
         </div>
       )}
