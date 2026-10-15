@@ -67,26 +67,38 @@ export default function DecisionBanner({ result }: Props) {
         </div>
       </div>
 
-      <p className="text-lg font-semibold leading-relaxed m-0">{result.summary}</p>
-      <p className="text-sm text-text-secondary m-0">{cfg.desc}</p>
+      <div>
+        <div className="text-xs font-bold mb-1.5" style={{ color: cfg.color }}>
+          종합 평가
+        </div>
+        <p className="text-base font-semibold leading-relaxed m-0" style={{ color: "#08183F" }}>
+          {result.summary}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm leading-relaxed">
-        {result.strengths.length > 0 && (
-          <div>
-            <div className="font-semibold mb-2">강점</div>
-            <ul className="m-0 pl-5 list-disc flex flex-col gap-1">
-              {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
-            </ul>
-          </div>
-        )}
-        {result.weaknesses.length > 0 && (
-          <div>
-            <div className="font-semibold mb-2">약점</div>
-            <ul className="m-0 pl-5 list-disc flex flex-col gap-1">
-              {result.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
-            </ul>
-          </div>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm leading-relaxed">
+        {[
+          { title: "강점", items: result.strengths, mark: "＋", tone: "#0F7B6C", bg: "#F1FAF6", border: "#CDEBDD" },
+          { title: "약점", items: result.weaknesses, mark: "－", tone: "#B42318", bg: "#FFF6F5", border: "#F5D3CF" },
+        ]
+          .filter((g) => g.items.length > 0)
+          .map((g) => (
+            <div key={g.title} className="rounded-xl p-4 flex flex-col gap-2.5 bg-white" style={{ border: `1px solid ${g.border}` }}>
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-md flex items-center justify-center text-sm font-bold" style={{ background: g.bg, color: g.tone }}>
+                  {g.mark}
+                </span>
+                <b style={{ color: g.tone }}>{g.title}</b>
+              </div>
+              <ul className="m-0 p-0 list-none flex flex-col gap-2">
+                {g.items.map((t, i) => (
+                  <li key={i} className="rounded-lg px-3 py-2" style={{ background: g.bg, color: "#485876" }}>
+                    <LeadBold text={t} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
       </div>
 
       {result.action_plan.length > 0 && (
@@ -150,4 +162,16 @@ function parseStep(action: string, i: number) {
   const title = cut > 0 && cut <= 40 ? body.slice(0, cut).trim() : "";
   const detail = title ? body.slice(cut).replace(/^\s*[-–—:：]\s*/, "") : body;
   return { step: `${m ? m[1] : i + 1}단계`, when: m?.[2]?.trim() ?? "", title, detail };
+}
+
+/** "명확한 타겟 고객: 유초등 학부모…" → 콜론 앞 요약만 굵게 */
+function LeadBold({ text }: { text: string }) {
+  const i = text.search(/[:：]/);
+  if (i <= 0 || i > 40) return <>{text}</>;
+  return (
+    <>
+      <b style={{ color: "#08183F" }}>{text.slice(0, i)}</b>
+      {text.slice(i)}
+    </>
+  );
 }

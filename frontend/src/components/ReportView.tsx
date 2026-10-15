@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
-import { CompetitionPanel, EvidenceOverview, FinancePanel, RiskPanel } from "@/components/ReportVisuals";
-import type { AgentResult } from "@/lib/api";
+import { CompetitionPanel, EvidenceOverview, FinancePanel, MarketPanel, RiskPanel } from "@/components/ReportVisuals";
+import type { AgentResult, MarketSizing } from "@/lib/api";
 import { type FinancePlan, financeConfidence, financeSummary } from "@/lib/financePlan";
 import type { IdeaReport } from "@/lib/idea";
 
@@ -13,10 +13,14 @@ export default function ReportView({
   report,
   financePlan,
   onSaveFinancePlan,
+  marketSizing,
+  onSaveMarketSizing,
 }: {
   report: IdeaReport;
   financePlan?: FinancePlan | null;
   onSaveFinancePlan?: (plan: FinancePlan) => Promise<void> | void;
+  marketSizing?: { reportId: string; data: MarketSizing } | null;
+  onSaveMarketSizing?: (v: { reportId: string; data: MarketSizing }) => Promise<void> | void;
 }) {
   const wf = report.response.workflow_result;
   return (
@@ -78,6 +82,7 @@ export default function ReportView({
             hideSummary={sec.agent === "FinancialAgent"}
             result={withFinancePlan(sec.agent, wf.agent_results[sec.agent], financePlan)}
           >
+            {sec.agent === "MarketAgent" && <MarketPanel report={report} saved={marketSizing} onSave={onSaveMarketSizing} />}
             {sec.agent === "CompetitorAgent" && <CompetitionPanel report={report} embedded />}
             {/* 보고서 버전이 바뀌면 입력칸도 새로 */}
             {sec.agent === "FinancialAgent" && <FinancePanel key={report.id} report={report} saved={financePlan} onSave={onSaveFinancePlan} embedded />}

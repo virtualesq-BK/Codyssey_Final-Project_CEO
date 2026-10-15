@@ -319,6 +319,7 @@ export default function IdeaDetailPage() {
           onShowProgress={() => setProgressOpen(true)}
           openReportSignal={reportSignal}
           onSaveFinance={async (financePlan) => setIdea(await updateIdea(user, current, { financePlan }))}
+          onSaveMarket={async (marketSizing) => setIdea(await updateIdea(user, current, { marketSizing }))}
         />
         {diagnosisModals}
       </div>

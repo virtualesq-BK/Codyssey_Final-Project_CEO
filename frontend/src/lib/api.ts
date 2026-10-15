@@ -195,3 +195,42 @@ export async function suggestStatement(req: { revenue_type: string; idea: Record
   if (!res.ok) throw new Error("손익 항목을 만들지 못했어요. 직접 입력해 주세요.");
   return res.json();
 }
+
+/** 시장 규모 — 금액은 원(KRW), 연도별 시리즈는 근거 원문 통화 그대로 */
+export interface MarketTier {
+  value: number | null;
+  display: string;
+  basis: string;
+  evidence_index: number | null;
+  estimated: boolean;
+}
+
+export interface MarketSeries {
+  name: string;
+  unit: "KRW" | "USD";
+  evidence_index: number;
+  points: { year: number; value: number; projected: boolean; raw: string }[];
+}
+
+export interface MarketSizing {
+  tam: MarketTier;
+  sam: MarketTier;
+  som: MarketTier;
+  series: MarketSeries[];
+  usd_krw: number;
+}
+
+export async function suggestMarketSizing(req: {
+  idea: Record<string, string>;
+  market_summary: string;
+  claims: Record<string, string>;
+  evidence: { title: string; source: string; url?: string | null; content: string }[];
+}): Promise<MarketSizing> {
+  const res = await fetch("/api/v1/market/sizing", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error("시장 규모를 정리하지 못했어요.");
+  return res.json();
+}

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import ReportView, { SectionNav, reportNavItems } from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
-import type { AnalyzeJob } from "@/lib/api";
+import type { AnalyzeJob, MarketSizing } from "@/lib/api";
 import { type FinancePlan, financeSummary } from "@/lib/financePlan";
 import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
 import { AGENT_LABELS, AGENT_ORDER, SHOW_CONFIDENCE } from "@/lib/agents";
@@ -55,6 +55,7 @@ interface Props {
   openReportSignal?: number;
   /** 보고서 재무 시나리오에 넣은 숫자 저장 */
   onSaveFinance?: (plan: FinancePlan) => Promise<void>;
+  onSaveMarket?: (v: { reportId: string; data: MarketSizing }) => Promise<void>;
 }
 
 const ink = "#08183F";
@@ -63,7 +64,7 @@ const iron = "#6B7280";
 const line = "#E5E7EB";
 
 export default function ProfileWorkspace(props: Props) {
-  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal, onSaveFinance } = props;
+  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal, onSaveFinance, onSaveMarket } = props;
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null);
   // 프로필 전체를 한 번에 고친다: 편집 모드 + 칸별 초안
@@ -507,7 +508,11 @@ export default function ProfileWorkspace(props: Props) {
               </div>
             )}
             {selectedReport ? (
-              <ReportView report={selectedReport} financePlan={idea.financePlan} onSaveFinancePlan={onSaveFinance} />
+              <ReportView report={selectedReport} financePlan={idea.financePlan}
+                onSaveFinancePlan={onSaveFinance}
+                marketSizing={idea.marketSizing}
+                onSaveMarketSizing={onSaveMarket}
+              />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
                 <div className="font-bold">

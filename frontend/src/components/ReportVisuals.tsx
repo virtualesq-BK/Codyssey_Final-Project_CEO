@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { type LineGroup, suggestStatement } from "@/lib/api";
+import { type LineGroup, type MarketSeries, type MarketSizing, type MarketTier, suggestMarketSizing, suggestStatement } from "@/lib/api";
 import {
   type FinancePlan,
   GROUPS,
@@ -705,3 +705,197 @@ function Kpi({ label, value, tone, sub }: { label: string; value: string; tone?:
   );
 }
 
+
+/* ───────────── 0. 시장 규모 (TAM · SAM · SOM + 연도별) ───────────── */
+
+export function MarketPanel({
+  report,
+  saved,
+  onSave,
+}: {
+  report: IdeaReport;
+  saved?: { reportId: string; data: MarketSizing } | null;
+  onSave?: (v: { reportId: string; data: MarketSizing }) => Promise<void> | void;
+}) {
+  const fresh = saved && saved.reportId === report.id ? saved.data : null;
+  const [data, setData] = useState<MarketSizing | null>(fresh);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const market = report.response.workflow_result.agent_results.MarketAgent;
+  const evidence = market?.evidence ?? [];
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const m = findingOf(report, "MarketAgent", "market_analysis");
+      const res = await suggestMarketSizing({
+        idea: {
+          name: report.profile?.name ?? "",
+          industry: report.profile?.industry ?? "",
+          customer: (report.profile?.customer ?? "").slice(0, 400),
+          revenue_model: (report.profile?.revenueModel ?? "").slice(0, 400),
+        },
+        market_summary: (market?.summary ?? "").slice(0, 3000),
+        claims: Object.fromEntries(["market_size", "target_market_size", "growth_rate"].map((k) => [k, textOf(m?.[k])])),
+        evidence: evidence.slice(0, 30).map((e) => ({ title: e.title, source: e.source, url: e.url, content: e.content.slice(0, 1500) })),
+      });
+      setData(res);
+      await onSave?.({ reportId: report.id, data: res });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!fresh && market) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report.id]);
+
+  if (!market) return null;
+  return (
+    <div className="flex flex-col gap-4" aria-label="시장 규모">
+      {loading && (
+        <div className="rounded-lg px-4 py-6 text-sm text-center animate-pulse" style={{ background: "#F5F7FC", color: blue }}>
+          근거에서 시장 규모를 정리하는 중…
+        </div>
+      )}
+      {error && (
+        <div className="text-sm flex items-center gap-3" style={{ color: "#B42318" }}>
+          {error}
+          <button type="button" onClick={load} className="text-xs font-semibold" style={{ background: "none", border: "none", color: blue, cursor: "pointer", padding: 0 }}>
+            다시 시도
+          </button>
+        </div>
+      )}
+      {data && !loading && (
+        <>
+          <div className="grid gap-3 md:grid-cols-3">
+            <TierCard code="TAM" name="전체 시장" tier={data.tam} evidence={evidence} />
+            <TierCard code="SAM" name="닿을 수 있는 시장" tier={data.sam} evidence={evidence} />
+            <TierCard code="SOM" name="3년 안에 확보할 몫" tier={data.som} evidence={evidence} />
+          </div>
+          {data.series.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {data.series.map((s, i) => (
+                <TrendChart key={i} series={s} evidence={evidence} />
+              ))}
+            </div>
+          ) : (
+            <p className="m-0 text-xs" style={{ color: gray }}>
+              근거에 연도별 시장 규모가 두 개 이상 나오지 않아 추세 그래프는 그리지 않았어요.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function TierCard({ code, name, tier, evidence }: { code: string; name: string; tier: MarketTier; evidence: { url?: string | null; title: string }[] }) {
+  const ev = tier.evidence_index != null ? evidence[tier.evidence_index] : null;
+  return (
+    <div className="rounded-xl p-4 flex flex-col gap-1.5" style={{ background: "#F5F7FC", border: `1px solid #E3E9F7` }}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-bold" style={{ color: "#1446C4" }}>
+          {code} <span className="font-semibold" style={{ color: slate }}>· {name}</span>
+        </span>
+        {tier.value != null && <KindTag kind={tier.estimated ? "hypothesis" : "fact"} />}
+      </div>
+      <div className="text-2xl font-bold tabular-nums" style={{ color: tier.value == null ? gray : navy }}>
+        {tier.display}
+        {tier.value != null && <span className="text-xs font-normal ml-1" style={{ color: gray }}>/ 년</span>}
+      </div>
+      {tier.basis && (
+        <p className="m-0 text-xs leading-relaxed" style={{ color: slate }}>
+          {tier.basis}
+        </p>
+      )}
+      {ev?.url && (
+        <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-[11px] underline underline-offset-2 truncate" style={{ color: gray }}>
+          출처: {ev.title} ↗
+        </a>
+      )}
+    </div>
+  );
+}
+
+const fmtMoney = (v: number, unit: "KRW" | "USD") => {
+  if (unit === "USD") return v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : `$${Math.round(v / 1e6)}M`;
+  return v >= 1e12 ? `${(v / 1e12).toFixed(1).replace(".0", "")}조원` : `${Math.round(v / 1e8).toLocaleString()}억원`;
+};
+
+/** 출처 하나의 연도별 시장 규모 — 실제 값은 실선, 전망은 점선. 출처마다 기준이 달라 한 그래프에 겹치지 않는다 */
+function TrendChart({ series, evidence }: { series: MarketSeries; evidence: { url?: string | null; title: string }[] }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const W = 420;
+  const H = 180;
+  const P = { l: 52, r: 16, t: 16, b: 28 };
+  const pts = series.points;
+  const years = pts.map((p) => p.year);
+  const x0 = Math.min(...years);
+  const x1 = Math.max(...years);
+  const yMax = Math.max(...pts.map((p) => p.value)) * 1.15;
+  const x = (yr: number) => P.l + ((yr - x0) / Math.max(1, x1 - x0)) * (W - P.l - P.r);
+  const y = (v: number) => P.t + (1 - v / yMax) * (H - P.t - P.b);
+  const ticks = [0, 0.5, 1].map((f) => yMax * f);
+  const ev = evidence[series.evidence_index];
+  // 실제 구간(전망 전까지)과 전망 구간을 나눠 그린다
+  const firstProj = pts.findIndex((p) => p.projected);
+  const actual = firstProj === -1 ? pts : pts.slice(0, Math.max(1, firstProj));
+  const projected = firstProj === -1 ? [] : pts.slice(Math.max(0, firstProj - 1));
+  const path = (arr: typeof pts) => arr.map((p, i) => `${i ? "L" : "M"}${x(p.year)},${y(p.value)}`).join(" ");
+  const last = pts[pts.length - 1];
+  const first = pts[0];
+  const cagr = last.year > first.year ? (Math.pow(last.value / first.value, 1 / (last.year - first.year)) - 1) * 100 : null;
+  return (
+    <figure className="m-0 rounded-xl p-4 flex flex-col gap-2 bg-white" style={{ border: `1px solid ${line}` }}>
+      <figcaption className="flex items-start justify-between gap-2">
+        <span>
+          <b className="text-sm block" style={{ color: navy }}>
+            {series.name}
+          </b>
+          <span className="text-[11px]" style={{ color: gray }}>
+            단위 {series.unit === "USD" ? "달러" : "원"}
+            {cagr != null && ` · 연평균 ${cagr >= 0 ? "+" : ""}${cagr.toFixed(1)}%`}
+          </span>
+        </span>
+        {ev?.url && (
+          <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-[11px] underline underline-offset-2 shrink-0 max-w-[45%] truncate" style={{ color: gray }}>
+            {ev.title} ↗
+          </a>
+        )}
+      </figcaption>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={`${series.name}: ${pts.map((p) => `${p.year}년 ${p.raw}${p.projected ? "(전망)" : ""}`).join(", ")}`}>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={P.l} x2={W - P.r} y1={y(t)} y2={y(t)} stroke="#EEF0F4" strokeWidth={1} />
+            <text x={P.l - 6} y={y(t) + 4} textAnchor="end" fontSize={10} fill={gray}>
+              {t === 0 ? "0" : fmtMoney(t, series.unit)}
+            </text>
+          </g>
+        ))}
+        <path d={path(actual)} fill="none" stroke={blue} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        {projected.length > 1 && <path d={path(projected)} fill="none" stroke={blue} strokeWidth={2} strokeDasharray="5 4" strokeLinecap="round" />}
+        {pts.map((p, i) => (
+          <g key={p.year} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} tabIndex={0}>
+            {/* 손가락·마우스로 잡기 쉽게 표시점보다 넓은 투명 영역 */}
+            <circle cx={x(p.year)} cy={y(p.value)} r={14} fill="transparent" />
+            <circle cx={x(p.year)} cy={y(p.value)} r={4.5} fill={p.projected ? "#fff" : blue} stroke={blue} strokeWidth={2} />
+            <text x={x(p.year)} y={H - 8} textAnchor="middle" fontSize={10} fill={slate}>
+              {p.year}
+            </text>
+            {(hover === i || i === 0 || i === pts.length - 1) && (
+              <text x={x(p.year)} y={y(p.value) - 10} textAnchor={i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle"} fontSize={11} fontWeight={700} fill={navy}>
+                {p.raw.replace(/^약\s*/, "")}
+                {p.projected ? " (전망)" : ""}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+    </figure>
+  );
+}
