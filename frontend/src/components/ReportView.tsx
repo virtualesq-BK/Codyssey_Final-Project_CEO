@@ -5,10 +5,10 @@ import DecisionBanner from "@/components/DecisionBanner";
 import { CompetitionPanel, EvidenceOverview, FinancePanel, RiskPanel } from "@/components/ReportVisuals";
 import type { AgentResult } from "@/lib/api";
 import { type FinancePlan, financeConfidence, financeSummary } from "@/lib/financePlan";
-import { AGENT_ORDER, STATUS_BG, STATUS_TEXT } from "@/lib/agents";
+import { STATUS_BG, STATUS_TEXT } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
 
-/** 상세 진단 보고서 한 버전 — 판정 배너 + 한눈에 보기(근거·리스크·경쟁·재무) + 분야별 카드 */
+/** 상세 진단 보고서 한 버전 — 판정 요약 → 시장 · 고객 · 경쟁 · 수익 구조 · 재무 · 리스크 → 근거 한눈에 보기 */
 export default function ReportView({
   report,
   financePlan,
@@ -19,7 +19,6 @@ export default function ReportView({
   onSaveFinancePlan?: (plan: FinancePlan) => Promise<void> | void;
 }) {
   const wf = report.response.workflow_result;
-  const orderedAgents = AGENT_ORDER.filter((k) => k in wf.agent_results);
   return (
     <div className="flex flex-col gap-5">
       <div
@@ -49,26 +48,37 @@ export default function ReportView({
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold m-0">한눈에 보기</h3>
-        <EvidenceOverview report={report} />
-        <RiskPanel report={report} />
-        <CompetitionPanel report={report} />
-        {/* 보고서 버전이 바뀌면 입력칸도 새로 */}
-        <FinancePanel key={report.id} report={report} saved={financePlan} onSave={onSaveFinancePlan} />
-      </div>
+      {/* 분야별로 시각화 + 그 분야 에이전트 카드를 한 덩어리로, 시장부터 리스크까지 */}
+      {SECTIONS.filter((sec) => sec.agent in wf.agent_results).map((sec) => (
+        <section key={sec.agent} className="flex flex-col gap-3" aria-label={sec.title}>
+          <h3 className="text-lg font-bold m-0 flex items-center gap-2">
+            <span className="text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#EAF0FD", color: "#1446C4" }}>
+              {sec.no}
+            </span>
+            {sec.title}
+          </h3>
+          {sec.agent === "CompetitorAgent" && <CompetitionPanel report={report} />}
+          {/* 보고서 버전이 바뀌면 입력칸도 새로 */}
+          {sec.agent === "FinancialAgent" && <FinancePanel key={report.id} report={report} saved={financePlan} onSave={onSaveFinancePlan} />}
+          {sec.agent === "RiskAgent" && <RiskPanel report={report} />}
+          <AgentResultCard agentName={sec.agent} hideLabel result={withFinancePlan(sec.agent, wf.agent_results[sec.agent], financePlan)} />
+        </section>
+      ))}
 
-      <div>
-        <h3 className="text-lg font-bold mb-4 mt-0">분야별 진단</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {orderedAgents.map((agentName) => (
-            <AgentResultCard key={agentName} agentName={agentName} result={withFinancePlan(agentName, wf.agent_results[agentName], financePlan)} />
-          ))}
-        </div>
-      </div>
+      {/* 참고 자료 성격이라 맨 뒤 */}
+      <EvidenceOverview report={report} />
     </div>
   );
 }
+
+const SECTIONS = [
+  { no: 1, agent: "MarketAgent", title: "시장" },
+  { no: 2, agent: "CustomerAgent", title: "고객" },
+  { no: 3, agent: "CompetitorAgent", title: "경쟁" },
+  { no: 4, agent: "BusinessModelAgent", title: "수익 구조" },
+  { no: 5, agent: "FinancialAgent", title: "재무" },
+  { no: 6, agent: "RiskAgent", title: "리스크" },
+];
 
 /** 재무 카드는 사용자가 채운 손익계산서가 있으면 그 결과로 보여준다 (보고서를 새로 만들지 않아도) */
 function withFinancePlan(agentName: string, result: AgentResult, plan?: FinancePlan | null): AgentResult {

@@ -131,23 +131,6 @@ export default function DecisionBanner({ result }: Props) {
         </div>
       )}
 
-      {result.validation_items.length > 0 && (
-        <div>
-          <div className="font-semibold mb-3">검증 필요 항목</div>
-          <div className="flex flex-col gap-2">
-            {result.validation_items.map((item, i) => (
-              <label
-                key={i}
-                className="flex gap-3 p-4 bg-white/60 rounded-xl text-sm leading-relaxed cursor-pointer"
-              >
-                <input type="checkbox" className="mt-0.5 shrink-0" />
-                <span>{item}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
       <p className="text-xs text-text-muted border-t pt-3 m-0" style={{ borderColor: `${cfg.color}30` }}>
         {result.disclaimer}
       </p>

@@ -49,9 +49,11 @@ function ConfidenceBar({ value }: { value: number }) {
 interface Props {
   agentName: string;
   result: AgentResult;
+  /** 위에 분야 제목이 따로 있을 때 카드 안 이름을 숨긴다 */
+  hideLabel?: boolean;
 }
 
-export default function AgentResultCard({ agentName, result }: Props) {
+export default function AgentResultCard({ agentName, result, hideLabel }: Props) {
   const [showAll, setShowAll] = useState(false);
   const label = AGENT_LABELS[agentName] ?? agentName;
   const statusColor = STATUS_COLORS[result.status];
@@ -66,7 +68,7 @@ export default function AgentResultCard({ agentName, result }: Props) {
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <span className="font-bold text-base">{label}</span>
+          {!hideLabel && <span className="font-bold text-base">{label}</span>}
           <span
             className="text-xs font-semibold px-2 py-0.5 rounded"
             style={{
