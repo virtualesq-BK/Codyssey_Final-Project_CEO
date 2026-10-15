@@ -23,6 +23,7 @@ from app.api.routes import AnalyzeRequest, AnalyzeResponse
 from app.core.schemas import BusinessIdea
 from app.rag.external_retrievers import build_external_retriever
 from app.rag.providers import get_adapters
+from app.rag.bizrag_bridge import build_bizrag_retriever
 from app.rag.web_search_retriever import CombinedRetriever, build_web_search_retriever
 
 logger = logging.getLogger(__name__)
@@ -102,15 +103,18 @@ def _track(job: JobState, name: str, obj: object, method: str) -> None:
 async def _run(job: JobState, req: AnalyzeRequest) -> None:
     idea = BusinessIdea(idea_id=str(uuid.uuid4()), **req.model_dump())
     adapters = get_adapters()
+    # 근거 = 공공 API 직접 검색(KOSIS·KIPRIS) + B팀 RAG(Pinecone) + 웹검색, 셋 다 합친다
     base_retriever = adapters.evidence_retriever if adapters else build_external_retriever()
+    rag = await asyncio.to_thread(build_bizrag_retriever)  # 첫 호출은 임베딩 모델 로딩으로 느림
     web = build_web_search_retriever()
+    extra = [r for r in (rag, web) if r]
     orchestrator = Orchestrator(
-        evidence_retriever=CombinedRetriever(base_retriever, web) if web else base_retriever,
+        evidence_retriever=CombinedRetriever(base_retriever, *extra) if extra else base_retriever,
         benchmark_provider=adapters.benchmark_provider if adapters else None,
         risk_evidence_provider=adapters.risk_evidence_provider if adapters else None,
     )
     for name, agent in orchestrator.agents.items():
-        if web and hasattr(agent, "retrieval_timeout_sec"):
+        if extra and hasattr(agent, "retrieval_timeout_sec"):
             agent.retrieval_timeout_sec = RETRIEVAL_TIMEOUT_SEC
         if name in job.stages:
             _track(job, name, agent, "run")
