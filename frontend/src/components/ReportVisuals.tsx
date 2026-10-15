@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { type LineGroup, type MarketSeries, type MarketSizing, type MarketTier, suggestMarketSizing, suggestStatement } from "@/lib/api";
+import { type AreaScore, type LineGroup, type MarketSeries, type MarketSizing, type MarketTier, scoreReport, suggestMarketSizing, suggestStatement } from "@/lib/api";
 import {
   type FinancePlan,
   GROUPS,
@@ -905,5 +905,112 @@ function TrendChart({ series, evidence }: { series: MarketSeries; evidence: { ur
         ))}
       </svg>
     </figure>
+  );
+}
+
+/* ───────────── 요약: 영역별 점수 ───────────── */
+
+const AREA_NAMES: Record<string, string> = {
+  MarketAgent: "시장성",
+  CustomerAgent: "고객",
+  CompetitorAgent: "경쟁력",
+  BusinessModelAgent: "수익 구조",
+  FinancialAgent: "재무",
+  RiskAgent: "리스크 관리",
+};
+
+export function AreaScores({
+  report,
+  financeSummary,
+  saved,
+  onSave,
+}: {
+  report: IdeaReport;
+  financeSummary?: string | null;
+  saved?: { reportId: string; data: AreaScore[] } | null;
+  onSave?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
+}) {
+  const fresh = saved && saved.reportId === report.id ? saved.data : null;
+  const [scores, setScores] = useState<AreaScore[] | null>(fresh);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (fresh) return;
+    const ar = report.response.workflow_result.agent_results;
+    const areas = Object.fromEntries(
+      Object.keys(AREA_NAMES)
+        .filter((a) => ar[a])
+        .map((a) => [a, { summary: ar[a].summary.slice(0, 2500), findings: JSON.stringify(ar[a].findings).slice(0, 3500), evidence_count: ar[a].evidence?.length ?? 0 }]),
+    );
+    scoreReport({ idea: { name: report.profile?.name ?? "", industry: report.profile?.industry ?? "" }, areas, finance_summary: financeSummary ?? "" })
+      .then(async (res) => {
+        setScores(res);
+        await onSave?.({ reportId: report.id, data: res });
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report.id]);
+
+  if (error) return null;
+  if (!scores) {
+    return (
+      <div className="rounded-xl bg-white px-4 py-5 text-sm animate-pulse" style={{ border: `1px solid ${line}`, color: blue }}>
+        영역별 점수를 매기는 중…
+      </div>
+    );
+  }
+  const max = Math.max(...scores.map((s) => s.score));
+  const min = Math.min(...scores.map((s) => s.score));
+  const avg = scores.reduce((a, s) => a + s.score, 0) / scores.length;
+  return (
+    <div className="rounded-xl bg-white p-4 flex flex-col gap-3" style={{ border: `1px solid ${line}` }} aria-label="영역별 점수">
+      <div className="flex items-baseline justify-between gap-2">
+        <b className="text-sm" style={{ color: navy }}>
+          영역별 점수
+        </b>
+        <span className="text-xs" style={{ color: gray }}>
+          평균 <b className="tabular-nums" style={{ color: navy }}>{avg.toFixed(1)}</b> / 10
+        </span>
+      </div>
+      <ul className="m-0 p-0 list-none flex flex-col gap-1">
+        {scores.map((s) => {
+          const tag = s.score === max && max !== min ? "가장 강함" : s.score === min && max !== min ? "가장 약함" : "";
+          return (
+            <li key={s.area}>
+              <button
+                type="button"
+                onClick={() => document.getElementById(`rv-${s.area}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="w-full text-left grid gap-x-3 gap-y-0.5 items-center rounded-lg px-2 py-1.5 hover:bg-[#F5F7FC]"
+                style={{ gridTemplateColumns: "84px minmax(0,1fr) 44px", background: "none", border: "none", cursor: "pointer" }}
+                title={`${AREA_NAMES[s.area]} 섹션으로 이동`}
+              >
+                <span className="text-sm font-semibold" style={{ color: navy }}>
+                  {AREA_NAMES[s.area] ?? s.area}
+                </span>
+                <span className="h-3 rounded-full overflow-hidden" style={{ background: "#EEF1F6" }}>
+                  <span className="block h-3 rounded-full" style={{ width: `${s.score * 10}%`, background: blue, opacity: 0.35 + (s.score / 10) * 0.65 }} />
+                </span>
+                <span className="text-sm font-bold text-right tabular-nums" style={{ color: navy }}>
+                  {s.score}
+                  <span className="text-[11px] font-normal" style={{ color: gray }}>
+                    /10
+                  </span>
+                </span>
+                <span />
+                <span className="text-xs leading-snug" style={{ color: slate }}>
+                  {tag && (
+                    <b className="mr-1.5" style={{ color: tag === "가장 강함" ? "#0F7B6C" : "#B42318" }}>
+                      {tag === "가장 강함" ? "▲" : "▼"} {tag}
+                    </b>
+                  )}
+                  {s.reason}
+                </span>
+                <span />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

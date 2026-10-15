@@ -28,6 +28,7 @@ import {
   finishInterview,
   getIdea,
   listReports,
+  patchIdea,
   startDiagnosis,
   saveProfile,
   startInterview,
@@ -318,8 +319,21 @@ export default function IdeaDetailPage() {
           diagnosisJob={job}
           onShowProgress={() => setProgressOpen(true)}
           openReportSignal={reportSignal}
-          onSaveFinance={async (financePlan) => setIdea(await updateIdea(user, current, { financePlan }))}
-          onSaveMarket={async (marketSizing) => setIdea(await updateIdea(user, current, { marketSizing }))}
+          onSaveFinance={async (financePlan) => {
+            // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
+            await patchIdea(user, current.id, { financePlan });
+            setIdea((prev) => (prev ? { ...prev, financePlan } : prev));
+          }}
+          onSaveMarket={async (marketSizing) => {
+            // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
+            await patchIdea(user, current.id, { marketSizing });
+            setIdea((prev) => (prev ? { ...prev, marketSizing } : prev));
+          }}
+          onSaveScores={async (areaScores) => {
+            // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
+            await patchIdea(user, current.id, { areaScores });
+            setIdea((prev) => (prev ? { ...prev, areaScores } : prev));
+          }}
         />
         {diagnosisModals}
       </div>

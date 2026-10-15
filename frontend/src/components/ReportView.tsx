@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import AgentResultCard from "@/components/AgentResultCard";
 import DecisionBanner from "@/components/DecisionBanner";
-import { CompetitionPanel, EvidenceOverview, FinancePanel, MarketPanel, RiskPanel } from "@/components/ReportVisuals";
-import type { AgentResult, MarketSizing } from "@/lib/api";
+import { AreaScores, CompetitionPanel, EvidenceOverview, FinancePanel, MarketPanel, RiskPanel } from "@/components/ReportVisuals";
+import type { AgentResult, AreaScore, MarketSizing } from "@/lib/api";
 import { type FinancePlan, financeConfidence, financeSummary } from "@/lib/financePlan";
 import type { IdeaReport } from "@/lib/idea";
 
@@ -15,12 +15,16 @@ export default function ReportView({
   onSaveFinancePlan,
   marketSizing,
   onSaveMarketSizing,
+  areaScores,
+  onSaveAreaScores,
 }: {
   report: IdeaReport;
   financePlan?: FinancePlan | null;
   onSaveFinancePlan?: (plan: FinancePlan) => Promise<void> | void;
   marketSizing?: { reportId: string; data: MarketSizing } | null;
   onSaveMarketSizing?: (v: { reportId: string; data: MarketSizing }) => Promise<void> | void;
+  areaScores?: { reportId: string; data: AreaScore[] } | null;
+  onSaveAreaScores?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
 }) {
   const wf = report.response.workflow_result;
   return (
@@ -49,7 +53,9 @@ export default function ReportView({
 
       <div id="rv-summary" className="scroll-mt-32" />
       {wf.decision_result ? (
-        <DecisionBanner result={wf.decision_result} />
+        <DecisionBanner result={wf.decision_result}>
+          <AreaScores report={report} financeSummary={financeSummary(financePlan)} saved={areaScores} onSave={onSaveAreaScores} />
+        </DecisionBanner>
       ) : (
         <div className="rounded-xl p-4 text-sm" style={{ background: "#FFFBEB", color: "#B45309" }}>
           종합 판정을 내리지 못했어요. 분야별 결과만 확인할 수 있어요.

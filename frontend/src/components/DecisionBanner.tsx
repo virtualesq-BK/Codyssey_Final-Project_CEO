@@ -32,9 +32,11 @@ const DECISION_CONFIG = {
 
 interface Props {
   result: DecisionResult;
+  /** 종합 평가 아래에 넣을 내용 (영역별 점수) */
+  children?: React.ReactNode;
 }
 
-export default function DecisionBanner({ result }: Props) {
+export default function DecisionBanner({ result, children }: Props) {
   const cfg = DECISION_CONFIG[result.decision];
 
   return (
@@ -72,9 +74,11 @@ export default function DecisionBanner({ result }: Props) {
           종합 평가
         </div>
         <p className="text-base font-semibold leading-relaxed m-0" style={{ color: "#08183F" }}>
-          {result.summary}
+          {withoutConfidence(result.summary)}
         </p>
       </div>
+
+      {children}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm leading-relaxed">
         {[
@@ -93,7 +97,7 @@ export default function DecisionBanner({ result }: Props) {
               <ul className="m-0 p-0 list-none flex flex-col gap-2">
                 {g.items.map((t, i) => (
                   <li key={i} className="rounded-lg px-3 py-2" style={{ background: g.bg, color: "#485876" }}>
-                    <LeadBold text={t} />
+                    <LeadBold text={stripConfidence(t)} />
                   </li>
                 ))}
               </ul>
@@ -174,4 +178,20 @@ function LeadBold({ text }: { text: string }) {
       {text.slice(i)}
     </>
   );
+}
+
+/** 예전 보고서의 종합 평가에 섞인 신뢰도·확신도 문장을 뺀다 */
+function withoutConfidence(text: string) {
+  const sentences = text.split(/(?<=[.!?。])\s+/);
+  const kept = sentences.filter((t) => !/신뢰도|확신도|confidence/i.test(t));
+  return (kept.length ? kept : sentences).join(" ");
+}
+
+/** 항목 안의 "(신뢰도 0%)" 같은 꼬리를 뗀다 */
+function stripConfidence(text: string) {
+  return text
+    .replace(/\s*\(?\s*(신뢰도|확신도)\s*[\d.]+%?\s*\)?/g, "")
+    .replace(/(신뢰도|확신도)(가|이)?\s*(\S+\s*)?(없음|낮음|부족)/g, "근거 부족")
+    .replace(/신뢰도|확신도/g, "근거")
+    .trim();
 }

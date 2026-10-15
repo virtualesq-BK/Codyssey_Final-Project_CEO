@@ -2,7 +2,7 @@
  * 아이디어 한 건의 모양과 상태 규칙.
  * 메모 → 인터뷰 → (1차 분석) → 아이템 프로필 → (상세 진단) → 분석 보고서
  */
-import type { AnalyzeRequest, AnalyzeResponse, Coverage, Decision, InterviewMessage, InterviewSlot, MarketSizing } from "@/lib/api";
+import type { AnalyzeRequest, AnalyzeResponse, AreaScore, Coverage, Decision, InterviewMessage, InterviewSlot, MarketSizing } from "@/lib/api";
 import type { FinancePlan } from "@/lib/financePlan";
 
 export type IdeaStatus =
@@ -94,6 +94,8 @@ export interface Idea {
   financePlan?: FinancePlan | null;
   /** 보고서 '시장' 섹션의 TAM·SAM·SOM·연도별 그래프 (보고서 버전마다 한 번 만들어 저장) */
   marketSizing?: { reportId: string; data: MarketSizing } | null;
+  /** 보고서 요약의 영역별 점수 (보고서 버전마다 한 번 매겨 저장) */
+  areaScores?: { reportId: string; data: AreaScore[] } | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
   createdAt: string;

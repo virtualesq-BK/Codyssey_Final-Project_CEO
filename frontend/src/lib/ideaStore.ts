@@ -185,6 +185,17 @@ export async function updateIdea(user: User | null, idea: Idea, patch: Partial<I
 }
 
 /** 프로필 저장. 보고서가 이미 있으면 '보고서 새로 작성하기'가 켜지도록 표시한다 */
+/** 아이디어의 일부 칸만 저장한다 — 손익표·시장 규모·점수처럼 동시에 저장될 수 있는 부가 정보용 (다른 칸을 덮어쓰지 않음) */
+export async function patchIdea(user: User | null, ideaId: string, patch: Partial<Idea>): Promise<void> {
+  const fields = { ...patch, updatedAt: new Date().toISOString() };
+  if (user) {
+    await updateIdeaFS(user.uid, ideaId, fields);
+    return;
+  }
+  const local = loadLocalIdeas().find((i) => i.id === ideaId);
+  if (local) saveLocalIdea({ ...local, ...fields });
+}
+
 export async function saveProfile(user: User | null, idea: Idea, profile: IdeaProfile): Promise<Idea> {
   return updateIdea(user, idea, {
     profile,

@@ -236,3 +236,24 @@ export async function suggestMarketSizing(req: {
   if (!res.ok) throw new Error("시장 규모를 정리하지 못했어요.");
   return res.json();
 }
+
+/** 보고서 영역별 점수 (10점 만점 + 한 줄 이유) */
+export interface AreaScore {
+  area: string;
+  score: number;
+  reason: string;
+}
+
+export async function scoreReport(req: {
+  idea: Record<string, string>;
+  areas: Record<string, { summary: string; findings: string; evidence_count: number }>;
+  finance_summary: string;
+}): Promise<AreaScore[]> {
+  const res = await fetch("/api/v1/report/scores", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error("영역별 점수를 매기지 못했어요.");
+  return (await res.json()).scores;
+}
