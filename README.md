@@ -12,7 +12,7 @@
 - **목표:** 단순 창업정보 챗봇이 아닌, 근거 기반 의사결정 지원
 - **원칙:** 임의 수치 생성 금지 — 근거 부족 시 "데이터 부족 / 추가 조사 필요"로 명시
 - **배포:**
-  - Frontend → [Vercel](https://codyssey-final-project-ceo-g9sg.vercel.app/)
+  - Frontend → [Vercel](https://codyssey-final-project-ceo-g9sg.vercel.app/) https://codyssey-final-project-ceo-g9sg.vercel.app/
   - Backend → [Render](https://codyssey-final-project-ceo.onrender.com)
 
 ---
