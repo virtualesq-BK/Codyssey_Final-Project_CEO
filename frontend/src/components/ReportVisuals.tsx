@@ -10,7 +10,6 @@ import {
   SCENARIOS,
   type StatementLine,
   TYPE_ORDER,
-  type Totals,
   guessRevenueType,
   newLineId,
   totalsOf,
@@ -579,8 +578,6 @@ export function FinancePanel({
             />
           </div>
 
-          <Waterfall t={t} />
-
           <div className="grid gap-3 lg:grid-cols-3">
             {GROUPS.map((g) => {
               const rows = plan.lines.filter((l) => l.group === g.key);
@@ -682,49 +679,6 @@ export function FinancePanel({
         </>
       )}
     </section>
-  );
-}
-
-/** 매출에서 비용이 빠져 영업이익이 되는 흐름 (가로 폭포 차트) */
-function Waterfall({ t }: { t: Totals }) {
-  const steps = [
-    { label: "매출", value: t.revenue, kind: "total" as const },
-    { label: "매출원가", value: -t.cogs, kind: "minus" as const },
-    { label: "매출총이익", value: t.gross, kind: "total" as const },
-    { label: "판매관리비", value: -t.opex, kind: "minus" as const },
-    { label: "영업이익", value: t.operating, kind: "result" as const },
-  ];
-  // 각 막대의 시작·끝 (빼는 항목은 앞 단계 끝에서 왼쪽으로 줄어든다)
-  let run = 0;
-  const bars = steps.map((st) => {
-    const from = st.kind === "minus" ? run : 0;
-    const to = st.kind === "minus" ? run + st.value : st.value;
-    run = to;
-    return { ...st, lo: Math.min(from, to), hi: Math.max(from, to) };
-  });
-  const max = Math.max(1, ...bars.map((b) => b.hi));
-  const min = Math.min(0, ...bars.map((b) => b.lo));
-  const x = (v: number) => ((v - min) / (max - min)) * 100;
-  return (
-    <div className="flex flex-col gap-2" role="img" aria-label={`매출 ${won(t.revenue)}, 매출원가 ${won(t.cogs)}, 판매관리비 ${won(t.opex)}, 영업이익 ${won(t.operating)}`}>
-      {bars.map((b) => {
-        const color = b.kind === "minus" ? "#E5735C" : b.kind === "result" ? (b.value < 0 ? "#C2341C" : "#0F7B6C") : b.label === "매출" ? blue : "#9DB8F5";
-        return (
-          <div key={b.label} className="grid grid-cols-[76px_minmax(0,1fr)_76px] items-center gap-3">
-            <span className="text-xs" style={{ color: b.kind === "total" || b.kind === "result" ? navy : slate, fontWeight: b.kind === "minus" ? 400 : 700 }}>
-              {b.label}
-            </span>
-            <div className="relative h-6 rounded" style={{ background: "#F5F7FC" }}>
-              {min < 0 && <div className="absolute top-0 bottom-0" style={{ left: `${x(0)}%`, borderLeft: "1px dashed #C9D0DC" }} />}
-              <div className="absolute top-0 bottom-0 rounded" style={{ left: `${x(b.lo)}%`, width: `${Math.max(0.8, x(b.hi) - x(b.lo))}%`, background: color }} />
-            </div>
-            <span className="text-xs font-bold text-right tabular-nums" style={{ color: b.kind === "result" ? color : navy }}>
-              {won(b.value)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
