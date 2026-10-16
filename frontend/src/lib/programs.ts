@@ -1,4 +1,4 @@
-/** 지원사업 공고 — 백엔드 /api/v1/programs (지금은 샘플 데이터) */
+/** 지원사업 공고 — 백엔드 /api/v1/programs (K-Startup 모집 중 공고, 실패 시 샘플) */
 export type Program = {
   id: string;
   title: string;
@@ -12,6 +12,9 @@ export type Program = {
   body: string;
   detail_url: string;
   amount: string;
+  /** 온라인 접수 주소 (K-Startup 공고에 있을 때) */
+  apply_url?: string;
+  source?: string;
 };
 
 export async function fetchPrograms(params?: URLSearchParams): Promise<Program[]> {

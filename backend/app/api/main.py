@@ -3,7 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.analyze_jobs import router as analyze_jobs_router
+from app.api.finance_routes import router as finance_router
 from app.api.interview_routes import router as interview_router
+from app.api.market_routes import router as market_router
+from app.api.report_routes import router as report_router
 from app.api.news_routes import router as news_router
 from app.api.routes import router
 from app.core.config import settings
@@ -35,4 +39,8 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(interview_router)
+app.include_router(analyze_jobs_router)
+app.include_router(finance_router)
+app.include_router(market_router)
+app.include_router(report_router)
 app.include_router(news_router)

@@ -36,3 +36,6 @@ export const AGENT_LABELS: Record<string, string> = {
   FinancialAgent: "재무",
   RiskAgent: "위험",
 };
+
+/** 신뢰도 바·숫자 표시 — 개발 중 임시로 숨김 (true로 바꾸면 다시 보인다) */
+export const SHOW_CONFIDENCE = false;

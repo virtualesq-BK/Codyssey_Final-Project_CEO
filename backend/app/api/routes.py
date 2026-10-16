@@ -13,6 +13,7 @@ from app.agents.orchestrator import Orchestrator
 from app.core.schemas import BusinessIdea, BusinessStage, UserProfile, WorkflowResult
 from app.rag.providers import get_adapters
 from app.rag.external_retrievers import build_external_retriever
+from app.api.kstartup_source import live_programs
 
 router = APIRouter(prefix="/api/v1")
 
@@ -98,11 +99,13 @@ async def list_programs(
     category: Optional[str] = Query(None),
     q: Optional[str] = Query(None, description="검색어"),
 ) -> ProgramListResponse:
-    items = list(_SAMPLE_PROGRAMS)
+    # K-Startup 모집 중 공고 (실패·키 없음이면 샘플)
+    items = (await live_programs()) or list(_SAMPLE_PROGRAMS)
     if status:
         items = [p for p in items if p["deadline_status"] == status]
     if region:
-        items = [p for p in items if p["region"] == region or p["region"] == "전국"]
+        # K-Startup 지역은 '전남광주'처럼 붙어 오기도 해 포함 여부로 본다
+        items = [p for p in items if region in p["region"] or p["region"] == "전국"]
     if category:
         items = [p for p in items if category in p["category"]]
     if q:
@@ -118,7 +121,7 @@ async def list_programs(
 
 @router.get("/programs/{program_id}")
 async def get_program(program_id: str) -> dict:
-    for p in _SAMPLE_PROGRAMS:
+    for p in (await live_programs()) or _SAMPLE_PROGRAMS:
         if p["id"] == program_id:
             return p
     raise HTTPException(status_code=404, detail="공고를 찾을 수 없습니다.")

@@ -2,7 +2,8 @@
  * 아이디어 한 건의 모양과 상태 규칙.
  * 메모 → 인터뷰 → (1차 분석) → 아이템 프로필 → (상세 진단) → 분석 보고서
  */
-import type { AnalyzeRequest, AnalyzeResponse, Coverage, Decision, InterviewMessage, InterviewSlot } from "@/lib/api";
+import type { AnalyzeRequest, AnalyzeResponse, AreaScore, Coverage, Decision, InterviewMessage, InterviewSlot, MarketSizing } from "@/lib/api";
+import type { FinancePlan } from "@/lib/financePlan";
 
 export type IdeaStatus =
   | "memo"
@@ -85,6 +86,16 @@ export interface Idea {
   /** 진행 중 상태가 너무 오래 멈춰 있는지 판단하는 기준 */
   statusChangedAt: string;
   latestReport: ReportSummary | null;
+  /** 진행 중인 상세분석 작업 (서버 백그라운드). 화면을 떠났다 와도 이어서 결과를 받는다 */
+  diagnosisJobId?: string | null;
+  /** 상세분석 작업을 시작할 때 보낸 입력 — 보고서에 함께 남긴다 */
+  diagnosisInput?: AnalyzeRequest | null;
+  /** 사용자가 보고서 화면에서 직접 넣은 재무 숫자 — 수익 방식 + 값 (시나리오 계산용) */
+  financePlan?: FinancePlan | null;
+  /** 보고서 '시장' 섹션의 TAM·SAM·SOM·연도별 그래프 (보고서 버전마다 한 번 만들어 저장) */
+  marketSizing?: { reportId: string; data: MarketSizing } | null;
+  /** 보고서 요약의 영역별 점수 (보고서 버전마다 한 번 매겨 저장) */
+  areaScores?: { reportId: string; data: AreaScore[] } | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
   createdAt: string;

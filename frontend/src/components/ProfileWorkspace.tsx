@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
-import ReportView from "@/components/ReportView";
+import ReportView, { SectionNav, reportNavItems } from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
-import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
+import type { AnalyzeJob, AreaScore, MarketSizing } from "@/lib/api";
+import { type FinancePlan, financeSummary } from "@/lib/financePlan";
+import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
+import { AGENT_LABELS, AGENT_ORDER, SHOW_CONFIDENCE } from "@/lib/agents";
+import { progressOf } from "@/lib/diagnosisRunner";
 import {
   DECISION_META,
   type Idea,
@@ -29,6 +33,8 @@ interface Section {
   rows: ProfileRow[];
   /** 상세분석에서 채워지는 섹션 */
   fromReport?: boolean;
+  /** 이 섹션을 채우는 에이전트 (근거 수 표시용) */
+  agent?: string;
 }
 
 interface Props {
@@ -42,6 +48,15 @@ interface Props {
   missingCount: number;
   onSaveProfile: (profile: IdeaProfile) => Promise<void>;
   onDiagnose: () => void;
+  /** 진행 중인 상세분석 작업 (단계별 진행) */
+  diagnosisJob?: AnalyzeJob | null;
+  onShowProgress?: () => void;
+  /** 값이 바뀌면 보고서 탭으로 넘긴다 (진행 모달의 '보고서 보기') */
+  openReportSignal?: number;
+  /** 보고서 재무 시나리오에 넣은 숫자 저장 */
+  onSaveFinance?: (plan: FinancePlan) => Promise<void>;
+  onSaveMarket?: (v: { reportId: string; data: MarketSizing }) => Promise<void>;
+  onSaveScores?: (v: { reportId: string; data: AreaScore[] }) => Promise<void>;
 }
 
 const ink = "#08183F";
@@ -50,7 +65,7 @@ const iron = "#6B7280";
 const line = "#E5E7EB";
 
 export default function ProfileWorkspace(props: Props) {
-  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose } = props;
+  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal, onSaveFinance, onSaveMarket, onSaveScores } = props;
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null);
   // 프로필 전체를 한 번에 고친다: 편집 모드 + 칸별 초안
@@ -66,6 +81,9 @@ export default function ProfileWorkspace(props: Props) {
   useEffect(() => {
     setSelectedReportId(reports[0]?.id ?? null);
   }, [reports]);
+  useEffect(() => {
+    if (openReportSignal) setTab("report");
+  }, [openReportSignal]);
   useEffect(() => {
     listIdeas(user).then(setIdeas).catch(() => setIdeas([]));
   }, [user, idea.updatedAt]);
@@ -85,10 +103,10 @@ export default function ProfileWorkspace(props: Props) {
     { no: 1, title: "아이템", badge: "", rows: base.item },
     { no: 2, title: "문제 · 고객", badge: "P 문제인식", rows: base.customer },
     { no: 3, title: "해결 · 솔루션", badge: "S 실현가능성 · BM", rows: base.solution },
-    { no: 4, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true },
-    { no: 5, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true },
-    { no: 6, title: "재무", badge: "S 자금 소요", rows: fromReport.finance, fromReport: true },
-    { no: 7, title: "리스크", badge: "", rows: fromReport.risk, fromReport: true },
+    { no: 4, title: "시장", badge: "P 목표시장", rows: fromReport.market, fromReport: true, agent: "MarketAgent" },
+    { no: 5, title: "경쟁", badge: "S 차별성", rows: fromReport.competition, fromReport: true, agent: "CompetitorAgent" },
+    { no: 6, title: "재무", badge: "S 자금 소요", rows: fromReport.finance, fromReport: true, agent: "FinancialAgent" },
+    { no: 7, title: "리스크", badge: "", rows: fromReport.risk, fromReport: true, agent: "RiskAgent" },
   ];
   const filled = (rows: ProfileRow[]) => rows.filter((r) => !isUnknown(r.value)).length;
   const toFill = sections
@@ -144,10 +162,26 @@ export default function ProfileWorkspace(props: Props) {
               {s.badge}
             </span>
           )}
-          {!sectionLocked && (
-            <span className="text-xs" style={{ color: iron }}>
-              {filled(s.rows)}/{s.rows.length}
+          {!sectionLocked && s.fromReport && s.agent && latest && (
+            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#E7F6EF", color: "#0F7B6C" }}>
+              근거 {latest.response.workflow_result.agent_results[s.agent]?.evidence?.length ?? 0}건
             </span>
+          )}
+          {!sectionLocked && s.fromReport ? (
+            <button
+              type="button"
+              onClick={() => setTab("report")}
+              className="text-xs font-semibold"
+              style={{ background: "none", border: "none", color: "#1B57EA", cursor: "pointer", padding: 0 }}
+            >
+              보고서에서 자세히 ›
+            </button>
+          ) : (
+            !sectionLocked && (
+              <span className="text-xs" style={{ color: iron }}>
+                {filled(s.rows)}/{s.rows.length}
+              </span>
+            )
           )}
         </div>
       </div>
@@ -200,6 +234,34 @@ export default function ProfileWorkspace(props: Props) {
                   />
                   )}
                 </div>
+              ) : r.id === "fin:summary" ? (
+                <div className="flex flex-col gap-2 items-start">
+                  <span>{financeSummary(idea.financePlan) ?? (r.value || "이번 분석에서 나오지 않았어요")}</span>
+                  <button
+                    type="button"
+                    onClick={() => setTab("report")}
+                    className="min-h-[36px] px-3 rounded-lg text-xs font-bold"
+                    style={{ background: "#EAF0FD", color: "#1446C4", border: "none", cursor: "pointer" }}
+                  >
+                    {financeSummary(idea.financePlan) ? "손익계산서 보기 ›" : "손익계산서 만들기 ›"}
+                  </button>
+                </div>
+              ) : r.id === "risk:top" && latest && risksOf(latest).length > 0 ? (
+                <div className="flex gap-4 items-start flex-wrap">
+                  <RiskMatrix risks={risksOf(latest)} size="sm" />
+                  <ol className="m-0 p-0 list-none flex flex-col gap-1 min-w-0 flex-1">
+                    {risksOf(latest)
+                      .slice(0, 3)
+                      .map((x, i) => (
+                        <li key={i} className="flex gap-2 items-baseline">
+                          <span className="text-[11px] font-bold shrink-0" style={{ color: x.score >= 15 ? "#C2341C" : x.score >= 8 ? "#C27A0E" : "#0F7B6C" }}>
+                            {i + 1}. {x.score}점
+                          </span>
+                          <span className="min-w-0">{x.risk || x.label}</span>
+                        </li>
+                      ))}
+                  </ol>
+                </div>
               ) : empty && !r.value.includes("(미확인)") ? (
                 <span>{s.fromReport ? "이번 분석에서 나오지 않았어요" : "미입력"}</span>
               ) : (
@@ -221,7 +283,8 @@ export default function ProfileWorkspace(props: Props) {
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8 grid gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[220px_minmax(0,1fr)_320px] items-start">
       {/* ── 왼쪽: 내 아이디어 ── */}
-      <aside className="hidden xl:flex flex-col gap-2 bg-white rounded-lg shadow-card p-4" style={{ border: `1px solid ${line}` }}>
+      <div className="hidden xl:flex flex-col gap-4 self-stretch">
+      <aside className="flex flex-col gap-2 bg-white rounded-lg shadow-card p-4" style={{ border: `1px solid ${line}` }}>
         <div className="text-xs px-2 pb-1" style={{ color: iron }}>
           내 아이디어
         </div>
@@ -249,6 +312,13 @@ export default function ProfileWorkspace(props: Props) {
           + 새 아이디어
         </Link>
       </aside>
+      {/* 보고서를 볼 때는 섹션 목차가 스크롤을 따라온다 */}
+      {tab === "report" && selectedReport && (
+        <div className="sticky top-[76px] bg-white rounded-lg shadow-card p-3" style={{ border: `1px solid ${line}` }}>
+          <SectionNav vertical items={reportNavItems(selectedReport)} />
+        </div>
+      )}
+      </div>
 
       {/* ── 가운데: 프로필 ── */}
       <main className="min-w-0 flex flex-col gap-5">
@@ -439,7 +509,13 @@ export default function ProfileWorkspace(props: Props) {
               </div>
             )}
             {selectedReport ? (
-              <ReportView report={selectedReport} />
+              <ReportView report={selectedReport} financePlan={idea.financePlan}
+                onSaveFinancePlan={onSaveFinance}
+                marketSizing={idea.marketSizing}
+                onSaveMarketSizing={onSaveMarket}
+                areaScores={idea.areaScores}
+                onSaveAreaScores={onSaveScores}
+              />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
                 <div className="font-bold">
@@ -488,6 +564,8 @@ export default function ProfileWorkspace(props: Props) {
           label={diagnoseLabel}
           onDiagnose={onDiagnose}
           onOpenReport={() => setTab("report")}
+          job={diagnosisJob ?? null}
+          onShowProgress={onShowProgress}
         />
 
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2" style={{ border: `1px solid ${line}` }}>
@@ -663,6 +741,8 @@ function DiagnosisCard({
   label,
   onDiagnose,
   onOpenReport,
+  job,
+  onShowProgress,
 }: {
   idea: Idea;
   status: IdeaStatus;
@@ -673,6 +753,8 @@ function DiagnosisCard({
   label: string;
   onDiagnose: () => void;
   onOpenReport: () => void;
+  job: AnalyzeJob | null;
+  onShowProgress?: () => void;
 }) {
   const dr = latest?.response.workflow_result.decision_result;
   const decision = dr ? DECISION_META[dr.decision] : idea.latestReport?.decision ? DECISION_META[idea.latestReport.decision] : null;
@@ -697,29 +779,20 @@ function DiagnosisCard({
       </div>
 
       {status === "diagnosing" ? (
-        <>
-          <p className="text-sm m-0 leading-relaxed" style={{ color: "#485876" }}>
-            6개 분야를 근거와 함께 진단하고 있어요. 보통 2~3분 걸려요. 이 화면을 닫지 말아주세요.
-          </p>
-          <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
-            {AGENT_ORDER.map((a) => (
-              <span key={a} className="rounded py-1.5 animate-pulse" style={{ background: "#F3F4F6", color: "#08183F" }}>
-                {AGENT_LABELS[a] ?? a}
-              </span>
-            ))}
-          </div>
-        </>
+        <DiagnosingMini job={job} startedAt={idea.statusChangedAt} onShowProgress={onShowProgress} />
       ) : dr ? (
         <>
-          <div>
-            <div className="flex justify-between text-xs mb-1" style={{ color: "#485876" }}>
-              <span>확신도</span>
-              <span className="font-semibold">{dr.confidence.toFixed(2)}</span>
+          {SHOW_CONFIDENCE && (
+            <div>
+              <div className="flex justify-between text-xs mb-1" style={{ color: "#485876" }}>
+                <span>확신도</span>
+                <span className="font-semibold">{dr.confidence.toFixed(2)}</span>
+              </div>
+              <div className="h-1.5 rounded-full" style={{ background: "#E5E7EB" }}>
+                <div className="h-1.5 rounded-full" style={{ width: `${Math.round(dr.confidence * 100)}%`, background: decision?.color }} />
+              </div>
             </div>
-            <div className="h-1.5 rounded-full" style={{ background: "#E5E7EB" }}>
-              <div className="h-1.5 rounded-full" style={{ width: `${Math.round(dr.confidence * 100)}%`, background: decision?.color }} />
-            </div>
-          </div>
+          )}
           <p className="text-sm m-0 leading-relaxed" style={{ color: "#08183F" }}>
             {dr.summary}
           </p>
@@ -755,14 +828,19 @@ function DiagnosisCard({
         </p>
       )}
 
-      {status !== "diagnosing" && loggedIn && (!dr || idea.profileChangedSinceReport || status === "failed") && (
+      {status !== "diagnosing" && loggedIn && (
         <div className="flex flex-col gap-1.5">
           <button
             type="button"
             onClick={onDiagnose}
             disabled={!canDiagnose}
-            className="min-h-[48px] rounded-xl text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
+            className="min-h-[48px] rounded-xl text-sm font-bold disabled:opacity-50"
+            // 보고서가 있고 프로필이 그대로면 보조 버튼으로 (강조는 진짜 다음 할 일에만)
+            style={
+              dr && !idea.profileChangedSinceReport && status !== "failed"
+                ? { background: "#fff", color: "#08183F", border: "1px solid #D9DBDA", cursor: "pointer" }
+                : { background: "#1B57EA", color: "#fff", border: "none", cursor: "pointer" }
+            }
           >
             {status === "failed" ? "다시 분석 (유료)" : label}
           </button>
@@ -771,7 +849,9 @@ function DiagnosisCard({
               ? "* 필수 항목을 채우면 분석할 수 있어요"
               : idea.profileChangedSinceReport
                 ? "프로필이 바뀌었어요. 새 보고서를 만들 수 있어요"
-                : "보통 2~3분 걸려요"}
+                : dr
+                  ? "이전 보고서는 버전으로 남아요 · 3분 안팎"
+                  : "보통 3분 안팎 걸려요"}
           </span>
         </div>
       )}
@@ -798,5 +878,60 @@ function LockIcon() {
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>
+  );
+}
+
+/** 진단 카드 안의 작은 진행 표시 — 단계별 상태 + 진행 모달 열기 */
+function DiagnosingMini({ job, startedAt, onShowProgress }: { job: AnalyzeJob | null; startedAt: string; onShowProgress?: () => void }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const { percent } = progressOf(job, startedAt);
+  return (
+    <>
+      <div>
+        <div className="flex justify-between text-xs mb-1" style={{ color: "#485876" }}>
+          <span>6개 분야 진단 중</span>
+          <span className="font-semibold tabular-nums">{percent}%</span>
+        </div>
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#E5E7EB" }}>
+          <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${percent}%`, background: "#1B57EA" }} />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
+        {AGENT_ORDER.map((a) => {
+          const st = job?.stages[a]?.state ?? "waiting";
+          const style =
+            st === "done"
+              ? { background: "#EAF0FD", color: "#1446C4" }
+              : st === "running"
+                ? { background: "#fff", color: "#1B57EA", boxShadow: "inset 0 0 0 1.5px #1B57EA" }
+                : st === "failed"
+                  ? { background: "#FEF2F2", color: "#B42318" }
+                  : { background: "#F3F4F6", color: "#6B7280" };
+          return (
+            <span key={a} className={`rounded py-1.5 font-semibold ${st === "running" ? "animate-pulse" : ""}`} style={style}>
+              {st === "done" ? "✓ " : ""}
+              {AGENT_LABELS[a] ?? a}
+            </span>
+          );
+        })}
+      </div>
+      <p className="text-xs m-0 leading-relaxed" style={{ color: "#485876" }}>
+        다른 화면으로 가거나 창을 닫아도 계속돼요. 끝나면 알려드려요.
+      </p>
+      {onShowProgress && (
+        <button
+          type="button"
+          onClick={onShowProgress}
+          className="min-h-[44px] rounded-xl text-sm font-bold bg-white"
+          style={{ border: "1px solid #D9DBDA", color: "#08183F", cursor: "pointer" }}
+        >
+          진행 상황 크게 보기
+        </button>
+      )}
+    </>
   );
 }

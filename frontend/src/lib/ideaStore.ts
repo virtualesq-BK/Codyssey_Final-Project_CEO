@@ -5,7 +5,8 @@
  */
 import type { User } from "firebase/auth";
 import {
-  analyze,
+  type AnalyzeResponse,
+  startAnalyzeJob,
   type Decision,
   type InterviewMessage,
   type InterviewTurn,
@@ -184,6 +185,17 @@ export async function updateIdea(user: User | null, idea: Idea, patch: Partial<I
 }
 
 /** 프로필 저장. 보고서가 이미 있으면 '보고서 새로 작성하기'가 켜지도록 표시한다 */
+/** 아이디어의 일부 칸만 저장한다 — 손익표·시장 규모·점수처럼 동시에 저장될 수 있는 부가 정보용 (다른 칸을 덮어쓰지 않음) */
+export async function patchIdea(user: User | null, ideaId: string, patch: Partial<Idea>): Promise<void> {
+  const fields = { ...patch, updatedAt: new Date().toISOString() };
+  if (user) {
+    await updateIdeaFS(user.uid, ideaId, fields);
+    return;
+  }
+  const local = loadLocalIdeas().find((i) => i.id === ideaId);
+  if (local) saveLocalIdea({ ...local, ...fields });
+}
+
 export async function saveProfile(user: User | null, idea: Idea, profile: IdeaProfile): Promise<Idea> {
   return updateIdea(user, idea, {
     profile,
@@ -254,48 +266,57 @@ export async function finishInterview(user: User | null, idea: Idea): Promise<Id
   });
 }
 
-/** 상세 진단 실행 → 새 버전 보고서 저장. 실패하면 실패 상태로 남긴다 */
-export async function runDiagnosis(user: User | null, idea: Idea): Promise<Idea> {
-  let current = await updateIdea(user, idea, { status: "diagnosing", failedStage: null, errorMessage: null });
-  const input = toAnalyzeRequest(current.profile);
-  const t0 = Date.now();
+/** 상세분석 시작 — 서버에 작업을 맡기고 작업 번호를 아이디어에 적어 둔다 (결과는 diagnosisRunner가 받아 저장) */
+export async function startDiagnosis(user: User | null, idea: Idea): Promise<Idea> {
+  const input = toAnalyzeRequest(idea.profile);
+  const jobId = await startAnalyzeJob(input);
+  return updateIdea(user, idea, {
+    status: "diagnosing",
+    failedStage: null,
+    errorMessage: null,
+    diagnosisJobId: jobId,
+    diagnosisInput: input,
+  });
+}
 
-  const fail = (message: string) =>
-    updateIdea(user, current, { status: "failed", failedStage: "diagnosing", errorMessage: message });
+/** 상세분석 실패로 남긴다 */
+export function failDiagnosis(user: User | null, idea: Idea, message: string): Promise<Idea> {
+  return updateIdea(user, idea, {
+    status: "failed",
+    failedStage: "diagnosing",
+    errorMessage: message,
+    diagnosisJobId: null,
+  });
+}
 
-  let response;
-  try {
-    response = await analyze(input);
-  } catch (err) {
-    return fail(err instanceof Error ? err.message : String(err));
-  }
+/** 상세분석 결과 → 새 버전 보고서 저장 */
+export async function completeDiagnosis(user: User | null, idea: Idea, response: AnalyzeResponse, elapsedMs: number): Promise<Idea> {
   // 모든 분야가 실패하면 보고서로 남기지 않는다 (기본값 판정이 진짜 판정처럼 보이지 않도록)
   if (response.workflow_result.status === "failed") {
-    return fail("모든 분야의 분석이 실패했어요.");
+    return failDiagnosis(user, idea, "모든 분야의 분석이 실패했어요.");
   }
-
   const report: IdeaReport = {
     id: response.idea_id,
     // 예전 기록은 요약만 있고 보고서 문서가 없을 수 있어 최신 버전 번호도 함께 본다
-    version: Math.max(current.reportCount, current.latestReport?.version ?? 0) + 1,
-    profile: current.profile,
-    input,
+    version: Math.max(idea.reportCount, idea.latestReport?.version ?? 0) + 1,
+    profile: idea.profile,
+    input: idea.diagnosisInput ?? toAnalyzeRequest(idea.profile),
     response,
-    elapsedMs: Date.now() - t0,
+    elapsedMs,
     createdAt: new Date().toISOString(),
   };
   try {
-    if (user) await setReportFS(user.uid, current.id, report);
-    else saveLocalReport(current.id, report);
+    if (user) await setReportFS(user.uid, idea.id, report);
+    else saveLocalReport(idea.id, report);
   } catch (err) {
-    return fail(err instanceof Error ? err.message : String(err));
+    return failDiagnosis(user, idea, err instanceof Error ? err.message : String(err));
   }
-
-  current = await updateIdea(user, current, {
+  return updateIdea(user, idea, {
     status: "report",
     latestReport: summarizeReport(report),
     reportCount: report.version,
     profileChangedSinceReport: false,
+    diagnosisJobId: null,
+    diagnosisInput: null,
   });
-  return current;
 }

@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import InterviewPanel from "@/components/InterviewPanel";
+import { DiagnoseStartModal, DiagnosisProgressModal } from "@/components/DiagnosisModals";
 import ProfileWorkspace from "@/components/ProfileWorkspace";
 import StatusPill from "@/components/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
+import type { AnalyzeJob } from "@/lib/api";
+import { subscribeDiagnosis, watchDiagnosis } from "@/lib/diagnosisRunner";
 import {
   type Idea,
   type IdeaProfile,
@@ -25,7 +28,8 @@ import {
   finishInterview,
   getIdea,
   listReports,
-  runDiagnosis,
+  patchIdea,
+  startDiagnosis,
   saveProfile,
   startInterview,
   updateIdea,
@@ -60,6 +64,12 @@ export default function IdeaDetailPage() {
   // 첫 질문을 받는 동안에도 메모 화면을 거치지 않고 바로 인터뷰 창을 띄운다
   const [startingInterview, setStartingInterview] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 상세분석: 시작 확인 모달 / 진행 모달 / 서버 작업 진행 상황
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [job, setJob] = useState<AnalyzeJob | null>(null);
+  const [diagnosisDone, setDiagnosisDone] = useState(false);
+  const [reportSignal, setReportSignal] = useState(0);
 
   useEffect(() => {
     if (authLoading) return;
@@ -74,6 +84,28 @@ export default function IdeaDetailPage() {
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, [id, user, authLoading]);
+
+  // 진단 중이면 서버 작업 진행 상황을 받는다 (화면을 떠났다 와도 이어짐)
+  useEffect(() => subscribeDiagnosis(id, (run) => setJob(run.job)), [id]);
+  const diagnosingJobId = idea?.status === "diagnosing" ? idea.diagnosisJobId : null;
+  useEffect(() => {
+    if (!idea || !diagnosingJobId) return;
+    let alive = true;
+    watchDiagnosis(user, idea)?.then(async (saved) => {
+      if (!alive) return;
+      setIdea(saved);
+      setDraft(saved.profile);
+      setDiagnosisDone(true);
+      // 실패면 진행 모달을 닫고 진단 카드의 실패 안내로 보여준다
+      if (saved.status === "failed") setProgressOpen(false);
+      if (saved.status === "report") setReports(await listReports(user, saved.id));
+    });
+    return () => {
+      alive = false;
+    };
+    // 작업 번호가 바뀔 때만 다시 붙인다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diagnosingJobId, user]);
 
   // MY아이디어 카드 버튼에서 넘어온 동작(?action=)과 위치(#profile·#report)를 한 번만 처리한다.
   // 동작 함수는 아래 렌더에서 만들어지므로 ref로 최신 것을 넘겨받는다
@@ -208,31 +240,22 @@ export default function IdeaDetailPage() {
 
 
   // 유료 분석이라 시작 전에 한 번 묻는다 (버튼·카드에서 넘어온 경우 모두)
-  const diagnose = () => {
-    const again = hasReport ? "보고서를 새로 작성할까요?" : "상세분석을 시작할까요?";
-    if (!confirm(`${again}\n\n시장·고객·경쟁·수익·재무·위험 6개 분야를 근거와 함께 진단해요 (유료).\n보통 1~3분 걸려요.`)) return;
-    return runDiagnose();
-  };
+  const diagnose = () => setConfirmOpen(true);
 
+  // 서버에 작업을 맡기고 바로 진행 모달을 띄운다. 결과는 diagnosisRunner가 받아 저장한다
   const runDiagnose = () =>
     run(async () => {
+      setConfirmOpen(false);
       const saved = profileDirty ? await saveProfile(user, current, draft) : current;
-      setIdea({ ...saved, status: "diagnosing", statusChangedAt: new Date().toISOString() });
-      const done = await runDiagnosis(user, saved);
-      setIdea(done);
-      if (done.status === "report") {
-        const fresh = await listReports(user, done.id);
-        setReports(fresh);
-      }
+      setJob(null);
+      setDiagnosisDone(false);
+      const started = await startDiagnosis(user, saved);
+      setIdea(started);
+      setProgressOpen(true);
     });
 
-  // 보고서가 있으면 프로필을 고쳤을 때만 새로 작성할 수 있다
-  const canDiagnose =
-    !!user &&
-    !busy &&
-    status !== "diagnosing" &&
-    missing.length === 0 &&
-    (!hasReport || current.profileChangedSinceReport || profileDirty || status === "failed");
+  // 보고서가 있어도 언제든 새 버전을 작성할 수 있다 (근거 수집이 바뀌었거나 다시 보고 싶을 때)
+  const canDiagnose = !!user && !busy && status !== "diagnosing" && missing.length === 0;
 
   handlersRef.current = { beginInterview, startProfile, diagnose, canDiagnose };
 
@@ -252,6 +275,32 @@ export default function IdeaDetailPage() {
     }
   };
 
+  const diagnosisModals = (
+    <>
+      {confirmOpen && (
+        <DiagnoseStartModal
+          ideaName={displayTitle(current)}
+          again={hasReport}
+          onConfirm={runDiagnose}
+          onClose={() => setConfirmOpen(false)}
+        />
+      )}
+      {progressOpen && (status === "diagnosing" || diagnosisDone) && (
+        <DiagnosisProgressModal
+          ideaName={displayTitle(current)}
+          job={job}
+          startedAt={current.statusChangedAt}
+          finished={diagnosisDone && status === "report"}
+          onMinimize={() => setProgressOpen(false)}
+          onOpenReport={() => {
+            setProgressOpen(false);
+            setReportSignal((n) => n + 1);
+          }}
+        />
+      )}
+    </>
+  );
+
   if (atProfile) {
     return (
       <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
@@ -267,7 +316,26 @@ export default function IdeaDetailPage() {
           missingCount={missing.length}
           onSaveProfile={saveProfileRow}
           onDiagnose={diagnose}
+          diagnosisJob={job}
+          onShowProgress={() => setProgressOpen(true)}
+          openReportSignal={reportSignal}
+          onSaveFinance={async (financePlan) => {
+            // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
+            await patchIdea(user, current.id, { financePlan });
+            setIdea((prev) => (prev ? { ...prev, financePlan } : prev));
+          }}
+          onSaveMarket={async (marketSizing) => {
+            // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
+            await patchIdea(user, current.id, { marketSizing });
+            setIdea((prev) => (prev ? { ...prev, marketSizing } : prev));
+          }}
+          onSaveScores={async (areaScores) => {
+            // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
+            await patchIdea(user, current.id, { areaScores });
+            setIdea((prev) => (prev ? { ...prev, areaScores } : prev));
+          }}
         />
+        {diagnosisModals}
       </div>
     );
   }
