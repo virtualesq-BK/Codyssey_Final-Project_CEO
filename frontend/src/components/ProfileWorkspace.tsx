@@ -21,10 +21,13 @@ import {
   displayTitle,
   effectiveStatus,
 } from "@/lib/idea";
-import { deleteIdea, listIdeas } from "@/lib/ideaStore";
+import { deleteIdea, deleteValidation, listIdeas, listValidations, saveValidation } from "@/lib/ideaStore";
+import ValidationBoard from "@/components/ValidationBoard";
+import ValidationForm, { type ValidationDraft, type ValidationPrefill } from "@/components/ValidationForm";
+import { type Validation, pendingValidations } from "@/lib/validation";
 import { type ProfileRow, isUnknown, profileFieldRows, reportRows, updateRow } from "@/lib/profileRows";
 
-type Tab = "overview" | "report" | "interview";
+type Tab = "overview" | "report" | "validation" | "interview";
 
 interface Section {
   no: number;
@@ -74,6 +77,11 @@ export default function ProfileWorkspace(props: Props) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const router = useRouter();
+  // 가설 검증 기록 — 다음 보고서의 '창업가 검증' 근거
+  const [validations, setValidations] = useState<Validation[]>([]);
+  const [validationsLoading, setValidationsLoading] = useState(true);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [form, setForm] = useState<ValidationPrefill | null>(null);
 
   // 카드의 '보고서 보기'(#report)로 들어오면 보고서 탭부터
   useEffect(() => {
@@ -88,6 +96,36 @@ export default function ProfileWorkspace(props: Props) {
   useEffect(() => {
     listIdeas(user).then(setIdeas).catch(() => setIdeas([]));
   }, [user, idea.updatedAt]);
+  useEffect(() => {
+    let alive = true;
+    setValidationsLoading(true);
+    listValidations(user, idea.id)
+      .then((list) => alive && (setValidations(list), setValidationError(null)))
+      .catch((err) => alive && setValidationError(err instanceof Error ? err.message : String(err)))
+      .finally(() => alive && setValidationsLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [user, idea.id]);
+
+  async function submitValidation(draft: ValidationDraft) {
+    const saved = await saveValidation(user, idea.id, draft);
+    setValidations((list) => [saved, ...list.filter((v) => v.id !== saved.id)]);
+    setValidationError(null);
+    setForm(null);
+    // 보고서에서 시작했어도 저장 뒤엔 검증 기록 탭에서 '보고서에 반영'으로 이어지게
+    setTab("validation");
+  }
+
+  async function removeValidation(v: Validation) {
+    if (!confirm("이 검증 기록을 삭제할까요? 이미 만든 보고서에는 그대로 남아 있어요.")) return;
+    try {
+      await deleteValidation(user, idea.id, v.id);
+      setValidations((list) => list.filter((x) => x.id !== v.id));
+    } catch (err) {
+      setValidationError(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   const latest = reports[0] ?? null;
   const selectedReport = reports.find((r) => r.id === selectedReportId) ?? latest;
@@ -396,6 +434,7 @@ export default function ProfileWorkspace(props: Props) {
             [
               ["overview", "프로필", null],
               ["report", "진단 보고서", reports.length || (idea.latestReport ? 1 : 0)],
+              ["validation", "검증 기록", validations.length],
               ["interview", "인터뷰 기록", idea.interview?.messages.filter((m) => m.role === "user").length ?? 0],
             ] as [Tab, string, number | null][]
           ).map(([key, label, count]) => (
@@ -548,6 +587,7 @@ export default function ProfileWorkspace(props: Props) {
                 onSaveMarketSizing={onSaveMarket}
                 areaScores={idea.areaScores}
                 onSaveAreaScores={onSaveScores}
+                onValidate={user ? (prefill) => setForm(prefill) : undefined}
               />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
@@ -566,6 +606,26 @@ export default function ProfileWorkspace(props: Props) {
             )}
           </section>
         )}
+
+        {tab === "validation" &&
+          (user ? (
+            <ValidationBoard
+              validations={validations}
+              reports={reports}
+              loading={validationsLoading}
+              error={validationError}
+              canDiagnose={canDiagnose}
+              diagnosing={status === "diagnosing"}
+              onAdd={(prefill) => setForm(prefill)}
+              onEdit={(v) => setForm(v)}
+              onDelete={removeValidation}
+              onDiagnose={onDiagnose}
+            />
+          ) : (
+            <EmptyCard text="검증 기록은 로그인한 뒤에 남길 수 있어요." />
+          ))}
+
+        {form && <ValidationForm initial={form} onSave={submitValidation} onClose={() => setForm(null)} />}
 
         {tab === "interview" &&
           (idea.interview?.messages.length ? (
@@ -599,6 +659,7 @@ export default function ProfileWorkspace(props: Props) {
           onOpenReport={() => setTab("report")}
           job={diagnosisJob ?? null}
           onShowProgress={onShowProgress}
+          pendingValidationCount={latest ? pendingValidations(validations, latest).length : 0}
         />
 
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2" style={{ border: `1px solid ${line}` }}>
@@ -776,7 +837,9 @@ function DiagnosisCard({
   onOpenReport,
   job,
   onShowProgress,
+  pendingValidationCount = 0,
 }: {
+  pendingValidationCount?: number;
   idea: Idea;
   status: IdeaStatus;
   latest: IdeaReport | null;
@@ -870,7 +933,7 @@ function DiagnosisCard({
             className="min-h-[48px] rounded-xl text-sm font-bold disabled:opacity-50"
             // 보고서가 있고 프로필이 그대로면 보조 버튼으로 (강조는 진짜 다음 할 일에만)
             style={
-              dr && !idea.profileChangedSinceReport && status !== "failed"
+              dr && !idea.profileChangedSinceReport && !pendingValidationCount && status !== "failed"
                 ? { background: "#fff", color: "#071B45", border: "1px solid #D9DBDA", cursor: "pointer" }
                 : { background: "#134CD8", color: "#fff", border: "none", cursor: "pointer" }
             }
@@ -882,6 +945,8 @@ function DiagnosisCard({
               ? "* 필수 항목을 채우면 분석할 수 있어요"
               : idea.profileChangedSinceReport
                 ? "프로필이 바뀌었어요. 새 보고서를 만들 수 있어요"
+                : dr && pendingValidationCount
+                  ? `반영 전 검증 ${pendingValidationCount}건 — 새 보고서에 근거로 들어가요`
                 : dr
                   ? "이전 보고서는 버전으로 남아요 · 3분 안팎"
                   : "보통 3분 안팎 걸려요"}

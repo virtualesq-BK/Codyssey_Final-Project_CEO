@@ -112,6 +112,8 @@ export interface IdeaReport {
   input: AnalyzeRequest;
   response: AnalyzeResponse;
   elapsedMs?: number;
+  /** 이 보고서를 만들기 직전 버전의 판정·점수 — '무엇이 바뀌었나' 비교용 */
+  baseline?: { reportId: string; version: number; decision?: Decision; scores: AreaScore[] | null } | null;
   createdAt: string;
 }
 

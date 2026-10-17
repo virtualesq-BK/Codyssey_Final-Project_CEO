@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.agents.orchestrator import Orchestrator
 from app.api.routes import AnalyzeRequest, AnalyzeResponse
@@ -24,6 +24,7 @@ from app.core.schemas import BusinessIdea
 from app.rag.external_retrievers import build_external_retriever
 from app.rag.providers import get_adapters
 from app.rag.bizrag_bridge import build_bizrag_retriever
+from app.rag.user_validation import UserValidationRetriever, UserValidationRiskProvider, ValidationInput
 from app.rag.web_search_retriever import CombinedRetriever, build_web_search_retriever
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,11 @@ class JobState(BaseModel):
     stages: dict[str, StageProgress]
     result: Optional[AnalyzeResponse] = None
     error: Optional[str] = None
+
+
+class AnalyzeJobRequest(AnalyzeRequest):
+    # 창업가가 직접 검증한 결과 — '창업가 검증' 근거로 해당 분야 에이전트에 들어간다
+    validations: list[ValidationInput] = Field(default_factory=list, max_length=30)
 
 
 class JobCreated(BaseModel):
@@ -101,17 +107,22 @@ def _track(job: JobState, name: str, obj: object, method: str) -> None:
 
 
 async def _run(job: JobState, req: AnalyzeRequest) -> None:
-    idea = BusinessIdea(idea_id=str(uuid.uuid4()), **req.model_dump())
+    validations: list[ValidationInput] = list(getattr(req, "validations", []) or [])
+    idea = BusinessIdea(idea_id=str(uuid.uuid4()), **req.model_dump(exclude={"validations"}))
     adapters = get_adapters()
     # 근거 = 공공 API 직접 검색(KOSIS·KIPRIS) + B팀 RAG(Pinecone) + 웹검색, 셋 다 합친다
     base_retriever = adapters.evidence_retriever if adapters else build_external_retriever()
     rag = await asyncio.to_thread(build_bizrag_retriever)  # 첫 호출은 임베딩 모델 로딩으로 느림
     web = build_web_search_retriever()
-    extra = [r for r in (rag, web) if r]
+    user = UserValidationRetriever(validations) if validations else None
+    extra = [r for r in (rag, web, user) if r]
+    risk_provider = adapters.risk_evidence_provider if adapters else None
+    if validations:
+        risk_provider = UserValidationRiskProvider(risk_provider, validations)
     orchestrator = Orchestrator(
         evidence_retriever=CombinedRetriever(base_retriever, *extra) if extra else base_retriever,
         benchmark_provider=adapters.benchmark_provider if adapters else None,
-        risk_evidence_provider=adapters.risk_evidence_provider if adapters else None,
+        risk_evidence_provider=risk_provider,
     )
     for name, agent in orchestrator.agents.items():
         if extra and hasattr(agent, "retrieval_timeout_sec"):
@@ -131,7 +142,7 @@ async def _run(job: JobState, req: AnalyzeRequest) -> None:
 
 
 @router.post("", response_model=JobCreated)
-async def start_job(req: AnalyzeRequest) -> JobCreated:
+async def start_job(req: AnalyzeJobRequest) -> JobCreated:
     _cleanup()
     job = JobState(job_id=str(uuid.uuid4()), started_at=_now(), stages={s: StageProgress() for s in STAGES})
     _jobs[job.job_id] = (time.time(), job)

@@ -25,13 +25,16 @@ import {
 } from "@/lib/idea";
 import {
   deleteIdeaFS,
+  deleteValidationFS,
   getIdeaFS,
   getIdeaIdsFS,
   getIdeasFS,
   getLegacyAnalysesFS,
   getReportsFS,
+  getValidationsFS,
   setIdeaFS,
   setReportFS,
+  setValidationFS,
   updateIdeaFS,
 } from "@/lib/firestore";
 import {
@@ -45,6 +48,7 @@ import {
   saveLocalReport,
   takeLegacyLocalIdeas,
 } from "@/lib/storage";
+import { type Validation, toValidationInput } from "@/lib/validation";
 
 /** 구조 개편 전 분석 기록 → 보고서 상태의 아이디어 */
 function fromLegacy(summary: LegacyIdea, detail: LegacyDetail | null): { idea: Idea; report: IdeaReport | null } {
@@ -266,9 +270,60 @@ export async function finishInterview(user: User | null, idea: Idea): Promise<Id
   });
 }
 
+// ── 가설 검증 기록 ──────────────────────────────────────────────────────
+
+/** Firestore 규칙이 아직 배포되지 않았을 때 사람이 읽는 안내로 바꾼다 */
+function validationError(err: unknown): Error {
+  const code = (err as { code?: string })?.code;
+  if (code === "permission-denied") {
+    return new Error("검증 기록을 저장할 권한이 없어요. 서버의 저장 규칙이 아직 반영되지 않았을 수 있어요.");
+  }
+  return err instanceof Error ? err : new Error(String(err));
+}
+
+export async function listValidations(user: User | null, ideaId: string): Promise<Validation[]> {
+  if (!user) return [];
+  try {
+    return await getValidationsFS(user.uid, ideaId);
+  } catch (err) {
+    throw validationError(err);
+  }
+}
+
+/** 새로 만들거나 고친다. 고치면 updatedAt이 바뀌어 '보고서에 반영 전'으로 돌아간다 */
+export async function saveValidation(
+  user: User | null,
+  ideaId: string,
+  draft: Omit<Validation, "id" | "createdAt" | "updatedAt"> & Partial<Pick<Validation, "id" | "createdAt">>,
+): Promise<Validation> {
+  if (!user) throw new Error("검증 기록은 로그인한 뒤에 남길 수 있어요.");
+  const now = new Date().toISOString();
+  const v: Validation = { ...draft, id: draft.id ?? newId(), createdAt: draft.createdAt ?? now, updatedAt: now };
+  try {
+    await setValidationFS(user.uid, ideaId, v);
+  } catch (err) {
+    throw validationError(err);
+  }
+  return v;
+}
+
+export async function deleteValidation(user: User | null, ideaId: string, id: string) {
+  if (!user) return;
+  try {
+    await deleteValidationFS(user.uid, ideaId, id);
+  } catch (err) {
+    throw validationError(err);
+  }
+}
+
 /** 상세분석 시작 — 서버에 작업을 맡기고 작업 번호를 아이디어에 적어 둔다 (결과는 diagnosisRunner가 받아 저장) */
 export async function startDiagnosis(user: User | null, idea: Idea): Promise<Idea> {
-  const input = toAnalyzeRequest(idea.profile);
+  // 검증 기록이 있으면 '창업가 검증' 근거로 함께 보낸다 (못 읽어도 분석은 진행)
+  const validations = await listValidations(user, idea.id).catch(() => []);
+  const input = {
+    ...toAnalyzeRequest(idea.profile),
+    ...(validations.length ? { validations: validations.slice(0, 30).map(toValidationInput) } : {}),
+  };
   const jobId = await startAnalyzeJob(input);
   return updateIdea(user, idea, {
     status: "diagnosing",
@@ -303,6 +358,15 @@ export async function completeDiagnosis(user: User | null, idea: Idea, response:
     input: idea.diagnosisInput ?? toAnalyzeRequest(idea.profile),
     response,
     elapsedMs,
+    // 직전 버전의 판정·점수를 남겨 두고 새 보고서에서 '무엇이 바뀌었나'를 보여준다
+    baseline: idea.latestReport
+      ? {
+          reportId: idea.latestReport.id,
+          version: idea.latestReport.version,
+          ...(idea.latestReport.decision ? { decision: idea.latestReport.decision } : {}),
+          scores: idea.areaScores?.reportId === idea.latestReport.id ? idea.areaScores.data : null,
+        }
+      : null,
     createdAt: new Date().toISOString(),
   };
   try {

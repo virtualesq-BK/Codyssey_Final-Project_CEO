@@ -61,7 +61,7 @@ function Icon({ name, color, size = 20 }: { name: keyof typeof ICONS; color: str
 }
 
 /** 공통 모달 틀 — 바깥 클릭·Esc로 닫고, 열릴 때 첫 버튼에 포커스 */
-function ModalFrame({
+export function ModalFrame({
   labelledBy,
   onClose,
   children,

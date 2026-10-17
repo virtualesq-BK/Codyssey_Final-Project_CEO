@@ -6,7 +6,9 @@ import DecisionBanner from "@/components/DecisionBanner";
 import { AreaScores, CompetitionPanel, EvidenceOverview, FinancePanel, MarketPanel, RiskPanel } from "@/components/ReportVisuals";
 import type { AgentResult, AreaScore, MarketSizing } from "@/lib/api";
 import { type FinancePlan, financeConfidence, financeSummary } from "@/lib/financePlan";
-import type { IdeaReport } from "@/lib/idea";
+import { DECISION_META, type IdeaReport } from "@/lib/idea";
+import type { ValidationPrefill } from "@/components/ValidationForm";
+import { AREA_LABEL, RESULT_META, guessArea, type ValidationArea, type ValidationResult } from "@/lib/validation";
 
 /** 상세 진단 보고서 한 버전 — 판정 요약 → 시장 · 고객 · 경쟁 · 수익 구조 · 재무 · 리스크 → 근거 한눈에 보기 */
 export default function ReportView({
@@ -17,6 +19,7 @@ export default function ReportView({
   onSaveMarketSizing,
   areaScores,
   onSaveAreaScores,
+  onValidate,
 }: {
   report: IdeaReport;
   financePlan?: FinancePlan | null;
@@ -25,8 +28,11 @@ export default function ReportView({
   onSaveMarketSizing?: (v: { reportId: string; data: MarketSizing }) => Promise<void> | void;
   areaScores?: { reportId: string; data: AreaScore[] } | null;
   onSaveAreaScores?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
+  /** 약점·약한 영역에서 '검증하기'를 누르면 검증 입력을 연다 */
+  onValidate?: (prefill: ValidationPrefill) => void;
 }) {
   const wf = report.response.workflow_result;
+  const origin = { reportId: report.id, version: report.version };
   const [scores, setScores] = useState<AreaScore[] | null>(areaScores?.reportId === report.id ? areaScores.data : null);
   useEffect(() => setScores(areaScores?.reportId === report.id ? areaScores.data : null), [report.id, areaScores]);
   return (
@@ -54,9 +60,24 @@ export default function ReportView({
       </div>
 
       <div id="rv-summary" className="scroll-mt-32" />
+      <ReportChanges report={report} scores={scores} />
       {wf.decision_result ? (
-        <DecisionBanner result={wf.decision_result} scores={scores}>
-          <AreaScores report={report} financeSummary={financeSummary(financePlan)} saved={areaScores} onSave={onSaveAreaScores} onLoaded={setScores} />
+        <DecisionBanner
+          result={wf.decision_result}
+          scores={scores}
+          onValidateWeakness={onValidate && ((text) => onValidate({ hypothesis: text, area: guessArea(text), origin }))}
+        >
+          <AreaScores
+            report={report}
+            financeSummary={financeSummary(financePlan)}
+            saved={areaScores}
+            onSave={onSaveAreaScores}
+            onLoaded={setScores}
+            onValidateArea={
+              onValidate &&
+              ((area, reason) => onValidate({ hypothesis: reason, area: (area in AREA_LABEL ? area : guessArea(reason)) as ValidationArea, origin }))
+            }
+          />
         </DecisionBanner>
       ) : (
         <div className="rounded-xl p-4 text-sm" style={{ background: "#FFFBEB", color: "#B45309" }}>
@@ -104,6 +125,72 @@ export default function ReportView({
         <EvidenceOverview report={report} />
       </div>
     </div>
+  );
+}
+
+/** 직전 버전과 비교해 무엇이 바뀌었는지 — 판정 · 영역별 점수 · 반영된 창업가 검증 */
+function ReportChanges({ report, scores }: { report: IdeaReport; scores: AreaScore[] | null }) {
+  const base = report.baseline;
+  if (!base) return null;
+  const used = report.input.validations ?? [];
+  const decision = report.response.workflow_result.decision_result?.decision;
+  const decisionChanged = !!(base.decision && decision && base.decision !== decision);
+  const prev = new Map((base.scores ?? []).map((s) => [s.area, s.score]));
+  const deltas = (scores ?? [])
+    .filter((s) => prev.has(s.area) && prev.get(s.area) !== s.score)
+    .map((s) => ({ area: s.area, from: prev.get(s.area)!, to: s.score }));
+  const avg = (list: { score: number }[]) => list.reduce((a, x) => a + x.score, 0) / list.length;
+  const avgFrom = base.scores?.length ? avg(base.scores) : null;
+  const avgTo = scores?.length ? avg(scores) : null;
+  const byResult = (r: ValidationResult) => used.filter((v) => v.result === r).length;
+  if (!used.length && !decisionChanged && !deltas.length) return null;
+  const up = "#0F7B6C";
+  const down = "#B42318";
+  return (
+    <section className="rounded-lg p-5 flex flex-col gap-3 bg-white" style={{ border: "1px solid #D7E0ED" }} aria-label="이전 버전과 달라진 점">
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+        <b className="text-sm" style={{ color: "#071B45" }}>
+          v{base.version} → v{report.version}에서 바뀐 것
+        </b>
+        {avgFrom !== null && avgTo !== null && (
+          <span className="text-xs" style={{ color: "#6B7280" }}>
+            평균 {avgFrom.toFixed(1)} →{" "}
+            <b style={{ color: avgTo > avgFrom ? up : avgTo < avgFrom ? down : "#071B45" }}>{avgTo.toFixed(1)}</b>
+          </span>
+        )}
+      </div>
+      {used.length > 0 && (
+        <div className="text-sm leading-relaxed" style={{ color: "#53647A" }}>
+          창업가 검증 <b style={{ color: "#071B45" }}>{used.length}건</b>을 근거로 넣었어요
+          {(["supported", "refuted", "unclear"] as ValidationResult[])
+            .filter((r) => byResult(r))
+            .map((r) => (
+              <span key={r} className="ml-2 text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: RESULT_META[r].bg, color: RESULT_META[r].color }}>
+                {RESULT_META[r].label} {byResult(r)}
+              </span>
+            ))}
+        </div>
+      )}
+      {decisionChanged && (
+        <div className="text-sm" style={{ color: "#53647A" }}>
+          판정 <b>{DECISION_META[base.decision!].label}</b> → <b style={{ color: "#071B45" }}>{DECISION_META[decision!].label}</b>
+        </div>
+      )}
+      {deltas.length > 0 && (
+        <ul className="m-0 p-0 list-none flex gap-2 flex-wrap">
+          {deltas.map((d) => (
+            <li key={d.area} className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: d.to > d.from ? "#E7F6EF" : "#FFF6F5", color: d.to > d.from ? up : down }}>
+              {AREA_LABEL[d.area as ValidationArea] ?? d.area} {d.from} → {d.to} {d.to > d.from ? "▲" : "▼"}
+            </li>
+          ))}
+        </ul>
+      )}
+      {!scores && base.scores && (
+        <span className="text-xs" style={{ color: "#6B7280" }}>
+          점수 변화는 영역별 점수가 매겨지면 보여요
+        </span>
+      )}
+    </section>
   );
 }
 

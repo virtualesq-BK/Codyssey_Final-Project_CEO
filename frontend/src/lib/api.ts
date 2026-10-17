@@ -1,3 +1,4 @@
+import type { ValidationInput } from "@/lib/validation";
 export type BusinessStage = "idea" | "validation" | "early" | "growth";
 export type AgentStatus = "pending" | "running" | "success" | "partial" | "failed" | "skipped";
 export type Decision = "GO" | "PIVOT" | "VALIDATE_MORE" | "STOP";
@@ -10,6 +11,8 @@ export interface AnalyzeRequest {
   industry: string;
   location: string;
   business_stage: BusinessStage;
+  /** 창업가 검증 기록 — 있으면 '창업가 검증' 근거로 들어간다 (상세분석 작업만 받음) */
+  validations?: ValidationInput[];
 }
 
 export interface Evidence {
@@ -248,6 +251,7 @@ export async function scoreReport(req: {
   idea: Record<string, string>;
   areas: Record<string, { summary: string; findings: string; evidence_count: number }>;
   finance_summary: string;
+  validations?: { area: string; hypothesis: string; result: string; method: string; sample_size: number | null; metric: string }[];
 }): Promise<AreaScore[]> {
   const res = await fetch("/api/v1/report/scores", {
     method: "POST",

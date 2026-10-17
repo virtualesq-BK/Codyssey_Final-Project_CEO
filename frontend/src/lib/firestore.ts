@@ -2,6 +2,7 @@
  * Firestore 경로
  *   users/{uid}/ideas/{ideaId}                    아이디어 (상태·프로필·최신 보고서 요약)
  *   users/{uid}/ideas/{ideaId}/reports/{reportId} 상세 진단 결과, 버전별로 쌓임
+ *   users/{uid}/ideas/{ideaId}/validations/{id}   창업가 가설 검증 기록 (다음 보고서의 근거)
  *   users/{uid}/applications/{appId}              지원서 (아이템 × 지원사업)
  *   users/{uid}/analyses/{id}                     구조 개편 전 기록 — 읽기만 함
  */
@@ -23,6 +24,7 @@ import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/application";
 import type { Idea, IdeaReport } from "@/lib/idea";
 import type { LegacyDetail, LegacyIdea } from "@/lib/storage";
+import type { Validation } from "@/lib/validation";
 
 // Firestore는 undefined 값을 거부하므로 JSON 왕복으로 제거
 function clean<T>(value: T): T {
@@ -35,6 +37,10 @@ function ideaRef(uid: string, ideaId: string) {
 
 function reportsCol(uid: string, ideaId: string) {
   return collection(db, "users", uid, "ideas", ideaId, "reports");
+}
+
+function validationsCol(uid: string, ideaId: string) {
+  return collection(db, "users", uid, "ideas", ideaId, "validations");
 }
 
 export async function getIdeasFS(uid: string, count = 50): Promise<Idea[]> {
@@ -65,6 +71,9 @@ export async function deleteIdeaFS(uid: string, ideaId: string) {
   // 하위 컬렉션은 문서와 함께 지워지지 않아 보고서부터 지운다
   const reports = await getDocs(reportsCol(uid, ideaId));
   await Promise.all(reports.docs.map((d) => deleteDoc(d.ref)));
+  // 검증 기록은 규칙 배포 전이면 읽기가 막힐 수 있어, 실패해도 아이디어 삭제는 계속한다
+  const validations = await getDocs(validationsCol(uid, ideaId)).catch(() => null);
+  if (validations) await Promise.all(validations.docs.map((d) => deleteDoc(d.ref)));
   await deleteDoc(ideaRef(uid, ideaId));
 }
 
@@ -75,6 +84,19 @@ export async function getReportsFS(uid: string, ideaId: string): Promise<IdeaRep
 
 export async function setReportFS(uid: string, ideaId: string, report: IdeaReport) {
   await setDoc(doc(reportsCol(uid, ideaId), report.id), clean(report));
+}
+
+export async function getValidationsFS(uid: string, ideaId: string): Promise<Validation[]> {
+  const snap = await getDocs(query(validationsCol(uid, ideaId), orderBy("createdAt", "desc")));
+  return snap.docs.map((d) => ({ ...(d.data() as Validation), id: d.id }));
+}
+
+export async function setValidationFS(uid: string, ideaId: string, v: Validation) {
+  await setDoc(doc(validationsCol(uid, ideaId), v.id), clean(v));
+}
+
+export async function deleteValidationFS(uid: string, ideaId: string, id: string) {
+  await deleteDoc(doc(validationsCol(uid, ideaId), id));
 }
 
 export async function getLegacyAnalysesFS(
