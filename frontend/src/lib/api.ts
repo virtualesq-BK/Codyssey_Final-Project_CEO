@@ -257,3 +257,14 @@ export async function scoreReport(req: {
   if (!res.ok) throw new Error("영역별 점수를 매기지 못했어요.");
   return (await res.json()).scores;
 }
+
+/** 프로필 4~7 칸 요약 — 보고서 긴 문장을 '짧은 요약 + 명사형 근거'로 */
+export async function profileDigest(rows: { id: string; label: string; text: string }[]): Promise<{ id: string; summary: string; points: string[] }[]> {
+  const res = await fetch("/api/v1/report/profile-digest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows }),
+  });
+  if (!res.ok) throw new Error("프로필 요약을 만들지 못했어요.");
+  return (await res.json()).rows;
+}

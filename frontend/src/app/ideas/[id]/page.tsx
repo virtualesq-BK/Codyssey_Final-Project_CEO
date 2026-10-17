@@ -329,6 +329,10 @@ export default function IdeaDetailPage() {
             await patchIdea(user, current.id, { marketSizing });
             setIdea((prev) => (prev ? { ...prev, marketSizing } : prev));
           }}
+          onSaveDigest={async (reportDigest) => {
+            await patchIdea(user, current.id, { reportDigest });
+            setIdea((prev) => (prev ? { ...prev, reportDigest } : prev));
+          }}
           onSaveScores={async (areaScores) => {
             // 손익표·시장 규모·점수 저장이 겹쳐도 서로 덮어쓰지 않게 자기 칸만 합친다
             await patchIdea(user, current.id, { areaScores });

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import ReportView, { SectionNav, reportNavItems } from "@/components/ReportView";
 import StatusPill from "@/components/StatusPill";
-import type { AnalyzeJob, AreaScore, MarketSizing } from "@/lib/api";
+import { type AnalyzeJob, type AreaScore, type MarketSizing, profileDigest } from "@/lib/api";
 import { type FinancePlan, financeSummary } from "@/lib/financePlan";
 import { RiskMatrix, risksOf } from "@/components/ReportVisuals";
 import { AGENT_LABELS, AGENT_ORDER, SHOW_CONFIDENCE } from "@/lib/agents";
@@ -57,6 +57,7 @@ interface Props {
   onSaveFinance?: (plan: FinancePlan) => Promise<void>;
   onSaveMarket?: (v: { reportId: string; data: MarketSizing }) => Promise<void>;
   onSaveScores?: (v: { reportId: string; data: AreaScore[] }) => Promise<void>;
+  onSaveDigest?: (v: { reportId: string; rows: Record<string, string> }) => Promise<void>;
 }
 
 const ink = "#08183F";
@@ -65,7 +66,7 @@ const iron = "#6B7280";
 const line = "#E5E7EB";
 
 export default function ProfileWorkspace(props: Props) {
-  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal, onSaveFinance, onSaveMarket, onSaveScores } = props;
+  const { idea, status, reports, user, busy, error, canDiagnose, missingCount, onSaveProfile, onDiagnose, diagnosisJob, onShowProgress, openReportSignal, onSaveFinance, onSaveMarket, onSaveScores, onSaveDigest } = props;
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null);
   // 프로필 전체를 한 번에 고친다: 편집 모드 + 칸별 초안
@@ -93,7 +94,33 @@ export default function ProfileWorkspace(props: Props) {
   const hasReport = idea.reportCount > 0 || idea.latestReport !== null;
   const fromInterview = !!idea.interview?.messages.length;
   const p = idea.profile;
-  const fromReport = reportRows(latest);
+  const rawFromReport = reportRows(latest);
+  // 보고서 문장을 1~3번과 같은 '짧은 요약 + 명사형 근거'로 다시 쓴 것이 있으면 그걸 보여준다 (없으면 문장 나누기)
+  const digest = latest && idea.reportDigest?.reportId === latest.id ? idea.reportDigest.rows : null;
+  const withDigest = (rows: ProfileRow[]) => rows.map((r) => (digest?.[r.id] ? { ...r, value: digest[r.id] } : r));
+  const fromReport = {
+    market: withDigest(rawFromReport.market),
+    competition: withDigest(rawFromReport.competition),
+    finance: withDigest(rawFromReport.finance),
+    risk: rawFromReport.risk,
+  };
+  const digestAsked = useRef<string | null>(null);
+  useEffect(() => {
+    if (!latest || digest || !onSaveDigest || digestAsked.current === latest.id) return;
+    digestAsked.current = latest.id;
+    const rows = [...rawFromReport.market, ...rawFromReport.competition, ...rawFromReport.finance]
+      .filter((r) => r.raw)
+      .map((r) => ({ id: r.id, label: r.label, text: r.raw!.slice(0, 2500) }));
+    if (!rows.length) return;
+    profileDigest(rows)
+      .then((res) => {
+        const map = Object.fromEntries(res.map((d) => [d.id, [d.summary, ...d.points.map((p) => `· ${p}`)].join("\n")]));
+        return onSaveDigest({ reportId: latest.id, rows: map });
+      })
+      .catch(() => {});
+    // 보고서 버전이 바뀔 때만
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latest?.id, !!digest]);
   const canEdit = !!user && status !== "diagnosing";
 
   const base = profileFieldRows(p);
@@ -236,7 +263,13 @@ export default function ProfileWorkspace(props: Props) {
                 </div>
               ) : r.id === "fin:summary" ? (
                 <div className="flex flex-col gap-2 items-start">
-                  <span>{financeSummary(idea.financePlan) ?? (r.value || "이번 분석에서 나오지 않았어요")}</span>
+                  {financeSummary(idea.financePlan) ? (
+                    <RowValue value={financeBullets(financeSummary(idea.financePlan)!)} />
+                  ) : r.value ? (
+                    <RowValue value={r.value} />
+                  ) : (
+                    <span>이번 분석에서 나오지 않았어요</span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setTab("report")}
@@ -934,4 +967,11 @@ function DiagnosingMini({ job, startedAt, onShowProgress }: { job: AnalyzeJob | 
       )}
     </>
   );
+}
+
+/** "월 매출 169만원 · 비용 112만원 · 영업이익 58만원 (34%) · 손익분기 …" → 영업이익을 요약으로, 나머지는 불렛 */
+function financeBullets(summary: string) {
+  const parts = summary.split(" · ").map((x) => x.trim()).filter(Boolean);
+  const head = parts.find((x) => x.startsWith("영업이익")) ?? parts[0];
+  return [head, ...parts.filter((x) => x !== head).map((x) => `· ${x}`)].join("\n");
 }

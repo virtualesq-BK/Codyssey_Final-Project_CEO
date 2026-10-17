@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
+import ChangeEmail from "@/components/ChangeEmail";
 import { useAuth } from "@/contexts/AuthContext";
 import { displayTitle } from "@/lib/idea";
 import { listIdeas } from "@/lib/ideaStore";
@@ -115,6 +116,8 @@ export default function MyPage() {
             </div>
           )}
         </div>
+
+        {user && <ChangeEmail user={user} />}
 
         {/* 통계 카드 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
