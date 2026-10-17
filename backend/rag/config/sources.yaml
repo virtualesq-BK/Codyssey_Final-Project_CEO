@@ -1,0 +1,286 @@
+# bizrag 수집 설정
+# cadence: daily | weekly | monthly | quarterly
+#   `python -m bizrag sync`를 하루 1번만 예약 실행하면, 각 작업이 마지막 성공 시각을 보고
+#   주기가 됐을 때만 실제로 호출합니다.
+# 키는 이 파일이 아니라 .env 에 넣습니다.
+
+database: data/knowledge.db
+
+sources:
+
+  # ── 네이버 ────────────────────────────────────────────────────────────
+  # 정기(월): 쇼핑 1분류 클릭 추이 + 분야별 연령/성별 분포
+  # 검색 시: 검색어 트렌드, 쇼핑 키워드 클릭 (캐시 7일/7일)
+  # 키: NCP 콘솔 > NAVER API HUB 앱의 Client ID/Secret (2026년 개발자센터에서 이관)
+  naver:
+    enabled: true
+    cadence: monthly
+    history_months: 36
+    # shopping_categories: {식품: "50000006", 생활/건강: "50000008"}   # 생략 시 1분류 10개 전체
+
+  # ── KOSIS ────────────────────────────────────────────────────────────
+  # 정기(월): 아래 검색어로 통계표 카탈로그 갱신 + watch_tables 및 '에이전트가 조회했던 표' 최신값 갱신
+  kosis:
+    enabled: true
+    cadence: monthly
+    catalog_limit: 30
+    watch_searches:
+      - 온라인쇼핑 거래액
+      - 소매판매액지수
+      - 서비스업생산지수
+      - 가계동향 소비지출
+      - 전국사업체조사 사업체수
+      - 1인 가구
+      - 소비자물가지수
+    watch_tables:
+      # [TAM 전체 시장 규모] 경제총조사 산업세세분류별 총괄 (KSIC 5자리 산업별 총매출액, 사업체수)
+      - {orgId: "101", tblId: "DT_2KI2001", prdSe: "F", recent: 1}
+      # [SOM 점포당 기대매출 벤치마크] 프랜차이즈 통계 (가맹점당 평균 연매출, 영업이익률, 가맹점수)
+      - {orgId: "101", tblId: "DT_FR0001N", prdSe: "Y", recent: 2, obj: {objL1: "00"}}
+      # [CAPEX/초기비용] 프랜차이즈 주요 업종별 가입비용 현황 (가맹비, 보증금, 인테리어비)
+      - {orgId: "101", tblId: "DT_FR0007",  prdSe: "Y", recent: 2}
+      # [이커머스/플랫폼 성장률] 온라인쇼핑몰 상품군별/판매매체별 거래액 (CAGR, 모바일 비중)
+      - {orgId: "101", tblId: "DT_1KE10071", prdSe: "M", recent: 12}
+      # [SAM 유효 시장/경쟁자 수] 전국사업체조사 전국 산업별 사업체수 및 종사자수
+      - {orgId: "101", tblId: "DT_1K52F01", prdSe: "A", recent: 1, obj: {objL1: "00"}}
+      # [유통 채널 전략] 소매업태별 판매액지수 (백화점, 편의점, 면세점, 무점포소매 추이)
+      - {orgId: "101", tblId: "DT_1K41013", prdSe: "M", recent: 12}
+      # [원가/물가 리스크] 지출목적별 소비자물가지수 (품목별 물가지수 및 등락률)
+      - {orgId: "101", tblId: "DT_1J22001", prdSe: "M", recent: 12, obj: {objL1: "T10"}}
+
+  # ── 국가법령정보 ──────────────────────────────────────────────────────
+  # 정기(월): 감시 법령의 개정 여부 확인 → 바뀐 경우에만 조문 전체 재적재
+  # 검색 시 law_add 로 추가한 법령도 자동으로 감시 대상이 됩니다
+  law:
+    enabled: true
+    cadence: monthly
+    watch_laws:
+      - 소비자기본법
+      - 전자상거래 등에서의 소비자보호에 관한 법률
+      - 표시·광고의 공정화에 관한 법률
+      - 개인정보 보호법
+      - 제조물 책임법
+      - 식품위생법
+      - 화장품법
+      - 의료기기법
+      - 중소기업창업 지원법
+
+  # ── KIPRIS Plus ──────────────────────────────────────────────────────
+  # 검색 시에만 호출 (캐시 30일). 정기 수집 없음
+  kipris:
+    enabled: true
+
+  # ── World Bank (키 불필요) ───────────────────────────────────────────
+  worldbank:
+    enabled: true
+    cadence: monthly
+    mrv: 15
+    countries: [KOR, USA, JPN, CHN, VNM, IDN, THA, DEU, GBR, IND]
+    # indicators: 생략 시 인구·GDP·1인당GDP·가계소비·인터넷이용률·도시화율·고령인구·물가
+
+  # ── 한국은행 ECOS ────────────────────────────────────────────────────
+  # 표마다 최근 history개 시점을 다시 받아 시계열로 저장 + 분류별 요약 문서(최신값·직전·전년 대비) 생성
+  #   items:   분류 위치별 코드 ('?'=전체, 목록이면 조합마다 호출). 생략 시 전체
+  #   doc_by:  요약 문서를 나눌 분류 위치 (예: 2 → CSI 분류(전체·남자·40세미만…)마다 문서 1개)
+  #   change:  diff(지수·비율, 차이) | pct(금액, 증감률)
+  # 다른 표 찾기: 카탈로그 문서 검색 또는 MCP 도구 bok_find_tables / bok_table_items
+  bok:
+    enabled: true
+    catalog_cadence: monthly
+    tables:
+      - id: csi
+        name: 소비자동향조사
+        stat_code: 511Y002
+        cycle: M
+        cadence: weekly
+        history: 60
+        doc_by: 2
+        note: CSI는 100보다 크면 '좋아질 것' 응답이 '나빠질 것'보다 많다는 뜻. 소비자심리지수(CCSI)는 장기평균=100 기준
+        keywords: [소비심리, 소비자심리, 소비자 신뢰, 소비 전망, 지출 전망, 경기 체감, CSI]
+      - id: bsi_actual
+        name: 기업경기조사(실적)
+        stat_code: 512Y013
+        cycle: M
+        cadence: weekly
+        history: 60
+        doc_by: 1
+        note: BSI는 100보다 크면 '좋다/증가' 응답 기업이 더 많다는 뜻. 기업심리지수(CBSI)는 장기평균=100 기준
+        keywords: [기업심리, 경기 체감, 업황, 매출 실적, 채산성, 자금사정, BSI]
+      - id: bsi_outlook
+        name: 기업경기조사(전망)
+        stat_code: 512Y014
+        cycle: M
+        cadence: weekly
+        history: 60
+        doc_by: 1
+        note: 다음 달 전망 BSI. 100보다 크면 '좋아질 것' 응답 기업이 더 많다는 뜻
+        keywords: [기업심리, 경기 전망, 업황 전망, 매출 전망, BSI]
+      - id: bsi_industry_actual
+        name: 업종별 기업경기조사(실적)
+        stat_code: 512Y007
+        cycle: M
+        cadence: weekly
+        history: 36
+        doc_by: 2
+        note: 세부 업종별 BSI. 100보다 크면 '좋다/증가' 응답 기업이 더 많다는 뜻
+        keywords: [업종 경기, 업황, 매출 실적, 채산성, 기업심리, BSI]
+      - id: bsi_industry_outlook
+        name: 업종별 기업경기조사(전망)
+        stat_code: 512Y008
+        cycle: M
+        cadence: weekly
+        history: 36
+        doc_by: 2
+        note: 세부 업종별 다음 달 전망 BSI
+        keywords: [업종 경기, 업황 전망, 매출 전망, 기업심리, BSI]
+      - id: news_sentiment
+        name: 뉴스심리지수
+        stat_code: 523Y001
+        cycle: D                  # ECOS는 일간·월간만 제공 → 일간을 받아 주간 평균을 만든다
+        weekly: true
+        cadence: weekly
+        history: 800              # 일 수
+        note: 경제 기사 감성을 지수화한 실험적 통계. 100보다 크면 장기평균보다 긍정적. 주간 값은 일간 지수의 평균(수집기에서 계산)
+        keywords: [뉴스 심리, 경제 심리, 경기 분위기, 언론 감성, NSI]
+      - id: fsa_q_growth
+        name: 기업경영분석(분기) 성장성
+        stat_code: 502Y001
+        cycle: Q
+        cadence: weekly
+        history: 20
+        doc_by: 1
+        note: 외감기업 대상. 단위 %
+        keywords: [매출 증가율, 성장성, 업종 매출, 재무지표]
+      - id: fsa_q_profit
+        name: 기업경영분석(분기) 손익
+        stat_code: 502Y002
+        cycle: Q
+        cadence: weekly
+        history: 20
+        doc_by: 1
+        note: 외감기업 대상. 단위 %
+        keywords: [영업이익률, 수익성, 이익률, 이자보상비율, 업종 수익성, 재무지표]
+      - id: fsa_a_growth
+        name: 기업경영분석(연간) 성장성
+        stat_code: 501Y005
+        cycle: A
+        cadence: weekly
+        history: 8
+        doc_by: 1
+        note: 전수(비금융 영리법인) 기준 업종×기업규모별. 단위 %
+        keywords: [매출 증가율, 성장성, 업종 매출, 중소기업, 소기업, 재무지표]
+      - id: fsa_a_profit
+        name: 기업경영분석(연간) 손익
+        stat_code: 501Y006
+        cycle: A
+        cadence: weekly
+        history: 8
+        # 계정항목 35개 중 사업성 판단에 쓰는 것만: 매출액세전순이익률·영업이익률·매출원가·인건비·재료비·이자보상비율·손익분기점률·연구개발비
+        items: ["?", "?", ["6091", "611", "612", "616", "617", "627", "6284", "615"]]
+        doc_by: 1
+        note: 전수(비금융 영리법인) 기준 업종×기업규모별. 단위 %
+        keywords: [영업이익률, 수익성, 원가율, 인건비 비중, 손익분기점, 업종 수익성, 중소기업, 소기업, 재무지표]
+      - id: hh_consumption_nominal
+        name: 가계의 목적별 최종소비지출(명목)
+        stat_code: 200Y142
+        cycle: Q
+        cadence: weekly
+        history: 24
+        change: pct
+        note: 국민계정 원계열 명목, 단위 십억원. 원계열이라 직전 분기보다 전년동기 대비로 볼 것
+        keywords: [가계 소비, 소비지출, 소비 시장 규모, 품목별 소비, 국민계정]
+      - id: hh_consumption_real
+        name: 가계의 목적별 최종소비지출(실질)
+        stat_code: 200Y143
+        cycle: Q
+        cadence: weekly
+        history: 24
+        change: pct
+        note: 국민계정 원계열 실질(물가 변동 제거), 단위 십억원. 전년동기 대비로 볼 것
+        keywords: [가계 소비, 소비지출, 실질 소비, 소비 시장 규모, 품목별 소비, 국민계정]
+
+  # ── 공공데이터포털: 파일데이터 자동변환 API ───────────────────────────
+  # 데이터셋 ID만 적으면 최신 버전을 자동으로 찾아 '새 버전만' 적재합니다.
+  # ⚠ 데이터셋마다 data.go.kr 페이지에서 [활용신청]을 눌러야 합니다 (즉시 승인, 반영 1~2시간)
+  # 새 데이터셋 확인: python -m bizrag discover <데이터셋ID>
+  datagokr:
+    enabled: true
+    file_datasets:
+      - id: "3040720"
+        name: 한국소비자원 소비자 피해구제 정보
+        cadence: monthly          # 분기 공개 → 월 1회 새 버전 확인
+        backfill: 4               # 최초 실행 시 최근 4개 분기
+        aggregate:
+          group_by: [물품명, 청구이유]   # 실제 필드: 물품명·성별·연령·접수일·지역·처리결과·청구이유·판매유형
+          doc_type: consumer_complaint
+          min_count: 3
+
+      - id: "15083256"
+        name: 한국소비자원 생필품 및 서비스 가격 정보
+        cadence: weekly
+        backfill: 3
+
+      - id: "15034787"
+        name: KOTRA 해외진출기업
+        cadence: monthly
+        backfill: 1
+        aggregate:
+          group_by: [업종중분류, 진출국가]
+          doc_type: overseas_entry
+          min_count: 3
+
+      # 아래 두 개는 대화에서 언급된 자료입니다. data.go.kr에서 데이터셋 ID(주소의 숫자)를 확인해 넣고
+      # enabled: true 로 바꾸세요. (확인 방법: python -m bizrag discover <ID>)
+      - id: ""
+        name: 한국소비자원 품목별 소비자상담 현황
+        enabled: false
+        cadence: monthly
+        backfill: 6
+      - id: ""
+        name: 한국소비자원 소비자상담 표준답변
+        enabled: false
+        cadence: monthly          # 버전이 바뀔 때만 적재
+        as_documents:
+          doc_type: consumer_faq
+          title_fields: []        # discover로 필드명 확인 후 예: [품목, 질문]
+
+  # ── 공공데이터포털: 일반 REST API (설정만으로 추가) ─────────────────────
+  datagokr_rest:
+    enabled: true
+    apis:
+      - name: kotra_market_news
+        description: KOTRA 해외시장뉴스
+        enabled: false            # data.go.kr 'KOTRA 해외시장뉴스' 활용신청 후 상세페이지의 요청주소를 endpoint에 넣고 true
+        endpoint: ""
+        params: {}
+        items_path: response.body.items.item
+        id_field: ""
+        title_field: ""
+        body_fields: []
+        date_field: ""
+        cadence: daily
+        doc_type: market_news
+
+  # ── 수동 투입 폴더 ───────────────────────────────────────────────────
+  # 예: 국가데이터처 온라인 수집 가격 정보 CSV → inbox/online_price/ 에 넣기
+  inbox:
+    enabled: true
+    path: inbox
+
+# ── Pinecone Vector DB RAG 설정 ─────────────────────────────────────────
+# RAG 벡터 유사도 검색 및 하이브리드 검색(BM25 + Semantic) 설정
+# API 키 및 세부 시크릿은 .env에서 관리합니다.
+pinecone:
+  enabled: true
+  index_name: bizrag-market
+  namespace: bizrag
+  cloud: aws
+  region: us-east-1
+  embedding:
+    provider: openai          # openai | gemini | mock
+    model: text-embedding-3-small
+    batch_size: 100
+  search:
+    default_mode: auto        # auto | hybrid | semantic | keyword
+    rrf_k: 60                 # Reciprocal Rank Fusion 상수
+    default_limit: 8
