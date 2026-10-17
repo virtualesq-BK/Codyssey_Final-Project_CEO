@@ -1,0 +1,13 @@
+[
+  {
+    "pbanc_sn": "777",
+    "biz_pbanc_nm": "지원사업",
+    "pbanc_rcpt_bgng_dt": "20260101",
+    "pbanc_rcpt_end_dt": "20991231",
+    "Rcrt_prgs_yn": "Y",
+    "pbanc_ctnt": "<p>설명</p>",
+    "custom": {
+      "preserve": true
+    }
+  }
+]

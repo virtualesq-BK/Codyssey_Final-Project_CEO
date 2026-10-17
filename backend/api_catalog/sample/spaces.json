@@ -1,0 +1,13 @@
+[
+  {
+    "spce_id": 30,
+    "cntr_id": 10,
+    "buld_id": 20,
+    "spce_nm": "예제 보육실",
+    "cntr_nm": "예제 창업센터",
+    "rent": 0,
+    "guam": "1,000,000",
+    "rsvt_psbl_clss": "UNKNOWN",
+    "addr": "세종시 예제 주소"
+  }
+]

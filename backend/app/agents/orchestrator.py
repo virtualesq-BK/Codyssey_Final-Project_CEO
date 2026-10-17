@@ -47,11 +47,11 @@ class Orchestrator:
             BusinessModelAgent,
             CompetitorAgent,
             CustomerAgent,
-            FinancialAgent,
             MarketAgent,
-            RiskAgent,
         )
         from app.agents.decision_agent import DecisionAgent
+        from app.agents.financial_agent import FinancialAgent
+        from app.agents.risk_agent import RiskAgent
 
         self.agents: dict[str, BaseAgent] = {
             "MarketAgent": market_agent or MarketAgent(llm_provider=llm_provider),
@@ -74,6 +74,10 @@ class Orchestrator:
         result.agent_results.update(phase1_results)
 
         # ── Phase 2: BusinessModelAgent (Phase1 의존) ────────────────────
+        from app.agents.business_agents import BusinessModelAgent
+        business_agent = self.agents["BusinessModelAgent"]
+        if isinstance(business_agent, BusinessModelAgent):
+            business_agent.set_agent_results(phase1_results)
         bm_result = await self._run_one("BusinessModelAgent", idea)
         result.agent_results["BusinessModelAgent"] = bm_result
 
