@@ -138,6 +138,6 @@ def build_web_search_retriever() -> Optional[WebSearchRetriever]:
     return WebSearchRetriever(
         api_key=settings.anthropic_api_key,
         base_url=os.getenv("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
-        model=os.getenv("WEB_SEARCH_MODEL", "claude-haiku-4-5"),
+        model=os.getenv("WEB_SEARCH_MODEL", "claude-haiku-4"),
         max_uses=int(os.getenv("WEB_SEARCH_MAX_USES", "2")),
     )
