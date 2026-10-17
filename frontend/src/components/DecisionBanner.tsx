@@ -49,32 +49,23 @@ export default function DecisionBanner({ result, scores, children }: Props) {
       className="rounded-lg p-7 flex flex-col gap-5"
       style={{ background: cfg.bg, border: `2px solid ${cfg.color}40` }}
     >
-      {/* 맨 위: 점수 · 판정 · 한 줄 결론, 그 아래 다음 행동 안내 */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
-          {avg != null && (
-            <span className="text-2xl font-bold tabular-nums" style={{ color: "#08183F" }}>
-              점수 {avg.toFixed(1)}
-              <span className="text-base font-semibold" style={{ color: "#6B7280" }}>
-                /10
-              </span>
-            </span>
-          )}
-          <span className="text-xs font-bold px-2.5 py-1 rounded-md whitespace-nowrap" style={{ background: cfg.color, color: "#fff" }}>
-            {CODE[result.decision]}
+      {/* 맨 위: 원형 점수 게이지 + 판정 · 한 줄 결론 · 다음 행동 안내 */}
+      <div className="flex items-center gap-6 flex-wrap">
+        <ScoreRing value={avg} color={cfg.color} />
+        <div className="flex flex-col gap-2 min-w-0 flex-1">
+          <span className="self-start text-xs font-bold px-2.5 py-1 rounded-md whitespace-nowrap text-white" style={{ background: cfg.color }}>
+            {cfg.label}
           </span>
-          <span className="text-xl font-bold" style={{ color: "#08183F" }}>
+          <div className="text-xl font-bold leading-snug" style={{ color: "#08183F" }}>
             {HEADLINE[result.decision]}
-          </span>
+          </div>
+          {guide && (
+            <p className="m-0 text-sm leading-relaxed" style={{ color: "#485876" }}>
+              {guide}
+            </p>
+          )}
+          {SHOW_CONFIDENCE && <span className="text-sm text-text-muted">신뢰도 {result.confidence.toFixed(2)}</span>}
         </div>
-        {guide && (
-          <p className="m-0 text-sm leading-relaxed" style={{ color: "#485876" }}>
-            {guide}
-          </p>
-        )}
-        {SHOW_CONFIDENCE && (
-          <span className="text-sm text-text-muted">신뢰도 {result.confidence.toFixed(2)}</span>
-        )}
       </div>
 
       <div>
@@ -202,7 +193,38 @@ function stripConfidence(text: string) {
     .trim();
 }
 
-const CODE: Record<string, string> = { GO: "GO", PIVOT: "PIVOT", VALIDATE_MORE: "VALIDATE MORE", STOP: "STOP" };
+/** 사업성 점수 링 — 영역별 점수 평균. 점수가 아직 없으면 빈 링 */
+function ScoreRing({ value, color }: { value: number | null; color: string }) {
+  const r = 46;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg width={116} height={116} viewBox="0 0 116 116" role="img" aria-label={value != null ? `사업성 점수 ${value.toFixed(1)}점 (10점 만점)` : "사업성 점수 계산 중"} className="shrink-0">
+      <circle cx={58} cy={58} r={r} fill="none" stroke={`${color}26`} strokeWidth={10} />
+      {value != null && (
+        <circle
+          cx={58}
+          cy={58}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={10}
+          strokeLinecap="round"
+          strokeDasharray={`${(value / 10) * c} ${c}`}
+          transform="rotate(-90 58 58)"
+          style={{ transition: "stroke-dasharray 0.8s ease" }}
+        />
+      )}
+      <text x={58} y={60} textAnchor="middle" fontSize={value != null ? 28 : 13} fontWeight={800} fill="#08183F">
+        {value != null ? value.toFixed(1) : "계산 중"}
+      </text>
+      {value != null && (
+        <text x={58} y={80} textAnchor="middle" fontSize={11} fill="#6B7280">
+          / 10
+        </text>
+      )}
+    </svg>
+  );
+}
 
 /** 판정 한 줄 결론 */
 const HEADLINE: Record<string, string> = {
@@ -215,7 +237,7 @@ const HEADLINE: Record<string, string> = {
 /** 판정 아래 한 줄 안내 — 가장 강한·약한 영역을 넣는다 */
 function guideFor(decision: string, scores: AreaScore[]) {
   const sorted = [...scores].sort((a, b) => a.score - b.score);
-  const name = (s: AreaScore) => `${AREA_NAMES[s.area] ?? s.area}(${s.score}점)`;
+  const name = (s: AreaScore) => `${AREA_NAMES[s.area] ?? s.area} ${s.score}점`;
   const [w1, w2] = sorted;
   const best = sorted[sorted.length - 1];
   switch (decision) {
@@ -225,9 +247,9 @@ function guideFor(decision: string, scores: AreaScore[]) {
       return `${name(best)}은 살리고, 가장 약한 ${name(w1)}부터 다시 정의해 보세요.`;
     case "STOP":
       // '(2점)' 뒤라 조사는 받침 있는 꼴(이·을·과·은)로 맞춘다
-      return `${name(w1)}${w2 ? `·${name(w2)}` : ""}이 모두 약해요. 문제나 고객부터 다시 잡아 보세요.`;
+      return `${name(w1)}${w2 ? `, ${name(w2)}` : ""} — 핵심 영역이 모두 약해요. 문제나 고객부터 다시 잡아 보세요.`;
     default:
-      return `가장 약한 ${name(w1)}${w2 ? `과 ${name(w2)}` : ""}부터 확인하면 판정이 달라질 수 있어요.`;
+      return `가장 약한 ${name(w1)}${w2 ? `, ${name(w2)}` : ""}부터 확인하면 판정이 달라질 수 있어요.`;
   }
 }
 
