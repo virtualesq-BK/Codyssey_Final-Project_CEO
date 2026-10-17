@@ -75,7 +75,9 @@ fact는 제공된 evidence의 인덱스를 인용하고 그 내용이 직접 뒷
 임의의 통계, 시장 수치, 조사 결과를 생성하지 마라. 추천은 recommendation으로 표기하라.
 실제 사용자 조사가 없는 Persona는 hypothesis다. 가격은 검증할 가설이다.
 recommendations에 인터뷰, 가격 실험, 채널 실험 등 구체적인 검증 방법을 포함하라.
-근거 부족을 summary에 명시하라. 한국어로 응답하라."""
+근거 부족을 summary에 명시하라. 한국어로 응답하라.
+summary는 3~5문장의 평문 한 문단으로, 문장 끝은 '~다' 체로 쓴다. 마크다운(**, #), 번호 목록((1), 1.),
+evidence 번호([0], [1, 2])를 summary에 넣지 마라 — 인용은 evidence_indices 필드에만 적는다."""
 
 
 def _normalize(value, evidence_count):
@@ -190,7 +192,9 @@ fact는 제공된 evidence의 인덱스를 인용하고 그 내용이 직접 뒷
 경쟁사 이름은 검색 결과나 사업 아이디어에 등장한 것만 사용하라.
 direct_competitors가 없으면 빈 리스트로 두고 summary에 "직접 경쟁사 확인 불가"를 명시하라.
 recommendations에 경쟁사 조사 방법과 차별화 검증 방법을 구체적으로 포함하라.
-한국어로 응답하라."""
+한국어로 응답하라.
+summary는 3~5문장의 평문 한 문단으로, 문장 끝은 '~다' 체로 쓴다. 마크다운(**, #), 번호 목록((1), 1.),
+evidence 번호([0], [1, 2])를 summary에 넣지 마라 — 인용은 evidence_indices 필드에만 적는다."""
 
     async def _execute(self, idea: BusinessIdea) -> AgentResult:
         return await self._analyze(
