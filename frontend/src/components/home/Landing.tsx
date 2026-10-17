@@ -17,7 +17,7 @@ export default function Landing() {
       <section
         className="relative bg-white border-b overflow-hidden"
         style={{
-          borderColor: "#E5E7EB",
+          borderColor: "#D7E0ED",
           backgroundImage: "url(/images/hero-meeting.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "right center",
@@ -40,19 +40,19 @@ export default function Landing() {
         <div className="relative max-w-[1200px] mx-auto px-6 py-20 flex flex-col items-start gap-6">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
-            style={{ background: "#F3F4F6", color: "#485876" }}
+            style={{ background: "#F5F7FB", color: "#53647A" }}
           >
-            <span className="w-2 h-2 rounded-full inline-block" style={{ background: "#FDB71A" }} />
+            <span className="w-2 h-2 rounded-full inline-block" style={{ background: "#FFB91B" }} />
             AI 에이전트 6개 · 실시간 병렬 분석
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight m-0 tracking-tight" style={{ color: "#08183F" }}>
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight m-0 tracking-tight" style={{ color: "#071B45" }}>
             아이디어 한 줄에서
             <br />
-            <span style={{ color: "#1B57EA" }}>지원서 재료</span>까지
+            <span style={{ color: "#134CD8" }}>지원서 재료</span>까지
           </h1>
 
-          <p className="text-lg max-w-xl m-0 leading-relaxed" style={{ color: "#485876" }}>
+          <p className="text-lg max-w-xl m-0 leading-relaxed" style={{ color: "#53647A" }}>
             시장·고객·경쟁·수익모델·재무·리스크를 AI가 병렬 분석하고
             <br />
             맞춤 창업 공고와 지원서 초안까지 한번에 만들어 드립니다.
@@ -62,14 +62,14 @@ export default function Landing() {
             <Link
               href="/ideas"
               className="px-6 py-3 rounded-xl font-semibold text-base text-white transition-opacity hover:opacity-90 no-underline"
-              style={{ background: "#1B57EA", textDecoration: "none" }}
+              style={{ background: "#134CD8", textDecoration: "none" }}
             >
               아이디어 메모하기
             </Link>
             <Link
               href="/ideas"
               className="px-6 py-3 rounded-xl font-semibold text-base transition-colors no-underline bg-white"
-              style={{ border: "1px solid #E5E7EB", color: "#08183F", textDecoration: "none" }}
+              style={{ border: "1px solid #D7E0ED", color: "#071B45", textDecoration: "none" }}
             >
               샘플 결과 보기
             </Link>
@@ -80,7 +80,7 @@ export default function Landing() {
               <span
                 key={label}
                 className="px-2.5 py-1 rounded text-xs font-semibold"
-                style={{ background: "#F3F4F6", color: "#485876" }}
+                style={{ background: "#F5F7FB", color: "#53647A" }}
               >
                 {label}
               </span>
@@ -101,11 +101,11 @@ export default function Landing() {
             <div
               key={s.step}
               className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3 relative"
-              style={{ border: "1px solid #E5E7EB" }}
+              style={{ border: "1px solid #D7E0ED" }}
             >
               {i < STEPS.length - 1 && (
                 <div
-                  className="hidden lg:block absolute top-[28px] right-[-12px] z-10 text-[#E5E7EB] font-bold"
+                  className="hidden lg:block absolute top-[28px] right-[-12px] z-10 text-[#D7E0ED] font-bold"
                   style={{ fontSize: 18 }}
                 >
                   →
@@ -113,7 +113,7 @@ export default function Landing() {
               )}
               <span
                 className="text-xs font-bold px-2.5 py-1 rounded self-start"
-                style={{ background: "#F3F4F6", color: "#485876" }}
+                style={{ background: "#F5F7FB", color: "#53647A" }}
               >
                 STEP {s.step}
               </span>
@@ -127,7 +127,7 @@ export default function Landing() {
           <Link
             href="/ideas"
             className="px-8 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90 no-underline"
-            style={{ background: "#1B57EA", textDecoration: "none" }}
+            style={{ background: "#134CD8", textDecoration: "none" }}
           >
             지금 무료로 시작하기
           </Link>

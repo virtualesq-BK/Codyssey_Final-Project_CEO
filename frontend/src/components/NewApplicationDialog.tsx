@@ -15,7 +15,7 @@ interface Props {
   onClose: () => void;
 }
 
-const line = "#E5E7EB";
+const line = "#D7E0ED";
 
 /** 아이템 × 지원사업을 골라 지원서 1건을 만든다 */
 export default function NewApplicationDialog({ ideas, programs, presetIdeaId, presetProgramId, onCreate, onClose }: Props) {
@@ -54,7 +54,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
   }
 
   const choice = (active: boolean) => ({
-    border: `1px solid ${active ? "#1B57EA" : line}`,
+    border: `1px solid ${active ? "#134CD8" : line}`,
     background: active ? "#EAF0FD" : "#fff",
     cursor: "pointer",
   });
@@ -100,9 +100,9 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: 360 }}>
               {ideas.length === 0 ? (
-                <div className="rounded-lg p-4 text-sm" style={{ background: "#F3F4F6", color: "#485876" }}>
+                <div className="rounded-lg p-4 text-sm" style={{ background: "#F5F7FB", color: "#53647A" }}>
                   아직 보고서가 있는 아이템이 없어요.{" "}
-                  <Link href="/ideas" className="underline font-semibold" style={{ color: "#08183F" }}>
+                  <Link href="/ideas" className="underline font-semibold" style={{ color: "#071B45" }}>
                     MY아이디어에서 상세분석하기 ›
                   </Link>
                 </div>
@@ -117,7 +117,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
                     className="text-left rounded-lg px-4 py-3"
                     style={choice(ideaId === i.id)}
                   >
-                    <div className="text-sm font-semibold" style={{ color: "#08183F" }}>
+                    <div className="text-sm font-semibold" style={{ color: "#071B45" }}>
                       {displayTitle(i)}
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
@@ -156,7 +156,7 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
                   className="text-left rounded-lg px-4 py-3"
                   style={choice(programId === p.id)}
                 >
-                  <div className="text-sm font-semibold" style={{ color: "#08183F" }}>
+                  <div className="text-sm font-semibold" style={{ color: "#071B45" }}>
                     {p.title}
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
@@ -174,15 +174,15 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
         </div>
 
         <div className="px-6 py-4 border-t flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: line }}>
-          <span className="text-sm" style={{ color: error ? "#B42318" : "#485876" }}>
+          <span className="text-sm" style={{ color: error ? "#B42318" : "#53647A" }}>
             {error ?? (idea && program ? `${displayTitle(idea)} → ${program.title}` : "아이템과 지원사업을 하나씩 골라주세요")}
           </span>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white"
-              style={{ border: `1px solid ${line}`, color: "#08183F", cursor: "pointer" }}
+              className="min-h-[48px] px-5 rounded-xl text-sm font-semibold bg-white"
+              style={{ border: `1px solid ${line}`, color: "#071B45", cursor: "pointer" }}
             >
               취소
             </button>
@@ -190,8 +190,8 @@ export default function NewApplicationDialog({ ideas, programs, presetIdeaId, pr
               type="button"
               onClick={submit}
               disabled={!idea || !program || saving}
-              className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
+              className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
             >
               {saving ? "만드는 중…" : "지원서 만들기"}
             </button>

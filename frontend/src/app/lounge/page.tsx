@@ -59,7 +59,7 @@ const NEWS = [
 
 export default function LoungePage() {
   return (
-    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
       <Header activeNav="lounge" />
 
       <div className="max-w-[1200px] mx-auto px-6 py-10">
@@ -77,12 +77,12 @@ export default function LoungePage() {
               <div
                 key={i}
                 className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2"
-                style={{ border: "1px solid #E5E7EB" }}
+                style={{ border: "1px solid #D7E0ED" }}
               >
                 <div className="flex items-center gap-2">
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded"
-                    style={{ background: "#F3F4F6", color: "#485876" }}
+                    style={{ background: "#F5F7FB", color: "#53647A" }}
                   >
                     {n.tag}
                   </span>
@@ -107,11 +107,11 @@ export default function LoungePage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-white rounded-xl p-4 flex items-start gap-3 hover:shadow-sm transition-shadow no-underline"
-                      style={{ border: "1px solid #E5E7EB", textDecoration: "none" }}
+                      style={{ border: "1px solid #D7E0ED", textDecoration: "none" }}
                     >
                       <div
                         className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-sm text-white"
-                        style={{ background: "#08183F" }}
+                        style={{ background: "#071B45" }}
                       >
                         {item.name[0]}
                       </div>
@@ -128,7 +128,7 @@ export default function LoungePage() {
             {/* CTA */}
             <div
               className="rounded-lg p-5 flex flex-col gap-3"
-              style={{ background: "#08183F" }}
+              style={{ background: "#071B45" }}
             >
               <div className="text-white font-bold">내 아이디어 AI 진단받기</div>
               <div className="text-white/70 text-sm leading-relaxed">
@@ -137,7 +137,7 @@ export default function LoungePage() {
               <Link
                 href="/"
                 className="bg-white text-center rounded-xl py-2.5 text-sm font-bold no-underline"
-                style={{ color: "#08183F", textDecoration: "underline" }}
+                style={{ color: "#071B45", textDecoration: "underline" }}
               >
                 무료로 시작하기
               </Link>

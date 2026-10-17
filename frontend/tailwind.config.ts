@@ -8,18 +8,28 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        xs: ["13px", { lineHeight: "20px" }],
+        sm: ["15px", { lineHeight: "24px" }],
+        base: ["16px", { lineHeight: "26px" }],
+      },
+      borderRadius: {
+        lg: "12px",
+        xl: "14px",
+        "2xl": "16px",
+      },
       colors: {
-        primary: "#1B57EA",
-        "primary-dark": "#1446C4",
+        primary: "#134CD8",
+        "primary-dark": "#0F3DB0",
         "primary-light": "#EAF0FD",
-        accent: "#FDB71A",
+        accent: "#FFB91B",
         "accent-bg": "#FFF6DE",
-        surface: "#F3F4F6",
-        border: "#E5E7EB",
+        surface: "#F5F7FB",
+        border: "#D7E0ED",
         "border-light": "#D9DBDA",
-        text: "#08183F",
-        "text-secondary": "#485876",
-        "text-muted": "#485876",
+        text: "#071B45",
+        "text-secondary": "#53647A",
+        "text-muted": "#53647A",
         "text-disabled": "#6B7280",
         amber: "#B45309",
         "amber-bg": "#FFF7EB",
@@ -33,8 +43,8 @@ const config: Config = {
         "card-hover": "none",
       },
       fontFamily: {
-        // 영문·숫자는 Plus Jakarta Sans, 한글은 IBM Plex Sans KR로 자동 대체
-        sans: ["Plus Jakarta Sans", "IBM Plex Sans KR", "sans-serif"],
+        // 가이드 콘셉트 B: Pretendard 하나로 (실패 시 한국어 시스템 서체)
+        sans: ["Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "sans-serif"],
       },
     },
   },

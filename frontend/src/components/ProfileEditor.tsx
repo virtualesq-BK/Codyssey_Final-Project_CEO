@@ -54,7 +54,7 @@ const GROUPS: { title: string; fields: FieldDef[] }[] = [
   },
 ];
 
-const inputStyle = { border: "1.5px solid #E5E7EB" };
+const inputStyle = { border: "1.5px solid #D7E0ED" };
 
 interface Props {
   value: IdeaProfile;
@@ -81,7 +81,7 @@ export default function ProfileEditor({ value, onChange, readOnly }: Props) {
     <div className="flex flex-col gap-7">
       {GROUPS.map((group, gi) => (
         <fieldset key={group.title} className="flex flex-col gap-4 border-0 p-0 m-0" disabled={readOnly}>
-          <legend className="text-sm font-bold mb-3 p-0" style={{ color: "#1B57EA" }}>
+          <legend className="text-sm font-bold mb-3 p-0" style={{ color: "#134CD8" }}>
             {group.title}
           </legend>
 

@@ -13,11 +13,11 @@ import { createMemo, listIdeas } from "@/lib/ideaStore";
 import { type NewsItem, fetchNews } from "@/lib/news";
 import { type Program, fetchPrograms } from "@/lib/programs";
 
-const ink = "#08183F";
-const slate = "#485876";
+const ink = "#071B45";
+const slate = "#53647A";
 const iron = "#6B7280";
-const line = "#E5E7EB";
-const brand = "#1B57EA";
+const line = "#D7E0ED";
+const brand = "#134CD8";
 const card = "bg-white rounded-lg shadow-card p-5 flex flex-col gap-3";
 
 type NextStep = { idea: Idea | null; title: string; desc: string; cta: string; href: string };
@@ -172,7 +172,7 @@ export default function Dashboard({ user }: { user: User }) {
         actions={
           <Link
             href="/ideas"
-            className="min-h-[44px] px-5 rounded-xl text-sm font-bold no-underline inline-flex items-center bg-white"
+            className="min-h-[48px] px-5 rounded-xl text-sm font-bold no-underline inline-flex items-center bg-white"
             style={{ color: brand, textDecoration: "none" }}
           >
             + 새 아이디어
@@ -185,7 +185,7 @@ export default function Dashboard({ user }: { user: User }) {
         <div className="flex flex-col gap-5 min-w-0">
           {/* 다음 할 일 */}
           <section className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-3" style={{ border: `1.5px solid ${brand}` }}>
-            <span className="self-start text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#FFF6DE", color: "#08183F" }}>
+            <span className="self-start text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#FFF6DE", color: "#071B45" }}>
               다음 할 일
             </span>
             <h2 className="text-xl font-bold m-0" style={{ color: ink }}>
@@ -199,7 +199,7 @@ export default function Dashboard({ user }: { user: User }) {
                 <div className="flex items-center gap-3 flex-wrap">
                   <Link
                     href={next.href}
-                    className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white no-underline inline-flex items-center"
+                    className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white no-underline inline-flex items-center"
                     style={{ background: brand, textDecoration: "none" }}
                   >
                     {next.cta} ›
@@ -438,7 +438,7 @@ export default function Dashboard({ user }: { user: User }) {
                   </span>
                   <span className="flex gap-1 flex-wrap">
                     {reasons.map((r) => (
-                      <span key={r} className="text-[11px] px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: slate }}>
+                      <span key={r} className="text-[11px] px-1.5 py-0.5 rounded" style={{ background: "#F5F7FB", color: slate }}>
                         {r}
                       </span>
                     ))}

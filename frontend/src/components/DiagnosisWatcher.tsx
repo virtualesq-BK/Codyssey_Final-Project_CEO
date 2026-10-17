@@ -51,9 +51,9 @@ export default function DiagnosisWatcher() {
     <div
       role="status"
       className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[80] w-[calc(100%-32px)] max-w-[480px] rounded-2xl px-5 py-4 flex items-center gap-4"
-      style={{ background: "#08183F", color: "#fff", boxShadow: "0 16px 40px rgba(8,24,63,0.35)" }}
+      style={{ background: "#071B45", color: "#fff", boxShadow: "0 16px 40px rgba(8,24,63,0.35)" }}
     >
-      <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: ok ? "#1B57EA" : "#B42318" }}>
+      <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: ok ? "#134CD8" : "#B42318" }}>
         {ok ? "✓" : "!"}
       </span>
       <div className="flex-1 min-w-0">
@@ -66,7 +66,7 @@ export default function DiagnosisWatcher() {
         href={`/ideas/${done.id}${ok ? "#report" : ""}`}
         onClick={() => setDone(null)}
         className="text-sm font-bold no-underline shrink-0 px-3 py-2 rounded-lg"
-        style={{ background: "#FDB71A", color: "#08183F", textDecoration: "none" }}
+        style={{ background: "#FFB91B", color: "#071B45", textDecoration: "none" }}
       >
         {ok ? "보고서 보기" : "확인하기"}
       </Link>

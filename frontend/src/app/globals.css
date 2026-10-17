@@ -2,17 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap');
 
 * {
   box-sizing: border-box;
 }
 
+/* 가이드 콘셉트 B: Pretendard Variable 자체 호스팅 (SIL OFL 1.1 — public/fonts/Pretendard-LICENSE.txt) */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/PretendardVariable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --navy: #071B45;
+  --blue: #134CD8;
+  --cyan: #0CA8F6;
+  --yellow: #FFB91B;
+  --text: #071B45;
+  --muted: #53647A;
+  --surface: #F5F7FB;
+  --border: #D7E0ED;
+}
+
 body {
-  font-family: 'Plus Jakarta Sans', 'IBM Plex Sans KR', sans-serif;
-  letter-spacing: -0.01em;
-  color: #08183F;
-  background: #F3F4F6;
+  font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #071B45;
+  background: #F5F7FB;
   margin: 0;
 }
 
@@ -24,4 +44,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-\[indeterminate_1\.4s_ease-in-out_infinite\] { animation: none; }
+}
+
+button, input, select, textarea { font: inherit; }
+
+/* 포커스 링은 숨기지 않는다 (Tailwind focus:outline-none 보다 우선) */
+:focus-visible {
+  outline: 3px solid var(--blue) !important;
+  outline-offset: 3px;
 }

@@ -7,8 +7,8 @@ import type { AreaScore, DecisionResult } from "@/lib/api";
 const DECISION_CONFIG = {
   GO: {
     label: "GO · 진행 권장",
-    color: "#1B57EA",
-    bg: "#F3F4F6",
+    color: "#134CD8",
+    bg: "#F5F7FB",
     desc: "근거가 충분하고 리스크가 관리 가능합니다. 다음 단계로 진행하세요.",
   },
   PIVOT: {
@@ -56,11 +56,11 @@ export default function DecisionBanner({ result, scores, children }: Props) {
           <span className="self-start text-xs font-bold px-2.5 py-1 rounded-md whitespace-nowrap text-white" style={{ background: cfg.color }}>
             {cfg.label}
           </span>
-          <div className="text-xl font-bold leading-snug" style={{ color: "#08183F" }}>
+          <div className="text-xl font-bold leading-snug" style={{ color: "#071B45" }}>
             {HEADLINE[result.decision]}
           </div>
           {guide && (
-            <p className="m-0 text-sm leading-relaxed" style={{ color: "#485876" }}>
+            <p className="m-0 text-sm leading-relaxed" style={{ color: "#53647A" }}>
               {guide}
             </p>
           )}
@@ -93,7 +93,7 @@ export default function DecisionBanner({ result, scores, children }: Props) {
               </div>
               <ul className="m-0 p-0 list-none flex flex-col gap-2">
                 {g.items.map((t, i) => (
-                  <li key={i} className="rounded-lg px-3 py-2" style={{ background: g.bg, color: "#485876" }}>
+                  <li key={i} className="rounded-lg px-3 py-2" style={{ background: g.bg, color: "#53647A" }}>
                     <LeadBold text={stripConfidence(t)} />
                   </li>
                 ))}
@@ -105,11 +105,11 @@ export default function DecisionBanner({ result, scores, children }: Props) {
       {result.action_plan.length > 0 && (
         <div>
           <div className="font-semibold mb-3">다음 행동</div>
-          <div className="rounded-xl overflow-x-auto bg-white" style={{ border: "1px solid #E5E7EB" }}>
+          <div className="rounded-xl overflow-x-auto bg-white" style={{ border: "1px solid #D7E0ED" }}>
             <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 560 }}>
               <caption className="sr-only">다음 행동 단계별 계획</caption>
               <thead>
-                <tr style={{ background: "#F5F7FC", color: "#485876" }}>
+                <tr style={{ background: "#F5F7FC", color: "#53647A" }}>
                   <th scope="col" className="text-left font-semibold text-xs px-3 py-2 w-[72px]">단계</th>
                   <th scope="col" className="text-left font-semibold text-xs px-3 py-2 w-[84px]">기간</th>
                   <th scope="col" className="text-left font-semibold text-xs px-3 py-2">할 일</th>
@@ -119,22 +119,22 @@ export default function DecisionBanner({ result, scores, children }: Props) {
                 {result.action_plan.map((action, i) => {
                   const step = parseStep(action, i);
                   return (
-                    <tr key={i} style={{ borderTop: "1px solid #E5E7EB" }}>
+                    <tr key={i} style={{ borderTop: "1px solid #D7E0ED" }}>
                       <td className="px-3 py-2.5 align-top">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-md whitespace-nowrap" style={{ background: "#EAF0FD", color: "#1446C4" }}>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-md whitespace-nowrap" style={{ background: "#EAF0FD", color: "#0F3DB0" }}>
                           {step.step}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 align-top text-xs whitespace-nowrap" style={{ color: "#485876" }}>
+                      <td className="px-3 py-2.5 align-top text-xs whitespace-nowrap" style={{ color: "#53647A" }}>
                         {step.when || "—"}
                       </td>
                       <td className="px-3 py-2.5 align-top leading-relaxed">
                         {step.title && (
-                          <b className="block" style={{ color: "#08183F" }}>
+                          <b className="block" style={{ color: "#071B45" }}>
                             {step.title}
                           </b>
                         )}
-                        <span className="text-[13px]" style={{ color: step.title ? "#485876" : "#08183F" }}>
+                        <span className="text-[13px]" style={{ color: step.title ? "#53647A" : "#071B45" }}>
                           {step.detail}
                         </span>
                       </td>
@@ -171,7 +171,7 @@ function LeadBold({ text }: { text: string }) {
   if (i <= 0 || i > 40) return <>{text}</>;
   return (
     <>
-      <b style={{ color: "#08183F" }}>{text.slice(0, i)}</b>
+      <b style={{ color: "#071B45" }}>{text.slice(0, i)}</b>
       {text.slice(i)}
     </>
   );
@@ -214,7 +214,7 @@ function ScoreRing({ value, color }: { value: number | null; color: string }) {
           style={{ transition: "stroke-dasharray 0.8s ease" }}
         />
       )}
-      <text x={58} y={60} textAnchor="middle" fontSize={value != null ? 28 : 13} fontWeight={800} fill="#08183F">
+      <text x={58} y={60} textAnchor="middle" fontSize={value != null ? 28 : 13} fontWeight={800} fill="#071B45">
         {value != null ? value.toFixed(1) : "계산 중"}
       </text>
       {value != null && (
@@ -259,12 +259,12 @@ function SummaryText({ text }: { text: string }) {
   const lines = marked.split("\n").map((l) => l.trim()).filter(Boolean);
   if (lines.length > 1) {
     return (
-      <div className="flex flex-col gap-1.5 text-[15px] leading-relaxed" style={{ color: "#08183F" }}>
+      <div className="flex flex-col gap-1.5 text-[15px] leading-relaxed" style={{ color: "#071B45" }}>
         {lines.map((l, i) => {
           const m = l.match(/^([①②③④⑤⑥⑦⑧⑨]|\d[.)])\s*(.*)$/);
           return m ? (
             <div key={i} className="flex gap-2">
-              <span className="shrink-0 font-semibold" style={{ color: "#1446C4" }}>
+              <span className="shrink-0 font-semibold" style={{ color: "#0F3DB0" }}>
                 {m[1]}
               </span>
               <span>{m[2]}</span>
@@ -281,7 +281,7 @@ function SummaryText({ text }: { text: string }) {
   // 번호가 없으면 문장마다 줄을 나눠 한 덩어리로 보이지 않게
   const sentences = text.split(/(?<=[.!?。])\s+/).filter(Boolean);
   return (
-    <div className="flex flex-col gap-1.5 text-[15px] leading-relaxed" style={{ color: "#08183F" }}>
+    <div className="flex flex-col gap-1.5 text-[15px] leading-relaxed" style={{ color: "#071B45" }}>
       {sentences.map((t, i) => (
         <p key={i} className="m-0">
           {t}
