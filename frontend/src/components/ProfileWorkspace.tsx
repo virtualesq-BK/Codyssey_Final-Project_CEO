@@ -63,6 +63,7 @@ interface Props {
   onSaveDigest?: (v: { reportId: string; rows: Record<string, string> }) => Promise<void>;
 }
 
+const IDEA_LIMIT = 3;
 const ink = "#071B45";
 const slate = "#53647A";
 const iron = "#6B7280";
@@ -76,6 +77,8 @@ export default function ProfileWorkspace(props: Props) {
   const [editing, setEditing] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  // 왼쪽 '내 아이디어'는 3개까지만 — 보고서 목차가 화면 안에 보이도록
+  const [showAllIdeas, setShowAllIdeas] = useState(false);
   const router = useRouter();
   // 가설 검증 기록 — 다음 보고서의 '창업가 검증' 근거
   const [validations, setValidations] = useState<Validation[]>([]);
@@ -349,6 +352,14 @@ export default function ProfileWorkspace(props: Props) {
     </div>
   );
 
+  // 지금 보고 있는 아이디어는 3개 안에 늘 들어가게 한다
+  const visibleIdeas = (() => {
+    if (showAllIdeas || ideas.length <= IDEA_LIMIT) return ideas;
+    const top = ideas.slice(0, IDEA_LIMIT);
+    const current = ideas.find((i) => i.id === idea.id);
+    return current && !top.includes(current) ? [...top.slice(0, IDEA_LIMIT - 1), current] : top;
+  })();
+
   const diagnoseLabel = hasReport ? "보고서 새로 작성 (유료)" : "상세분석하기 (유료)";
 
   return (
@@ -359,7 +370,7 @@ export default function ProfileWorkspace(props: Props) {
         <div className="text-xs px-2 pb-1" style={{ color: iron }}>
           내 아이디어
         </div>
-        {ideas.map((i) => {
+        {visibleIdeas.map((i) => {
           const active = i.id === idea.id;
           return (
             <Link
@@ -375,6 +386,17 @@ export default function ProfileWorkspace(props: Props) {
             </Link>
           );
         })}
+        {ideas.length > IDEA_LIMIT && (
+          <button
+            type="button"
+            onClick={() => setShowAllIdeas((v) => !v)}
+            aria-expanded={showAllIdeas}
+            className="rounded-lg py-2 text-xs font-semibold"
+            style={{ background: "none", border: "none", color: slate, cursor: "pointer" }}
+          >
+            {showAllIdeas ? "접기 ▴" : `더보기 (${ideas.length - IDEA_LIMIT}) ▾`}
+          </button>
+        )}
         <Link
           href="/ideas"
           className="mt-2 rounded-lg py-3 text-center text-sm font-semibold no-underline"
