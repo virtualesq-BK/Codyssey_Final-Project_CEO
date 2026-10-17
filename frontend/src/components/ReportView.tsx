@@ -27,6 +27,8 @@ export default function ReportView({
   onSaveAreaScores?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
 }) {
   const wf = report.response.workflow_result;
+  const [scores, setScores] = useState<AreaScore[] | null>(areaScores?.reportId === report.id ? areaScores.data : null);
+  useEffect(() => setScores(areaScores?.reportId === report.id ? areaScores.data : null), [report.id, areaScores]);
   return (
     <div className="flex flex-col gap-5">
       <div
@@ -53,8 +55,8 @@ export default function ReportView({
 
       <div id="rv-summary" className="scroll-mt-32" />
       {wf.decision_result ? (
-        <DecisionBanner result={wf.decision_result}>
-          <AreaScores report={report} financeSummary={financeSummary(financePlan)} saved={areaScores} onSave={onSaveAreaScores} />
+        <DecisionBanner result={wf.decision_result} scores={scores}>
+          <AreaScores report={report} financeSummary={financeSummary(financePlan)} saved={areaScores} onSave={onSaveAreaScores} onLoaded={setScores} />
         </DecisionBanner>
       ) : (
         <div className="rounded-xl p-4 text-sm" style={{ background: "#FFFBEB", color: "#B45309" }}>

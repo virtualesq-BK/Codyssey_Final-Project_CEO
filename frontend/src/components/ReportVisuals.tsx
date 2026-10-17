@@ -910,7 +910,7 @@ function TrendChart({ series, evidence }: { series: MarketSeries; evidence: { ur
 
 /* ───────────── 요약: 영역별 점수 ───────────── */
 
-const AREA_NAMES: Record<string, string> = {
+export const AREA_NAMES: Record<string, string> = {
   MarketAgent: "시장성",
   CustomerAgent: "고객",
   CompetitorAgent: "경쟁력",
@@ -924,15 +924,22 @@ export function AreaScores({
   financeSummary,
   saved,
   onSave,
+  onLoaded,
 }: {
   report: IdeaReport;
   financeSummary?: string | null;
   saved?: { reportId: string; data: AreaScore[] } | null;
   onSave?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
+  /** 점수가 준비되면 알려준다 (판정 줄의 '점수 4.3/10'에 쓴다) */
+  onLoaded?: (scores: AreaScore[]) => void;
 }) {
   const fresh = saved && saved.reportId === report.id ? saved.data : null;
   const [scores, setScores] = useState<AreaScore[] | null>(fresh);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (scores) onLoaded?.(scores);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scores]);
 
   useEffect(() => {
     if (fresh) return;
