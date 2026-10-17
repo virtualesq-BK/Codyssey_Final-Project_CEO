@@ -1045,8 +1045,8 @@ export function AreaScores({
             <button
               type="button"
               onClick={() => onValidateArea(weakest.area, weakest.reason)}
-              className="min-h-[32px] px-3 rounded-lg text-xs font-bold bg-white shrink-0"
-              style={{ border: "1px solid #F5D3CF", color: "#B42318", cursor: "pointer" }}
+              className="p-0 text-[11px] font-semibold underline underline-offset-2 shrink-0"
+              style={{ background: "none", border: "none", color: "#B42318", cursor: "pointer" }}
             >
               검증하기 ›
             </button>

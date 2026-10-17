@@ -101,8 +101,8 @@ export default function DecisionBanner({ result, scores, children, onValidateWea
                       <button
                         type="button"
                         onClick={() => onValidateWeakness(stripConfidence(t))}
-                        className="self-start min-h-[32px] px-2.5 rounded-lg text-xs font-bold bg-white"
-                        style={{ border: "1px solid #F5D3CF", color: "#B42318", cursor: "pointer" }}
+                        className="self-start p-0 text-[11px] font-semibold underline underline-offset-2"
+                        style={{ background: "none", border: "none", color: "#B42318", cursor: "pointer" }}
                       >
                         검증하기 ›
                       </button>
