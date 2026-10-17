@@ -20,6 +20,8 @@ export default function ReportView({
   areaScores,
   onSaveAreaScores,
   onValidate,
+  validationCounts,
+  onOpenValidations,
 }: {
   report: IdeaReport;
   financePlan?: FinancePlan | null;
@@ -30,6 +32,9 @@ export default function ReportView({
   onSaveAreaScores?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
   /** 약점·약한 영역에서 '검증하기'를 누르면 검증 입력을 연다 */
   onValidate?: (prefill: ValidationPrefill) => void;
+  /** 분야별 검증 기록 수 — 있으면 섹션 제목에 '검증 N건'으로 보여준다 */
+  validationCounts?: Record<string, number>;
+  onOpenValidations?: () => void;
 }) {
   const wf = report.response.workflow_result;
   const origin = { reportId: report.id, version: report.version };
@@ -104,6 +109,29 @@ export default function ReportView({
             <span className="text-sm" style={{ color: "#6B7280" }}>
               {sec.sub}
             </span>
+            {onValidate && (
+              <span className="ml-auto self-center">
+                {validationCounts?.[sec.agent] && onOpenValidations ? (
+                  <button
+                    type="button"
+                    onClick={onOpenValidations}
+                    className="p-0 text-[11px] font-semibold underline underline-offset-2"
+                    style={{ background: "none", border: "none", color: "#0F7B6C", cursor: "pointer" }}
+                  >
+                    검증 {validationCounts[sec.agent]}건 ›
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onValidate({ area: sec.agent as ValidationArea, origin })}
+                    className="p-0 text-[11px] font-semibold underline underline-offset-2"
+                    style={{ background: "none", border: "none", color: "#53647A", cursor: "pointer" }}
+                  >
+                    이 분야 검증하기 ›
+                  </button>
+                )}
+              </span>
+            )}
           </div>
           <AgentResultCard
             agentName={sec.agent}

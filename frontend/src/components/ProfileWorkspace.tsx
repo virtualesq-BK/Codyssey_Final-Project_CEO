@@ -610,6 +610,8 @@ export default function ProfileWorkspace(props: Props) {
                 areaScores={idea.areaScores}
                 onSaveAreaScores={onSaveScores}
                 onValidate={user ? (prefill) => setForm(prefill) : undefined}
+                validationCounts={validations.reduce<Record<string, number>>((acc, v) => ({ ...acc, [v.area]: (acc[v.area] ?? 0) + 1 }), {})}
+                onOpenValidations={() => setTab("validation")}
               />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
