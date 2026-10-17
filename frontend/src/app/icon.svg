@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="나도사장">
+  <title>나도사장</title>
+  <!-- 로고의 '점(머리) + 노란 곡선(몸)' — 뛰어오르는 사람 -->
+  <rect width="512" height="512" rx="112" fill="#071B45"/>
+  <g transform="translate(256 270) scale(1.2) translate(-256 -270)">
+  <circle cx="300" cy="150" r="66" fill="#0CA8F6"/>
+  <path d="M 284 252
+           C 312 246 344 250 352 262
+           C 362 278 356 318 336 352
+           C 306 402 250 420 156 410
+           C 146 409 142 398 152 394
+           C 210 382 250 364 270 330
+           C 286 304 286 276 284 252 Z" fill="#FFB91B"/>
+  </g>
+</svg>

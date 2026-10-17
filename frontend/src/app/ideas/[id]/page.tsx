@@ -157,7 +157,7 @@ export default function IdeaDetailPage() {
 
   if (loading || !idea || !draft) {
     return (
-      <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+      <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
         <Header activeNav="ideas" />
         <main className="max-w-[1200px] mx-auto px-6 py-12">
           <section className={`${card} items-center text-center`}>
@@ -169,7 +169,7 @@ export default function IdeaDetailPage() {
                 <div className="text-text-secondary text-sm">
                   {error ?? "삭제됐거나 다른 계정·브라우저에 저장된 아이디어일 수 있어요."}
                 </div>
-                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#08183F" }}>
+                <Link href="/ideas" className="text-sm font-semibold underline" style={{ color: "#071B45" }}>
                   MY아이디어로 ›
                 </Link>
               </>
@@ -303,7 +303,7 @@ export default function IdeaDetailPage() {
 
   if (atProfile) {
     return (
-      <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+      <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
         <Header activeNav="ideas" />
         <ProfileWorkspace
           idea={current}
@@ -345,7 +345,7 @@ export default function IdeaDetailPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
       <Header activeNav="ideas" />
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col gap-8">
@@ -361,7 +361,7 @@ export default function IdeaDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <StatusPill status={status} />
             {current.profile.industry && (
-              <span className="text-sm font-semibold" style={{ color: "#485876" }}>
+              <span className="text-sm font-semibold" style={{ color: "#53647A" }}>
                 {current.profile.industry} · {current.profile.location}
               </span>
             )}
@@ -385,7 +385,7 @@ export default function IdeaDetailPage() {
         {atProfile || atInterview ? (
           current.memo && (
             <section className="bg-white border border-border rounded-lg shadow-card px-6 py-4 text-sm">
-              <span className="font-semibold mr-2" style={{ color: "#485876" }}>
+              <span className="font-semibold mr-2" style={{ color: "#53647A" }}>
                 처음 메모
               </span>
               <span className="text-text-secondary whitespace-pre-wrap">{current.memo}</span>
@@ -400,21 +400,21 @@ export default function IdeaDetailPage() {
               rows={4}
               aria-label="메모"
               className="rounded-lg p-4 text-sm resize-y focus:outline-none leading-relaxed"
-              style={{ border: "1.5px solid #E5E7EB" }}
+              style={{ border: "1.5px solid #D7E0ED" }}
             />
             <div className="flex gap-3 flex-wrap items-center">
               <button
                 type="button"
                 onClick={saveMemo}
                 disabled={busy || memoDraft.trim() === current.memo}
-                className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
-                style={{ border: "1.5px solid #E5E7EB", color: "#485876", cursor: "pointer" }}
+                className="min-h-[48px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
+                style={{ border: "1.5px solid #D7E0ED", color: "#53647A", cursor: "pointer" }}
               >
                 메모 저장
               </button>
             </div>
 
-            <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#E5E7EB" }}>
+            <div className="border-t pt-5 flex flex-col gap-3" style={{ borderColor: "#D7E0ED" }}>
               <div className="font-semibold">다음 단계 · 인터뷰</div>
               <p className="text-sm text-text-secondary m-0 leading-relaxed">
                 AI 컨설턴트와 1:1로 대화하며 아이디어를 구체화하고, 그 내용으로 아이템 프로필을 만들어요.
@@ -428,7 +428,7 @@ export default function IdeaDetailPage() {
                     onClick={beginInterview}
                     disabled={busy || !memoDraft.trim()}
                     className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                    style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
+                    style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
                   >
                     {busy ? "첫 질문 준비 중…" : "인터뷰 시작"}
                   </button>
@@ -437,7 +437,7 @@ export default function IdeaDetailPage() {
                     onClick={startProfile}
                     disabled={busy || !memoDraft.trim()}
                     className="text-sm underline disabled:opacity-50"
-                    style={{ background: "none", border: "none", color: "#485876", cursor: "pointer" }}
+                    style={{ background: "none", border: "none", color: "#53647A", cursor: "pointer" }}
                   >
                     인터뷰 없이 직접 작성
                   </button>
@@ -446,7 +446,7 @@ export default function IdeaDetailPage() {
                 <Link
                   href={loginHref}
                   className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
-                  style={{ background: "#1B57EA", textDecoration: "none" }}
+                  style={{ background: "#134CD8", textDecoration: "none" }}
                 >
                   로그인하고 인터뷰 시작
                 </Link>
@@ -529,9 +529,9 @@ function StageBar({ status, failedStage }: { status: IdeaStatus; failedStage: Id
             aria-current={active ? "step" : undefined}
             className="rounded-xl px-4 py-3 text-sm font-semibold"
             style={{
-              background: active ? "#F3F4F6" : "#fff",
-              color: active ? "#08183F" : done ? "#08183F" : "#6B7280",
-              border: `1px solid ${active ? "#08183F" : "#E5E7EB"}`,
+              background: active ? "#F5F7FB" : "#fff",
+              color: active ? "#071B45" : done ? "#071B45" : "#6B7280",
+              border: `1px solid ${active ? "#071B45" : "#D7E0ED"}`,
             }}
           >
             {done ? "✓ " : `${i + 1}. `}

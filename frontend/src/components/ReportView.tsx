@@ -33,7 +33,7 @@ export default function ReportView({
     <div className="flex flex-col gap-5">
       <div
         className="rounded-lg p-5 flex items-center justify-between gap-4 flex-wrap"
-        style={{ background: "#fff", border: "1px solid #E5E7EB" }}
+        style={{ background: "#fff", border: "1px solid #D7E0ED" }}
       >
         <div>
           <span className="font-semibold">보고서 v{report.version}</span>
@@ -70,14 +70,14 @@ export default function ReportView({
           key={sec.agent}
           id={`rv-${sec.agent}`}
           className="flex flex-col gap-4 pt-7 mt-2 scroll-mt-32"
-          style={{ borderTop: "2px solid #08183F" }}
+          style={{ borderTop: "2px solid #071B45" }}
           aria-label={sec.title}
         >
           <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="self-center w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ background: "#1B57EA" }}>
+            <span className="self-center w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ background: "#134CD8" }}>
               {sec.no}
             </span>
-            <h3 className="text-2xl font-bold m-0 tracking-tight" style={{ color: "#08183F" }}>
+            <h3 className="text-2xl font-bold m-0 tracking-tight" style={{ color: "#071B45" }}>
               {sec.title}
             </h3>
             <span className="text-sm" style={{ color: "#6B7280" }}>
@@ -198,15 +198,15 @@ export function SectionNav({ items, vertical }: { items: { id: string; label: st
               className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm no-underline"
               style={{
                 background: on ? "#EAF0FD" : "transparent",
-                color: on ? "#1446C4" : "#485876",
+                color: on ? "#0F3DB0" : "#53647A",
                 fontWeight: on ? 700 : 500,
-                borderLeft: `3px solid ${on ? "#1B57EA" : "transparent"}`,
+                borderLeft: `3px solid ${on ? "#134CD8" : "transparent"}`,
                 textDecoration: "none",
               }}
             >
               <span
                 className="w-5 h-5 rounded-md shrink-0 flex items-center justify-center text-[11px] font-bold"
-                style={{ background: on ? "#1B57EA" : "#F3F4F6", color: on ? "#fff" : "#6B7280" }}
+                style={{ background: on ? "#134CD8" : "#F5F7FB", color: on ? "#fff" : "#6B7280" }}
               >
                 {i.no || "·"}
               </span>
@@ -236,9 +236,9 @@ export function SectionNav({ items, vertical }: { items: { id: string; label: st
             aria-current={on ? "true" : undefined}
             className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold no-underline whitespace-nowrap"
             style={{
-              background: on ? "#1B57EA" : "#fff",
-              color: on ? "#fff" : "#485876",
-              border: `1px solid ${on ? "#1B57EA" : "#E5E7EB"}`,
+              background: on ? "#134CD8" : "#fff",
+              color: on ? "#fff" : "#53647A",
+              border: `1px solid ${on ? "#134CD8" : "#D7E0ED"}`,
               textDecoration: "none",
             }}
           >

@@ -9,7 +9,7 @@ import type { Program } from "@/lib/programs";
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   "모집중": { bg: "#E6F9F0", text: "#1A7A4A" },
   "마감임박(D-3)": { bg: "#FFF3CD", text: "#856404" },
-  "마감": { bg: "#F3F4F6", text: "#6B7280" },
+  "마감": { bg: "#F5F7FB", text: "#6B7280" },
 };
 
 // K-Startup 공고의 지원 지역·분야 값과 맞춘다 (지역을 고르면 '전국' 공고도 함께 나온다)
@@ -51,7 +51,7 @@ export default function ProgramsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
       <Header activeNav="programs" />
 
       <PageHero eyebrow="창업 공고 찾기" title="내게 맞는 공고를 찾아보세요" description="정부·지자체 창업 지원 프로그램을 한눈에" />
@@ -59,20 +59,20 @@ export default function ProgramsPage() {
       <div className="max-w-[1200px] mx-auto px-6 py-8">
 
         {/* 검색 바 */}
-        <form onSubmit={handleSearch} className="bg-white rounded-lg shadow-card p-5 mb-6 flex gap-3 flex-wrap" style={{ border: "1px solid #E5E7EB" }}>
+        <form onSubmit={handleSearch} className="bg-white rounded-lg shadow-card p-5 mb-6 flex gap-3 flex-wrap" style={{ border: "1px solid #D7E0ED" }}>
           <input
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="공고명, 기관명 검색"
             className="flex-1 min-w-[200px] h-11 rounded-lg px-4 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #E5E7EB" }}
+            style={{ border: "1.5px solid #D7E0ED" }}
           />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="h-11 rounded-lg px-3 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #E5E7EB" }}
+            style={{ border: "1.5px solid #D7E0ED" }}
           >
             <option value="전체">전체 상태</option>
             <option value="모집중">모집중</option>
@@ -83,7 +83,7 @@ export default function ProgramsPage() {
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             className="h-11 rounded-lg px-3 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #E5E7EB" }}
+            style={{ border: "1.5px solid #D7E0ED" }}
           >
             {REGIONS.map((r) => <option key={r}>{r}</option>)}
           </select>
@@ -91,14 +91,14 @@ export default function ProgramsPage() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="h-11 rounded-lg px-3 text-sm focus:outline-none"
-            style={{ border: "1.5px solid #E5E7EB" }}
+            style={{ border: "1.5px solid #D7E0ED" }}
           >
             {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
           </select>
           <button
             type="submit"
             className="h-11 px-6 rounded-xl text-sm font-bold text-white"
-            style={{ background: "#1B57EA" }}
+            style={{ background: "#134CD8" }}
           >
             검색
           </button>
@@ -122,7 +122,7 @@ export default function ProgramsPage() {
                       onClick={() => setSelected(p)}
                       className="bg-white rounded-lg shadow-card p-5 cursor-pointer hover:shadow-md transition-shadow"
                       style={{
-                        border: selected?.id === p.id ? "2px solid #08183F" : "1px solid #E5E7EB",
+                        border: selected?.id === p.id ? "2px solid #071B45" : "1px solid #D7E0ED",
                       }}
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -144,7 +144,7 @@ export default function ProgramsPage() {
                         <div className="text-right shrink-0">
                           <div className="text-xs text-text-muted">마감일</div>
                           <div className="text-sm font-semibold">{p.ends_on}</div>
-                          {p.amount && <div className="text-xs font-bold mt-1" style={{ color: "#08183F" }}>{p.amount}</div>}
+                          {p.amount && <div className="text-xs font-bold mt-1" style={{ color: "#071B45" }}>{p.amount}</div>}
                         </div>
                       </div>
                     </div>
@@ -158,13 +158,13 @@ export default function ProgramsPage() {
           {selected && (
             <div
               className="w-80 shrink-0 bg-white rounded-lg shadow-card p-6 self-start sticky top-20 flex flex-col gap-4"
-              style={{ border: "1px solid #E5E7EB" }}
+              style={{ border: "1px solid #D7E0ED" }}
             >
               <div className="flex items-center justify-between">
                 <span
                   className="text-xs font-bold px-2 py-0.5 rounded"
                   style={{
-                    background: STATUS_COLOR[selected.deadline_status]?.bg ?? "#F3F4F6",
+                    background: STATUS_COLOR[selected.deadline_status]?.bg ?? "#F5F7FB",
                     color: STATUS_COLOR[selected.deadline_status]?.text ?? "#6B7280",
                   }}
                 >
@@ -188,7 +188,7 @@ export default function ProgramsPage() {
                 {selected.amount && (
                   <div className="flex justify-between">
                     <span className="text-text-muted">지원금액</span>
-                    <span className="font-semibold" style={{ color: "#08183F" }}>{selected.amount}</span>
+                    <span className="font-semibold" style={{ color: "#071B45" }}>{selected.amount}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -218,7 +218,7 @@ export default function ProgramsPage() {
               <Link
                 href={`/applications?new=1&program=${selected.id}`}
                 className="flex items-center justify-center h-11 rounded-xl font-bold text-sm text-white"
-                style={{ background: "#1B57EA", textDecoration: "none" }}
+                style={{ background: "#134CD8", textDecoration: "none" }}
               >
                 이 공고로 지원서 만들기
               </Link>
@@ -227,7 +227,7 @@ export default function ProgramsPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center h-11 rounded-xl font-semibold text-sm bg-white"
-                style={{ border: "1px solid #E5E7EB", color: "#08183F", textDecoration: "none" }}
+                style={{ border: "1px solid #D7E0ED", color: "#071B45", textDecoration: "none" }}
               >
                 공고 원문 보기 →
               </a>

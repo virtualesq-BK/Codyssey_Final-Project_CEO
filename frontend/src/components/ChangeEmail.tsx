@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EmailAuthProvider, type User, reauthenticateWithCredential, verifyBeforeUpdateEmail } from "firebase/auth";
 
-const line = "#E5E7EB";
+const line = "#D7E0ED";
 
 const ERRORS: Record<string, string> = {
   "auth/wrong-password": "현재 비밀번호가 맞지 않아요.",
@@ -56,7 +56,7 @@ export default function ChangeEmail({ user }: { user: User }) {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <b className="text-base">로그인 이메일</b>
-          <div className="text-sm mt-0.5" style={{ color: "#485876" }}>
+          <div className="text-sm mt-0.5" style={{ color: "#53647A" }}>
             {user.email}
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function ChangeEmail({ user }: { user: User }) {
             type="button"
             onClick={() => setOpen(true)}
             className="min-h-[40px] px-4 rounded-xl text-sm font-semibold bg-white"
-            style={{ border: `1px solid ${line}`, color: "#08183F", cursor: "pointer" }}
+            style={{ border: `1px solid ${line}`, color: "#071B45", cursor: "pointer" }}
           >
             이메일 변경
           </button>
@@ -79,10 +79,10 @@ export default function ChangeEmail({ user }: { user: User }) {
       )}
 
       {sentTo && (
-        <div className="rounded-lg p-4 text-sm leading-relaxed" style={{ background: "#EAF0FD", color: "#08183F" }}>
+        <div className="rounded-lg p-4 text-sm leading-relaxed" style={{ background: "#EAF0FD", color: "#071B45" }}>
           <b>{sentTo}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 로그인 이메일이 바뀌어요.
           <br />
-          <span className="text-xs" style={{ color: "#485876" }}>
+          <span className="text-xs" style={{ color: "#53647A" }}>
             바뀐 뒤에는 다시 로그인해야 할 수 있어요. 아이디어와 보고서는 그대로 남아요. 메일이 안 오면 스팸함도 확인해 주세요.
           </span>
         </div>
@@ -126,8 +126,8 @@ export default function ChangeEmail({ user }: { user: User }) {
             <button
               type="submit"
               disabled={busy || !email.trim() || !password}
-              className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
+              className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
             >
               {busy ? "확인 중…" : "인증 메일 보내기"}
             </button>
@@ -137,8 +137,8 @@ export default function ChangeEmail({ user }: { user: User }) {
                 setOpen(false);
                 setError(null);
               }}
-              className="min-h-[44px] px-4 rounded-xl text-sm font-semibold bg-white"
-              style={{ border: `1px solid ${line}`, color: "#485876", cursor: "pointer" }}
+              className="min-h-[48px] px-4 rounded-xl text-sm font-semibold bg-white"
+              style={{ border: `1px solid ${line}`, color: "#53647A", cursor: "pointer" }}
             >
               취소
             </button>

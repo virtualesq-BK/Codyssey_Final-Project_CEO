@@ -15,10 +15,10 @@ const AGENT_LABELS: Record<string, string> = {
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
-  const color = value >= 0.7 ? "#08183F" : value >= 0.4 ? "#B45309" : "#B42318";
+  const color = value >= 0.7 ? "#071B45" : value >= 0.4 ? "#B45309" : "#B42318";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[#D7E0ED] rounded-full overflow-hidden">
         <div
           className="h-2 rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -49,7 +49,7 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
   return (
     <div
       className="bg-white border rounded-lg shadow-card p-6 flex flex-col gap-4"
-      style={{ borderColor: "#E5E7EB" }}
+      style={{ borderColor: "#D7E0ED" }}
     >
       {/* 완료·부분 완료 상태 표시는 개발 중 임시로 숨김 */}
       {(!hideLabel || SHOW_CONFIDENCE) && (
@@ -91,7 +91,7 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
       )}
 
       {result.evidence.length > 0 && (
-        <div className="border-t pt-3" style={{ borderColor: "#E5E7EB" }}>
+        <div className="border-t pt-3" style={{ borderColor: "#D7E0ED" }}>
           <div className="text-xs font-semibold text-text-muted mb-2">
             근거 자료 {result.evidence.length}건
           </div>
@@ -99,16 +99,16 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
             {(showAll ? result.evidence : result.evidence.slice(0, 3)).map((ev, i) => (
               <li key={i} className="text-xs flex flex-col gap-0.5">
                 <span className="flex gap-2 items-baseline">
-                  <span className="font-medium shrink-0" style={{ color: "#1B57EA" }}>
+                  <span className="font-medium shrink-0" style={{ color: "#134CD8" }}>
                     [{ev.source}]
                   </span>
                   {ev.url ? (
-                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 min-w-0 break-words" style={{ color: "#08183F" }}>
+                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 min-w-0 break-words" style={{ color: "#071B45" }}>
                       {ev.title} <span aria-hidden="true">↗</span>
                       <span className="sr-only"> (새 창에서 열림)</span>
                     </a>
                   ) : (
-                    <span className="min-w-0" style={{ color: "#08183F" }}>
+                    <span className="min-w-0" style={{ color: "#071B45" }}>
                       {ev.title}
                     </span>
                   )}
@@ -127,7 +127,7 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
               onClick={() => setShowAll((v) => !v)}
               aria-expanded={showAll}
               className="mt-2 text-xs font-semibold"
-              style={{ background: "none", border: "none", color: "#1B57EA", cursor: "pointer", padding: 0 }}
+              style={{ background: "none", border: "none", color: "#134CD8", cursor: "pointer", padding: 0 }}
             >
               {showAll ? "▴ 접기" : `▾ 전체 ${result.evidence.length}건 보기 (내용 포함)`}
             </button>

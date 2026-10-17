@@ -80,25 +80,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#F5F7FB" }}>
       <div className="w-full max-w-md px-4">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 no-underline" style={{ textDecoration: "none" }}>
             <span
               className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-white text-lg font-bold"
-              style={{ background: "#1B57EA" }}
+              style={{ background: "#134CD8" }}
             >
               나
             </span>
-            <span className="text-2xl font-bold" style={{ color: "#08183F" }}>나도사장</span>
+            <span className="text-2xl font-bold" style={{ color: "#071B45" }}>나도사장</span>
           </Link>
           <p className="text-sm mt-2" style={{ color: "#6B7280" }}>AI 창업 사업성 진단 서비스</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-card p-8" style={{ border: "1px solid #E5E7EB" }}>
+        <div className="bg-white rounded-lg shadow-card p-8" style={{ border: "1px solid #D7E0ED" }}>
           {/* 탭 */}
-          <div className="flex rounded-xl p-1 mb-6" style={{ background: "#F3F4F6" }}>
+          <div className="flex rounded-xl p-1 mb-6" style={{ background: "#F5F7FB" }}>
             {(["login", "signup"] as Mode[]).map((m) => (
               <button
                 key={m}
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
                 style={{
                   background: mode === m ? "#fff" : "transparent",
-                  color: mode === m ? "#08183F" : "#6B7280",
+                  color: mode === m ? "#071B45" : "#6B7280",
                   border: "none",
                   cursor: "pointer",
                   boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
@@ -128,9 +128,9 @@ export default function LoginPage() {
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="홍길동"
                   className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
-                  style={{ border: "1.5px solid #E5E7EB" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#1B57EA")}
-                  onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                  style={{ border: "1.5px solid #D7E0ED" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#134CD8")}
+                  onBlur={(e) => (e.target.style.borderColor = "#D7E0ED")}
                 />
               </label>
             )}
@@ -144,9 +144,9 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
-                style={{ border: "1.5px solid #E5E7EB" }}
-                onFocus={(e) => (e.target.style.borderColor = "#1B57EA")}
-                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                style={{ border: "1.5px solid #D7E0ED" }}
+                onFocus={(e) => (e.target.style.borderColor = "#134CD8")}
+                onBlur={(e) => (e.target.style.borderColor = "#D7E0ED")}
               />
             </label>
 
@@ -160,9 +160,9 @@ export default function LoginPage() {
                 placeholder={mode === "signup" ? "6자 이상" : "비밀번호"}
                 minLength={mode === "signup" ? 6 : undefined}
                 className="h-12 rounded-lg px-4 font-normal text-sm focus:outline-none"
-                style={{ border: "1.5px solid #E5E7EB" }}
-                onFocus={(e) => (e.target.style.borderColor = "#1B57EA")}
-                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                style={{ border: "1.5px solid #D7E0ED" }}
+                onFocus={(e) => (e.target.style.borderColor = "#134CD8")}
+                onBlur={(e) => (e.target.style.borderColor = "#D7E0ED")}
               />
             </label>
 
@@ -172,7 +172,7 @@ export default function LoginPage() {
                 onClick={handleReset}
                 disabled={loading}
                 className="self-end -mt-2 text-xs font-medium disabled:opacity-60"
-                style={{ background: "none", border: "none", color: "#485876", cursor: "pointer", textDecoration: "underline" }}
+                style={{ background: "none", border: "none", color: "#53647A", cursor: "pointer", textDecoration: "underline" }}
               >
                 비밀번호를 잊으셨나요?
               </button>
@@ -185,7 +185,7 @@ export default function LoginPage() {
             )}
 
             {notice && (
-              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F3F4F6", color: "#08183F" }}>
+              <div role="status" className="rounded-xl p-3 text-sm" style={{ background: "#F5F7FB", color: "#071B45" }}>
                 {notice}
               </div>
             )}
@@ -194,23 +194,23 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="h-12 rounded-xl font-bold text-sm text-white transition-opacity disabled:opacity-60"
-              style={{ background: "#1B57EA", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+              style={{ background: "#134CD8", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
             >
               {loading ? "처리 중…" : mode === "login" ? "로그인" : "회원가입"}
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px" style={{ background: "#E5E7EB" }} />
+            <div className="flex-1 h-px" style={{ background: "#D7E0ED" }} />
             <span className="text-xs" style={{ color: "#6B7280" }}>또는</span>
-            <div className="flex-1 h-px" style={{ background: "#E5E7EB" }} />
+            <div className="flex-1 h-px" style={{ background: "#D7E0ED" }} />
           </div>
 
           <button
             onClick={handleGoogle}
             disabled={loading}
             className="w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-3 transition-colors disabled:opacity-60"
-            style={{ border: "1.5px solid #E5E7EB", background: "#fff", cursor: loading ? "not-allowed" : "pointer", color: "#08183F" }}
+            style={{ border: "1.5px solid #D7E0ED", background: "#fff", cursor: loading ? "not-allowed" : "pointer", color: "#071B45" }}
           >
             <GoogleIcon />
             Google로 계속하기

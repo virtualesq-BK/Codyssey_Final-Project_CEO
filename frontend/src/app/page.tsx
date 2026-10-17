@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function Home() {
   const { user, loading } = useAuth();
   return (
-    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
       <Header />
       {/* 로그인 확인 전엔 비워 둬서 랜딩이 잠깐 비쳤다가 바뀌지 않게 한다 */}
       {loading ? null : user ? <Dashboard user={user} /> : <Landing />}

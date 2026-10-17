@@ -17,11 +17,11 @@ import {
 import { AGENT_LABELS, AGENT_ORDER } from "@/lib/agents";
 import type { IdeaReport } from "@/lib/idea";
 
-const blue = "#1B57EA";
-const navy = "#08183F";
-const slate = "#485876";
+const blue = "#134CD8";
+const navy = "#071B45";
+const slate = "#53647A";
 const gray = "#6B7280";
-const line = "#E5E7EB";
+const line = "#D7E0ED";
 const card = "bg-white rounded-xl p-5 flex flex-col gap-4";
 
 type Obj = Record<string, unknown>;
@@ -66,7 +66,7 @@ function SectionHead({ title, sub, badge }: { title: string; sub?: string; badge
         )}
       </div>
       {badge && (
-        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#EAF0FD", color: "#1446C4" }}>
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md" style={{ background: "#EAF0FD", color: "#0F3DB0" }}>
           {badge}
         </span>
       )}
@@ -334,7 +334,7 @@ export function CompetitionPanel({ report, embedded }: { report: IdeaReport; emb
       {!embedded && <SectionHead title="경쟁 구도" sub="같은 문제를 푸는 서비스와 우리가 설 자리" badge={`경쟁사 ${competitors.length}`} />}
       {position?.text && (
         <div className="rounded-lg px-4 py-3 text-sm leading-relaxed flex gap-2 items-start" style={{ background: "#EAF0FD", color: navy }}>
-          <span className="font-bold shrink-0" style={{ color: "#1446C4" }}>
+          <span className="font-bold shrink-0" style={{ color: "#0F3DB0" }}>
             우리 자리
           </span>
           <span className="min-w-0">
@@ -350,7 +350,7 @@ export function CompetitionPanel({ report, embedded }: { report: IdeaReport; emb
                 <b className="text-sm" style={{ color: navy }}>
                   {String(x.name ?? "")}
                 </b>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: slate }}>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#F5F7FB", color: slate }}>
                   {x.kind} 경쟁
                 </span>
               </div>
@@ -537,7 +537,7 @@ export function FinancePanel({
                 generate(k);
               }}
               className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
-              style={{ border: `1.5px solid ${on ? blue : line}`, background: on ? "#EAF0FD" : "#fff", color: on ? "#1446C4" : slate, cursor: "pointer" }}
+              style={{ border: `1.5px solid ${on ? blue : line}`, background: on ? "#EAF0FD" : "#fff", color: on ? "#0F3DB0" : slate, cursor: "pointer" }}
             >
               {REVENUE_TYPES[k].label}
               {k === guessed && <span style={{ color: "#C27A0E" }}>·추천</span>}
@@ -807,7 +807,7 @@ function TierCard({ code, name, tier, evidence }: { code: string; name: string; 
   return (
     <div className="rounded-xl p-4 flex flex-col gap-1.5" style={{ background: "#F5F7FC", border: `1px solid #E3E9F7` }}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold" style={{ color: "#1446C4" }}>
+        <span className="text-xs font-bold" style={{ color: "#0F3DB0" }}>
           {code} <span className="font-semibold" style={{ color: slate }}>· {name}</span>
         </span>
         {tier.value != null && <KindTag kind={tier.estimated ? "hypothesis" : "fact"} />}

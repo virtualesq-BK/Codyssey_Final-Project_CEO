@@ -79,7 +79,7 @@ export default function IdeasPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen" style={{ background: "#F5F7FB" }}>
       <Header activeNav="ideas" />
 
       <PageHero eyebrow="MY아이디어" title="내 아이디어" description="메모부터 보고서까지, 단계와 상관없이 모두 모아뒀어요." />
@@ -92,7 +92,7 @@ export default function IdeasPage() {
             addMemo();
           }}
           className="mb-8 bg-white rounded-lg shadow-card p-4 flex gap-3 items-end"
-          style={{ border: "1px solid #E5E7EB" }}
+          style={{ border: "1px solid #D7E0ED" }}
         >
           <label className="flex-1 flex flex-col gap-1.5 text-sm font-semibold">
             새 아이디어 메모
@@ -109,14 +109,14 @@ export default function IdeasPage() {
               placeholder="떠오른 아이디어를 한 줄로 적어두세요 (Enter로 저장)"
               rows={1}
               className="rounded-lg px-4 py-3 font-normal text-sm resize-y focus:outline-none leading-relaxed"
-              style={{ border: "1.5px solid #E5E7EB", minHeight: 48 }}
+              style={{ border: "1.5px solid #D7E0ED", minHeight: 48 }}
             />
           </label>
           <button
             type="submit"
             disabled={saving || !memo.trim()}
             className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white disabled:opacity-50 shrink-0"
-            style={{ background: "#1B57EA", border: "none", cursor: "pointer" }}
+            style={{ background: "#134CD8", border: "none", cursor: "pointer" }}
           >
             {saving ? "저장 중…" : "메모 추가"}
           </button>
@@ -130,10 +130,10 @@ export default function IdeasPage() {
         {!authLoading && !user && ideas.length > 0 && (
           <div
             className="mb-6 rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
-            style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#485876" }}
+            style={{ background: "#FFFFFF", border: "1px solid #D7E0ED", color: "#53647A" }}
           >
             <span>이 브라우저에만 저장돼 있어요. 로그인하면 계정으로 옮겨져요.</span>
-            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#08183F" }}>
+            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#071B45" }}>
               로그인 ›
             </Link>
           </div>
@@ -148,7 +148,7 @@ export default function IdeasPage() {
         ) : ideas.length === 0 ? (
           <div
             className="bg-white rounded-lg shadow-card p-16 flex flex-col items-center gap-5 text-center"
-            style={{ border: "1px solid #E5E7EB" }}
+            style={{ border: "1px solid #D7E0ED" }}
           >
             <div>
               <div className="font-bold text-lg mb-2">아직 아이디어가 없어요</div>
@@ -174,13 +174,13 @@ export default function IdeasPage() {
                   className="min-h-[36px] px-4 rounded-xl text-sm font-semibold"
                   style={{
                     cursor: "pointer",
-                    border: `1px solid ${active ? "#1B57EA" : "#E5E7EB"}`,
+                    border: `1px solid ${active ? "#134CD8" : "#D7E0ED"}`,
                     background: active ? "#EAF0FD" : "#fff",
-                    color: active ? "#1446C4" : "#485876",
+                    color: active ? "#0F3DB0" : "#53647A",
                   }}
                 >
                   {f.label}
-                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#1B57EA" : "#6B7280" }}>
+                  <span className="ml-1.5 text-xs font-medium" style={{ color: active ? "#134CD8" : "#6B7280" }}>
                     {count}
                   </span>
                 </button>
@@ -188,7 +188,7 @@ export default function IdeasPage() {
             })}
           </div>
           {visible.length === 0 ? (
-            <div className="bg-white rounded-lg p-12 text-center text-sm" style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}>
+            <div className="bg-white rounded-lg p-12 text-center text-sm" style={{ border: "1px solid #D7E0ED", color: "#6B7280" }}>
               이 단계의 아이디어가 없어요.
             </div>
           ) : (

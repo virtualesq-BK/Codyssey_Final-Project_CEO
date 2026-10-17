@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import type { AnalyzeJob, StageProgress } from "@/lib/api";
 import { progressOf } from "@/lib/diagnosisRunner";
 
-const blue = "#1B57EA";
-const navy = "#08183F";
-const slate = "#485876";
+const blue = "#134CD8";
+const navy = "#071B45";
+const slate = "#53647A";
 const gray = "#6B7280";
-const line = "#E5E7EB";
+const line = "#D7E0ED";
 
 /** 진단 단계 — 서버 작업(stages)의 키와 맞춘다 */
 const STAGES: { key: string; label: string; fills: string; icon: keyof typeof ICONS }[] = [
@@ -120,10 +120,10 @@ export function DiagnoseStartModal({
   return (
     <ModalFrame labelledBy="diag-start-title" onClose={onClose}>
       {/* 머리 — 키컬러 띠 */}
-      <div className="relative overflow-hidden px-7 pt-7 pb-6" style={{ background: "linear-gradient(110deg, #1B57EA 0%, #1446C4 100%)", color: "#fff" }}>
+      <div className="relative overflow-hidden px-7 pt-7 pb-6" style={{ background: "linear-gradient(110deg, #134CD8 0%, #0F3DB0 100%)", color: "#fff" }}>
         <div aria-hidden="true" className="absolute pointer-events-none" style={{ right: -80, top: -120, width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.22), rgba(255,255,255,0) 70%)" }} />
         <div className="relative flex items-center gap-2 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.85)" }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#FDB71A" }} />
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#FFB91B" }} />
           {again ? "보고서 새 버전" : "상세분석"} · 유료
         </div>
         <h2 id="diag-start-title" className="relative text-2xl font-bold m-0 mt-2 tracking-tight">
@@ -278,7 +278,7 @@ export function DiagnosisProgressModal({
               type="button"
               data-autofocus
               onClick={onOpenReport}
-              className="min-h-[44px] px-5 rounded-xl text-sm font-bold text-white"
+              className="min-h-[48px] px-5 rounded-xl text-sm font-bold text-white"
               style={{ background: blue, border: "none", cursor: "pointer" }}
             >
               보고서 보기
@@ -288,7 +288,7 @@ export function DiagnosisProgressModal({
               type="button"
               data-autofocus
               onClick={onMinimize}
-              className="min-h-[44px] px-5 rounded-xl text-sm font-semibold bg-white"
+              className="min-h-[48px] px-5 rounded-xl text-sm font-semibold bg-white"
               style={{ border: `1px solid ${line}`, color: navy, cursor: "pointer" }}
             >
               닫고 계속 진행하기
