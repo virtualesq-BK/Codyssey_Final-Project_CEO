@@ -1,7 +1,8 @@
 "use client";
 
 import { SHOW_CONFIDENCE } from "@/lib/agents";
-import type { DecisionResult } from "@/lib/api";
+import { AREA_NAMES } from "@/components/ReportVisuals";
+import type { AreaScore, DecisionResult } from "@/lib/api";
 
 const DECISION_CONFIG = {
   GO: {
@@ -32,40 +33,38 @@ const DECISION_CONFIG = {
 
 interface Props {
   result: DecisionResult;
+  /** 영역별 점수 (판정 줄의 평균 점수·안내 문구에 쓴다) */
+  scores?: AreaScore[] | null;
   /** 종합 평가 아래에 넣을 내용 (영역별 점수) */
   children?: React.ReactNode;
 }
 
-export default function DecisionBanner({ result, children }: Props) {
+export default function DecisionBanner({ result, scores, children }: Props) {
   const cfg = DECISION_CONFIG[result.decision];
+  const avg = scores?.length ? scores.reduce((a, x) => a + x.score, 0) / scores.length : null;
+  const guide = scores?.length ? guideFor(result.decision, scores) : null;
 
   return (
     <section
       className="rounded-lg p-7 flex flex-col gap-5"
       style={{ background: cfg.bg, border: `2px solid ${cfg.color}40` }}
     >
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-4">
-          <span
-            className="text-xl font-bold"
-            style={{ color: cfg.color }}
-          >
+      {/* 맨 위: 원형 점수 게이지 + 판정 · 한 줄 결론 · 다음 행동 안내 */}
+      <div className="flex items-center gap-6 flex-wrap">
+        <ScoreRing value={avg} color={cfg.color} />
+        <div className="flex flex-col gap-2 min-w-0 flex-1">
+          <span className="self-start text-xs font-bold px-2.5 py-1 rounded-md whitespace-nowrap text-white" style={{ background: cfg.color }}>
             {cfg.label}
           </span>
-          {SHOW_CONFIDENCE && (
-            <span className="text-sm text-text-muted">
-              신뢰도 {result.confidence.toFixed(2)}
-            </span>
+          <div className="text-xl font-bold leading-snug" style={{ color: "#08183F" }}>
+            {HEADLINE[result.decision]}
+          </div>
+          {guide && (
+            <p className="m-0 text-sm leading-relaxed" style={{ color: "#485876" }}>
+              {guide}
+            </p>
           )}
-        </div>
-        <div className={`flex-1 h-2 max-w-32 bg-white/60 rounded-full overflow-hidden ${SHOW_CONFIDENCE ? "" : "hidden"}`}>
-          <div
-            className="h-2 rounded-full"
-            style={{
-              width: `${Math.round(result.confidence * 100)}%`,
-              backgroundColor: cfg.color,
-            }}
-          />
+          {SHOW_CONFIDENCE && <span className="text-sm text-text-muted">신뢰도 {result.confidence.toFixed(2)}</span>}
         </div>
       </div>
 
@@ -73,9 +72,7 @@ export default function DecisionBanner({ result, children }: Props) {
         <div className="text-xs font-bold mb-1.5" style={{ color: cfg.color }}>
           종합 평가
         </div>
-        <p className="text-base font-semibold leading-relaxed m-0" style={{ color: "#08183F" }}>
-          {withoutConfidence(result.summary)}
-        </p>
+        <SummaryText text={withoutConfidence(result.summary)} />
       </div>
 
       {children}
@@ -194,4 +191,102 @@ function stripConfidence(text: string) {
     .replace(/(신뢰도|확신도)(가|이)?\s*(\S+\s*)?(없음|낮음|부족)/g, "근거 부족")
     .replace(/신뢰도|확신도/g, "근거")
     .trim();
+}
+
+/** 사업성 점수 링 — 영역별 점수 평균. 점수가 아직 없으면 빈 링 */
+function ScoreRing({ value, color }: { value: number | null; color: string }) {
+  const r = 46;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg width={116} height={116} viewBox="0 0 116 116" role="img" aria-label={value != null ? `사업성 점수 ${value.toFixed(1)}점 (10점 만점)` : "사업성 점수 계산 중"} className="shrink-0">
+      <circle cx={58} cy={58} r={r} fill="none" stroke={`${color}26`} strokeWidth={10} />
+      {value != null && (
+        <circle
+          cx={58}
+          cy={58}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={10}
+          strokeLinecap="round"
+          strokeDasharray={`${(value / 10) * c} ${c}`}
+          transform="rotate(-90 58 58)"
+          style={{ transition: "stroke-dasharray 0.8s ease" }}
+        />
+      )}
+      <text x={58} y={60} textAnchor="middle" fontSize={value != null ? 28 : 13} fontWeight={800} fill="#08183F">
+        {value != null ? value.toFixed(1) : "계산 중"}
+      </text>
+      {value != null && (
+        <text x={58} y={80} textAnchor="middle" fontSize={11} fill="#6B7280">
+          / 10
+        </text>
+      )}
+    </svg>
+  );
+}
+
+/** 판정 한 줄 결론 */
+const HEADLINE: Record<string, string> = {
+  GO: "근거가 충분하고 리스크도 관리 가능합니다.",
+  PIVOT: "지금 방향 그대로는 어렵지만, 바꿀 여지가 있습니다.",
+  VALIDATE_MORE: "가능성은 보이지만, 아직 검증이 필요합니다.",
+  STOP: "현재 형태로는 사업성이 낮습니다.",
+};
+
+/** 판정 아래 한 줄 안내 — 가장 강한·약한 영역을 넣는다 */
+function guideFor(decision: string, scores: AreaScore[]) {
+  const sorted = [...scores].sort((a, b) => a.score - b.score);
+  const name = (s: AreaScore) => `${AREA_NAMES[s.area] ?? s.area} ${s.score}점`;
+  const [w1, w2] = sorted;
+  const best = sorted[sorted.length - 1];
+  switch (decision) {
+    case "GO":
+      return `가장 강한 ${name(best)}을 앞세워 다음 단계로 진행하세요. 남은 과제는 ${name(w1)}이에요.`;
+    case "PIVOT":
+      return `${name(best)}은 살리고, 가장 약한 ${name(w1)}부터 다시 정의해 보세요.`;
+    case "STOP":
+      // '(2점)' 뒤라 조사는 받침 있는 꼴(이·을·과·은)로 맞춘다
+      return `${name(w1)}${w2 ? `, ${name(w2)}` : ""} — 핵심 영역이 모두 약해요. 문제나 고객부터 다시 잡아 보세요.`;
+    default:
+      return `가장 약한 ${name(w1)}${w2 ? `, ${name(w2)}` : ""}부터 확인하면 판정이 달라질 수 있어요.`;
+  }
+}
+
+/** 종합 평가 — 굵게 쓰지 않고, ①②③ / 1. 2. 3. 으로 나열된 부분은 줄을 바꿔 보여준다 */
+function SummaryText({ text }: { text: string }) {
+  const marked = text.replace(/\s*([①②③④⑤⑥⑦⑧⑨]|(?:^|\s)\d[.)]\s)/g, (m, g) => `\n${g.trim()} `).trim();
+  const lines = marked.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length > 1) {
+    return (
+      <div className="flex flex-col gap-1.5 text-[15px] leading-relaxed" style={{ color: "#08183F" }}>
+        {lines.map((l, i) => {
+          const m = l.match(/^([①②③④⑤⑥⑦⑧⑨]|\d[.)])\s*(.*)$/);
+          return m ? (
+            <div key={i} className="flex gap-2">
+              <span className="shrink-0 font-semibold" style={{ color: "#1446C4" }}>
+                {m[1]}
+              </span>
+              <span>{m[2]}</span>
+            </div>
+          ) : (
+            <p key={i} className="m-0">
+              {l}
+            </p>
+          );
+        })}
+      </div>
+    );
+  }
+  // 번호가 없으면 문장마다 줄을 나눠 한 덩어리로 보이지 않게
+  const sentences = text.split(/(?<=[.!?。])\s+/).filter(Boolean);
+  return (
+    <div className="flex flex-col gap-1.5 text-[15px] leading-relaxed" style={{ color: "#08183F" }}>
+      {sentences.map((t, i) => (
+        <p key={i} className="m-0">
+          {t}
+        </p>
+      ))}
+    </div>
+  );
 }
