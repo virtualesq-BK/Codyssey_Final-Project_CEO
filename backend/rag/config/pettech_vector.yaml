@@ -1,0 +1,6 @@
+corpus: data/pettech/rag_corpus
+# 기존 bizrag 네임스페이스와 분리합니다. 인덱스 이름은 new.env에서 읽습니다.
+namespace: pettech
+dimension: 384
+batch_size: 64
+embedding_threads: 6

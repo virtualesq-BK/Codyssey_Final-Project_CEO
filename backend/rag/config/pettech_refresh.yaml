@@ -1,0 +1,8 @@
+# sync 실행 시 다음 확인일이 지난 출처만 API 호출. 로컬 파일은 매 실행 해시 확인.
+sources:
+  kosis: {days: 30, description: '연간 조사: 공표값 수정·추가를 월 1회 확인'}
+  ecos: {days: 7, description: '월간·연간 물가지수: 주 1회 신규 공표·수정 확인'}
+  naver: {days: 7, description: '최근 완료 월까지 36개월: 주 1회 갱신'}
+  shopping: {days: 7, description: '최근 완료 월까지 쇼핑 클릭 지수: 주 1회 갱신'}
+  local_files: {days: 1, description: '매일 파일 확인; 수동 sync 시에도 신규·중복·수정 해시 확인'}
+retry_hours: 6

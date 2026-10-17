@@ -61,7 +61,14 @@ bizrag 시스템은 사업보고서·사업계획서 검토, 시장 타당성 �
 
 > [!NOTE]
 > **현재 DB 적재 현황 (2026년 10월 최신 동기화 기준)**
-> - **RAG 문서 및 벡터**: 총 11,762건 (청크: **12,199개**, Pinecone `bizrag-market` 인덱스 100% 업서트 완료)
+> - **범용 RAG (bizrag 네임스페이스)**: 청크 **12,199개**, Pinecone `bizrag-market` 인덱스 업서트 완료
+> - **펫테크 TAM/SAM/SOM RAG (pettech 네임스페이스)**: 청크 **13,929개**, Pinecone `bizrag-market` 업서트·검증 완료
+>   - KOSIS 반려동물양육현황조사 2025 (25개 통계표, 4,858 관측값)
+>   - ECOS 반려동물용품·관리비 소비자물가지수 (2020~2026.09, 348 관측값)
+>   - NAVER 검색어트렌드·쇼핑인사이트 36개월 (9,350 관측값)
+>   - WorldBank 글로벌 경제지표 8개 × 10개국 (1,187 관측값, TAM 추정용)
+>   - KIPRIS 펫테크 특허 검색 10개 키워드
+>   - TAM/SAM/SOM 종합 분석 문서 4건 (TAM·SAM·SOM·방법론)
 > - **시계열 관측치 (`observations`)**: 총 **181,341건** (한국은행 11.6만건, KOSIS 5.6만건 등)
 > - **원본 레코드 (`records`)**: 총 **643,023건** (생필품 가격, 소비자 피해구제 원자료 등)
 
@@ -253,3 +260,105 @@ for doc in docs:
     print(f"[{doc['source']}] {doc['title']} (score: {doc.get('hybrid_score')})")
     print(doc['text'])
 ```
+
+---
+
+## 8. 펫테크 전용 TAM/SAM/SOM 수집 파이프라인
+
+펫테크 시장 크기(TAM·SAM·SOM) 산출을 위한 독립 수집 파이프라인입니다.
+별도 Pinecone 네임스페이스(`pettech`)와 SQLite 코퍼스(`data/pettech/rag_corpus/knowledge.db`)를 사용하여
+범용 RAG 데이터와 격리됩니다.
+
+### ① 데이터 소스
+
+| 소스 | 항목 | 용도 |
+|---|---|---|
+| **KOSIS** (반려동물양육현황조사) | 25개 통계표, 4,858 관측값 | 국내 SAM/SOM 근거 |
+| **ECOS** (한국은행) | 반려동물용품·관리비 CPI 2020~2026.09, 348 관측값 | 국내 물가·지출 추세 |
+| **NAVER** 검색·쇼핑인사이트 | 36개월 시계열, 9,350 관측값 | 소비자 관심·수요 |
+| **WorldBank Open API** | 8개 글로벌 경제지표 × 10개국, 1,187 관측값 | 글로벌 TAM 추정 |
+| **KIPRIS Plus** | 펫테크 특허 10개 키워드 검색 | 기술 경쟁 강도 |
+| **종합 분석 문서** | TAM·SAM·SOM·방법론 4건 | 에이전트 추론 근거 |
+
+### ② WorldBank 수집 지표 및 대상 국가
+
+```python
+# 8개 경제지표
+WB_INDICATORS = {
+    "SP.POP.TOTL":       "인구 (명)",
+    "NY.GDP.MKTP.CD":    "GDP (현재 US$)",
+    "NY.GDP.PCAP.CD":    "1인당 GDP (현재 US$)",
+    "NE.CON.PRVT.CD":    "가계 최종소비지출 (현재 US$)",
+    "IT.NET.USER.ZS":    "인터넷 이용률 (%)",
+    "SP.URB.TOTL.IN.ZS": "도시화율 (%)",
+    "SP.POP.65UP.TO.ZS": "65세 이상 인구 비율 (%)",
+    "FP.CPI.TOTL.ZG":    "소비자물가상승률 (%)",
+}
+
+# 10개국 (한국·미국·일본·중국·독일·영국·호주·프랑스·베트남·브라질)
+WB_COUNTRIES = ["KOR","USA","JPN","CHN","DEU","GBR","AUS","FRA","VNM","BRA"]
+```
+
+### ③ KIPRIS 특허 검색 키워드
+
+| 키워드 | 분류 태그 |
+|---|---|
+| 반려동물 IoT | 반려동물IoT |
+| 펫캠 CCTV | 펫캠 |
+| 자동급식기 | 자동급식기 |
+| 반려동물 웨어러블 | 웨어러블 |
+| 반려동물 헬스케어 | 헬스케어 |
+| 펫시터 앱 | 펫시터 |
+| 반려동물 행동분석 | 행동분석 |
+| 스마트 사료 | 스마트사료 |
+| 반려동물 원격 | 원격돌봄 |
+| 펫 구독 서비스 | 구독서비스 |
+
+### ④ TAM 추정 방법론
+
+WorldBank 가계 최종소비지출(`NE.CON.PRVT.CD`) × 국가별 반려동물 지출 비율로 산출:
+
+| 국가 | 반려동물 지출 비율 |
+|---|---|
+| 한국 (KOR) | 0.8% |
+| 미국 (USA), 호주 (AUS) | 1.5% |
+| 독일 (DEU), 영국 (GBR) | 1.2% |
+| 기타 선진국 | 1.0% |
+| 신흥국 (VNM, BRA, CHN) | 0.5% |
+
+### ⑤ 실행 방법
+
+```bash
+# 1. 환경변수 설정 (new.env)
+#    KIPRIS_API_KEY, PINECONE_API_KEY, EMBEDDING_MODEL 등 확인
+
+# 2. TAM/SAM/SOM 데이터 수집 및 코퍼스 구축
+cd C:\...\bizrag
+python scripts/collect_tam_som_data.py
+
+# 3. 펫테크 코퍼스 → Pinecone pettech 네임스페이스 업서트
+python -m bizrag.pinecone_upload sync
+```
+
+수집 완료 시 `data/pettech/rag_corpus/` 구조:
+```
+knowledge.db           SQLite RAG 코퍼스 (문서·청크·FTS5 색인)
+exports/
+  pinecone_chunks.jsonl  Pinecone 업서트용 벡터 청크 (13,929개)
+embeddings.sqlite3     로컬 임베딩 캐시
+embedding_report.json  임베딩 검증 리포트
+pinecone_upload.json   Pinecone 업서트 검증 리포트
+manifest.json          코퍼스 메타데이터
+```
+
+### ⑥ 관련 파일
+
+| 파일 | 설명 |
+|---|---|
+| `scripts/collect_tam_som_data.py` | TAM/SAM/SOM 수집 메인 스크립트 (WorldBank·KIPRIS·종합문서) |
+| `bizrag/pettech.py` | KOSIS·ECOS·NAVER 수집기 (Collector 클래스) |
+| `bizrag/pet_documents.py` | 수집 데이터 → RAG 문서 변환 |
+| `bizrag/pinecone_upload.py` | 코퍼스 임베딩 및 Pinecone 업서트 |
+| `bizrag/rag_index.py` | RagStore: 토큰 경계 청킹 + BM25 FTS5 |
+| `config/pettech_vector.yaml` | 임베딩 설정 (384차원, fastembed, batch 64) |
+| `config/pettech.yaml` | NAVER·ECOS 수집 배치 설정 |
