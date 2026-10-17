@@ -103,6 +103,8 @@ FinancialAgent  RiskAgent
 | 음성 입력 | Web Speech API 기반 아이디어 입력 |
 | 판례 기반 리스크 분석 | 법원 판례(law.go.kr) 수집 → 업종별 법적 리스크 근거 제시 |
 | 시맨틱 RAG 검색 | Pinecone Vector DB 기반 시맨틱·하이브리드 검색으로 관련 공공데이터 정밀 조회 |
+| **MY지원서** | 보고서가 완성된 아이디어로 창업 지원 공고에 지원서 생성·관리 |
+| **모두의 창업 지원서 자동 작성** | "모두의 창업" 선택 시 AI가 보고서 데이터 기반으로 6개 문항 자동 작성 |
 
 ---
 
@@ -194,6 +196,11 @@ pytest
 | `GET` | `/api/v1/news` | 창업 관련 뉴스 |
 | `POST` | `/api/v1/interview/next` | 인터뷰 다음 질문 |
 | `POST` | `/api/v1/interview/profile` | 인터뷰 기반 프로필 생성 |
+| `POST` | `/api/v1/report/scores` | 보고서 영역별 점수 채점 (1~10점) |
+| `POST` | `/api/v1/report/profile-digest` | 프로필 섹션 요약 생성 |
+| `POST` | `/api/v1/report/modues-application` | 모두의 창업 지원서 6개 문항 AI 자동 작성 |
+| `GET` | `/api/v1/market/sizing` | TAM·SAM·SOM 시장 규모 계산 |
+| `POST` | `/api/v1/finance/statement` | 손익계산서 생성 |
 | `GET` | `/api/v1/health` | 헬스체크 |
 
 ---
@@ -206,6 +213,12 @@ pytest
 │   ├── app/
 │   │   ├── agents/          # 7개 전문 에이전트 + Orchestrator
 │   │   ├── api/             # FastAPI 라우터
+│   │   │   ├── routes.py            # 분석·공고 라우터
+│   │   │   ├── report_routes.py     # 보고서 점수·요약·모두의창업 자동작성
+│   │   │   ├── finance_routes.py    # 손익계산서
+│   │   │   ├── market_routes.py     # 시장 규모 (TAM/SAM/SOM)
+│   │   │   ├── interview_routes.py  # 인터뷰 대화
+│   │   │   └── analyze_jobs.py      # 비동기 분석 작업 관리
 │   │   ├── core/            # 공통 Schema, BaseAgent, LLMProvider
 │   │   ├── db/              # SQLAlchemy 모델 및 세션
 │   │   ├── financial/       # 재무 계산기 (BEP, CAC, LTV 등)
@@ -213,10 +226,21 @@ pytest
 │   └── rag/bizrag/          # Shared RAG 인프라 (벡터 스토어, 커넥터)
 ├── frontend/
 │   └── src/
-│       ├── app/             # Next.js App Router 페이지
-│       ├── components/      # 공통 UI 컴포넌트
+│       ├── app/
+│       │   ├── ideas/               # MY아이디어 페이지·상세
+│       │   ├── applications/        # MY지원서 관리
+│       │   ├── programs/            # 창업 지원 공고
+│       │   ├── lounge/              # 스타트업 라운지
+│       │   └── api/v1/             # Next.js API 프록시 라우터
+│       ├── components/
+│       │   ├── NewApplicationDialog.tsx  # 지원서 생성 다이얼로그 (모두의창업 폼 포함)
+│       │   └── ...
 │       ├── contexts/        # Auth Context
-│       └── lib/             # API, Firebase, 상태 관리
+│       └── lib/
+│           ├── application.ts       # 지원서 타입 (ModeusAnswers 포함)
+│           ├── applicationStore.ts  # 지원서 저장소 (Firestore/localStorage)
+│           ├── programs.ts          # 공고 타입 + PINNED_PROGRAMS 상수
+│           └── ...
 ├── docker-compose.yml
 ├── render.yaml
 └── firebase.json
@@ -233,3 +257,26 @@ pytest
 - Next.js API Routes를 프록시 레이어로 활용하여 백엔드 URL 노출 방지
 - Pinecone Serverless Vector DB + fastembed 기반 시맨틱·하이브리드 RAG 검색 (벡터 2,773개+)
 - 국가법령정보 판례 API 연동 — 창업·소비자·식품위생 등 10개 주제 정기 수집
+- **MY지원서 기능** — 보고서가 완성된 아이디어 기반 지원서 생성·상태 관리 (Firestore/localStorage)
+- **모두의 창업 지원서 AI 자동 작성** — 보고서 DecisionResult 데이터를 LLM에 전달하여 6개 문항(Q1~Q4-2) 자동 생성
+
+---
+
+## 변경 이력
+
+### v1.2.0 (2026-10-18)
+
+**MY지원서 & 모두의 창업 지원서 자동 작성**
+
+- `frontend/src/lib/programs.ts`: `PINNED_PROGRAMS` 상수 추가 — "모두의 창업" 공고를 상시 노출
+- `frontend/src/lib/application.ts`: `ModeusAnswers` 타입 및 `Application.modeusAnswers` 필드 추가
+- `frontend/src/lib/applicationStore.ts`: `createApplication`에 `modeusAnswers` 파라미터 추가
+- `frontend/src/components/NewApplicationDialog.tsx`:
+  - 지원사업 목록 상단에 "모두의 창업" 항상 표시 (상시 뱃지)
+  - "모두의 창업" 선택 → "지원서 작성하기" 클릭 시 백엔드 LLM 호출로 6문항 자동 작성
+  - `step: "select" | "modues-form"` 상태로 다이얼로그 2-step 전환
+  - 글자수 카운터 및 초과 시 시각적 경고
+- `frontend/src/app/api/v1/report/modues-application/route.ts`: Next.js 프록시 라우트 신규 추가
+- `backend/app/api/report_routes.py`: `POST /api/v1/report/modues-application` LLM 자동 작성 엔드포인트 추가
+  - 보고서 프로필 + DecisionResult(강점·약점·기회·실행계획 등)를 LLM에 전달
+  - Q1(100자)~Q4-2(1000자) 6개 문항 응답, 글자수 초과 자동 트리밍

@@ -103,6 +103,60 @@
 
 ---
 
+### FR-07. MY지원서 관리
+
+#### FR-07-1. 지원서 생성
+- 사용자는 상세분석 보고서가 완성된 아이디어와 창업 지원 공고를 선택하여 지원서를 생성할 수 있다.
+- 동일 아이디어·공고 조합으로 중복 지원서 생성을 방지한다.
+- `/ideas` 페이지의 보고서 단계 아이디어 카드에서 "지원서 쓰기" 버튼으로 직접 진입할 수 있다.
+
+#### FR-07-2. 지원사업 목록
+- 지원서 생성 다이얼로그의 "2. 지원사업" 항목에는 실시간 공고 목록과 함께 "모두의 창업"이 상시 노출된다.
+- 사업명·기관명으로 검색 필터링이 가능하다.
+
+#### FR-07-3. 지원서 상태 관리
+- 각 지원서는 다음 4가지 상태를 가진다: `작성 중`, `제출 완료`, `선정`, `탈락`
+- 사용자는 지원서 카드에서 상태를 직접 변경할 수 있다.
+
+#### FR-07-4. 지원서 저장
+- 로그인 사용자: Firestore `users/{uid}/applications` 컬렉션에 저장
+- 비로그인 사용자: 브라우저 localStorage에 저장
+
+#### FR-07-5. 지원서 삭제
+- 사용자는 지원서 카드에서 개별 지원서를 삭제할 수 있다.
+
+---
+
+### FR-08. 모두의 창업 지원서 AI 자동 작성
+
+#### FR-08-1. 폼 진입
+- 지원서 생성 다이얼로그에서 "모두의 창업"을 선택하고 "지원서 작성하기"를 클릭하면 자동 작성 후 6문항 폼으로 전환된다.
+
+#### FR-08-2. AI 자동 작성
+- 시스템은 선택된 아이디어의 최신 보고서 데이터(프로필 + DecisionResult)를 백엔드 LLM에 전달하여 6개 문항을 자동 작성한다.
+- 자동 작성 실패 시 빈 폼으로 진입하여 수동 작성을 허용한다.
+
+#### FR-08-3. 6개 문항 구성
+
+| 문항 | 내용 | 글자 제한 | 데이터 소스 |
+|------|------|-----------|------------|
+| Q1 | 아이디어 한 줄 소개 | 100자 | `profile.oneLiner` |
+| Q2 | 아이디어 배경 이야기 | 1,000자 | `profile.problem` + `idea.memo` |
+| Q3-1 | 기존 대비 차별점·문제 해결 | 1,000자 | `profile.solution` + `strengths` + `opportunities` |
+| Q3-2 | 수익 창출 계획 | 1,000자 | `profile.revenueModel` + `financial_summary` |
+| Q4-1 | 사업화 계획 | 1,000자 | `action_plan` |
+| Q4-2 | 책임멘토에게 받고 싶은 도움 | 1,000자 | `weaknesses` + `validation_items` |
+
+#### FR-08-4. 폼 유효성 검사
+- 6개 문항 모두 내용이 있어야 "지원서 제출" 버튼이 활성화된다.
+- 각 문항에 실시간 글자수 카운터를 표시한다.
+- 글자수 초과 시 빨간 테두리와 경고 색상으로 표시한다.
+
+#### FR-08-5. 답변 저장
+- 제출 완료된 지원서에는 `modeusAnswers` 필드에 6개 문항 답변이 함께 저장된다.
+
+---
+
 ## 2. 비기능 요구사항 (Non-Functional Requirements)
 
 ### NFR-01. 성능
@@ -310,6 +364,38 @@ class WorkflowResult(BaseModel):
 |---|---|
 | 설명 | 서비스 상태 확인 |
 | Response | `{ status: "ok", service: "나도사장 API" }` |
+
+#### POST /api/v1/report/scores
+| 항목 | 내용 |
+|---|---|
+| 설명 | 보고서 에이전트별 영역 점수 채점 (1~10점) |
+| Request | `ScoreRequest` (아이디어 정보 + 에이전트별 summary/findings) |
+| Response | `ScoreResponse` (분야별 점수 + 이유 한 줄) |
+
+#### POST /api/v1/report/profile-digest
+| 항목 | 내용 |
+|---|---|
+| 설명 | 보고서 프로필 섹션을 짧은 요약 + 근거 형식으로 변환 |
+| Request | `DigestRequest` (칸 id·label·원문 목록) |
+| Response | `DigestResponse` (summary + points 목록) |
+
+#### POST /api/v1/report/modues-application
+| 항목 | 내용 |
+|---|---|
+| 설명 | 모두의 창업 지원서 6개 문항 AI 자동 작성 |
+| Request | 아이디어 프로필 + DecisionResult 데이터 (JSON) |
+| Response | `ModeusApplicationResponse` (q1~q4_2 6개 문자열) |
+| 타임아웃 | 90초 |
+
+#### POST /api/v1/market/sizing
+| 항목 | 내용 |
+|---|---|
+| 설명 | TAM·SAM·SOM 시장 규모 계산 및 연도별 그래프 데이터 생성 |
+
+#### POST /api/v1/finance/statement
+| 항목 | 내용 |
+|---|---|
+| 설명 | 손익계산서 항목 계산 (매출·비용·영업이익·손익분기점) |
 
 ### 3.4 보안 설계
 
