@@ -1,0 +1,28 @@
+output: data/pettech/rag_corpus
+inbox_directory: inbox/pettech_documents
+statistics_db: data/pettech/knowledge.db
+input_directory: C:/Users/USER/Downloads
+csv_files:
+  - 동물_동물미용업.csv
+  - 동물_동물약국.csv
+  - 동물_동물병원.csv
+pdf_prefixes:
+  - 펫테크(Pet-tech) 제품의 디자인 속성이 구매의도에 미치는 영향 분석
+  - 구독서비스 유형별 소비자 만족도 및 해지 사유 연구
+  - 반려견 보호자를 위한 펫 케어 모바일 애플리케이션 UI 디자인 개선 방안 연구
+  - 반려동물 스마트 웨어러블 디바이스에 대한 실태 조사
+  - 반려동물 애착 기반의 소비 가치와 구매 의도의 영향 관계 연구
+  - Customer satisfaction in the pet food subscription
+  - 누가 왜 구독 서비스를 이용하는가
+  - 2016 반려동물 연관산업 분석
+excluded_files:
+  - 디지털 트윈 기술을 활용한 가상 반려동물 관리 플랫폼 구현에 관한 탐색적 연구.pdf
+publication_years:
+  펫테크(Pet-tech) 제품의 디자인 속성이 구매의도에 미치는 영향 분석: 2024
+  구독서비스 유형별 소비자 만족도 및 해지 사유 연구: 2021
+  반려견 보호자를 위한 펫 케어 모바일 애플리케이션 UI 디자인 개선 방안 연구: 2024
+  반려동물 스마트 웨어러블 디바이스에 대한 실태 조사: 2022
+  반려동물 애착 기반의 소비 가치와 구매 의도의 영향 관계 연구: 2023
+  Customer satisfaction in the pet food subscription: 2024
+  누가 왜 구독 서비스를 이용하는가: 2022
+  2016 반려동물 연관산업 분석: 2016

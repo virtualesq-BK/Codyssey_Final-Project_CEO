@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections import defaultdict
 
 from ..util import to_float
 from .base import ApiError, Connector, Job
@@ -176,13 +177,117 @@ class Kosis(Connector):
                         "period": r.get("PRD_DE"), "value": to_float(r.get("DT")), "unit": r.get("UNIT_NM"),
                         "dims": {"table": r.get("TBL_NM")}})
         n = self.store.upsert_observations(obs)
+        doc_count = self._write_table_docs(dataset, title, rows, params)
         self.store.conn.commit()
         series = sorted({o["series_key"] for o in obs})
-        return {"dataset": dataset, "table": title, "prdSe": used, "rows": n,
+        return {"dataset": dataset, "table": title, "prdSe": used, "rows": n, "docs": doc_count,
                 "levels": meta["levels"] if meta else None, "obj": obj,
                 "series_count": len(series), "series_sample": series[:15],
                 "periods": sorted({o["period"] for o in obs})[-6:],
                 "how_to_read": "get_series(dataset=...)로 전체 값 조회"}
+
+    def _write_table_docs(self, dataset: str, title: str, rows: list[dict], params: dict) -> int:
+        """통계표 조회 결과를 RAG 검색이 가능하도록 분류별 요약 문서로 변환하여 저장합니다."""
+        if not rows:
+            return 0
+        groups = defaultdict(lambda: defaultdict(dict))
+        for r in rows:
+            dims = [r.get(f"C{i}_NM") for i in range(1, 9) if r.get(f"C{i}_NM")]
+            cat = " > ".join(dims) if dims else "전체"
+            prd = str(r.get("PRD_DE") or "")
+            itm = str(r.get("ITM_NM") or "")
+            val = r.get("DT")
+            unit = str(r.get("UNIT_NM") or "")
+            groups[cat][prd][itm] = (val, unit)
+
+        doc_count = 0
+        url = f"https://kosis.kr/statHtml/statHtml.do?orgId={params['orgId']}&tblId={params['tblId']}"
+
+        for cat, prd_data in groups.items():
+            prds = sorted(prd_data.keys())
+            if not prds:
+                continue
+            latest_prd = prds[-1]
+            prev_prd = prds[-2] if len(prds) > 1 else None
+
+            def _fmt_p(p: str) -> str:
+                if len(p) == 4 and p.isdigit():
+                    return f"{p}년"
+                if len(p) == 6 and p.isdigit():
+                    return f"{p[:4]}년 {p[4:]}월"
+                return p
+
+            head = [
+                f"[KOSIS 국가통계] {title}",
+                f"분류/업종: {cat}",
+                f"기준 시점: {_fmt_p(latest_prd)}" + (f" (직전 비교: {_fmt_p(prev_prd)})" if prev_prd else ""),
+                f"데이터셋: {dataset}",
+                "\n[주요 지표]",
+            ]
+
+            lines = []
+            curr_items = prd_data[latest_prd]
+            prev_items = prd_data[prev_prd] if prev_prd else {}
+
+            for itm, (val, unit) in sorted(curr_items.items()):
+                try:
+                    fval = float(val)
+                    val_str = f"{fval:,.1f}" if "." in str(val) else f"{int(fval):,}"
+                except (ValueError, TypeError):
+                    val_str = str(val)
+                line = f"- {itm}: {val_str} {unit}".strip()
+
+                if prev_prd and itm in prev_items:
+                    pval = prev_items[itm][0]
+                    try:
+                        diff = float(val) - float(pval)
+                        diff_str = f"+{diff:,.1f}" if diff > 0 else f"{diff:,.1f}"
+                        line += f" (전기 대비 {diff_str} {unit})".strip()
+                    except (ValueError, TypeError):
+                        pass
+                lines.append(line)
+
+            sales_val = None
+            stores_val = None
+            for itm, (val, unit) in curr_items.items():
+                if "매출액" in itm and "가맹점당" not in itm:
+                    try:
+                        mul = 1_000_000 if "백만" in unit else (1_000 if "천" in unit else 1)
+                        sales_val = float(val) * mul
+                    except Exception:
+                        pass
+                if any(k in itm for k in ("가맹점수", "사업체수", "점포수")):
+                    try:
+                        stores_val = float(val)
+                    except Exception:
+                        pass
+            if sales_val and stores_val and stores_val > 0:
+                avg_sales = sales_val / stores_val
+                if avg_sales >= 100_000_000:
+                    lines.append(f"- [산출치] 점포(가맹점)당 평균 연매출액: {avg_sales / 100_000_000:,.2f} 억 원 ({avg_sales:,.0f} 원)")
+                else:
+                    lines.append(f"- [산출치] 점포(가맹점)당 평균 연매출액: {avg_sales / 10_000:,.1f} 만 원")
+
+            tail = f"\n전체 시계열 조회: get_series(dataset=\"{dataset}\", series_contains=\"{cat}\")"
+            body = "\n".join(head) + "\n" + "\n".join(lines) + "\n" + tail
+            doc_title = f"[통계청] {title} — {cat} ({_fmt_p(latest_prd)} 기준)"
+            orig_id = f"{params['orgId']}:{params['tblId']}:{cat}"
+
+            saved = self.store.upsert_document(
+                source="kosis",
+                doc_type="stat_table",
+                original_id=orig_id,
+                title=doc_title,
+                body=body,
+                url=url,
+                published_at=latest_prd,
+                license=self.license,
+                meta={"orgId": params["orgId"], "tblId": params["tblId"], "category": cat, "dataset": dataset},
+            )
+            if saved:
+                doc_count += 1
+
+        return doc_count
 
     # ---------------------------------------------------------- 정기 수집
     def jobs(self) -> list[Job]:
