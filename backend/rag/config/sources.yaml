@@ -32,9 +32,21 @@ sources:
       - 전국사업체조사 사업체수
       - 1인 가구
       - 소비자물가지수
-    watch_tables: []
-    # 예시 — 통계표 ID는 `python -m bizrag try 온라인쇼핑` 이나 search 결과의 '조회키'에서 확인
-    #   - {orgId: "101", tblId: "DT_XXXXXXX", prdSe: "M", recent: 36}
+    watch_tables:
+      # [TAM 전체 시장 규모] 경제총조사 산업세세분류별 총괄 (KSIC 5자리 산업별 총매출액, 사업체수)
+      - {orgId: "101", tblId: "DT_2KI2001", prdSe: "F", recent: 1}
+      # [SOM 점포당 기대매출 벤치마크] 프랜차이즈 통계 (가맹점당 평균 연매출, 영업이익률, 가맹점수)
+      - {orgId: "101", tblId: "DT_FR0001N", prdSe: "Y", recent: 2, obj: {objL1: "00"}}
+      # [CAPEX/초기비용] 프랜차이즈 주요 업종별 가입비용 현황 (가맹비, 보증금, 인테리어비)
+      - {orgId: "101", tblId: "DT_FR0007",  prdSe: "Y", recent: 2}
+      # [이커머스/플랫폼 성장률] 온라인쇼핑몰 상품군별/판매매체별 거래액 (CAGR, 모바일 비중)
+      - {orgId: "101", tblId: "DT_1KE10071", prdSe: "M", recent: 12}
+      # [SAM 유효 시장/경쟁자 수] 전국사업체조사 전국 산업별 사업체수 및 종사자수
+      - {orgId: "101", tblId: "DT_1K52F01", prdSe: "A", recent: 1, obj: {objL1: "00"}}
+      # [유통 채널 전략] 소매업태별 판매액지수 (백화점, 편의점, 면세점, 무점포소매 추이)
+      - {orgId: "101", tblId: "DT_1K41013", prdSe: "M", recent: 12}
+      # [원가/물가 리스크] 지출목적별 소비자물가지수 (품목별 물가지수 및 등락률)
+      - {orgId: "101", tblId: "DT_1J22001", prdSe: "M", recent: 12, obj: {objL1: "T10"}}
 
   # ── 국가법령정보 — 법령 조문 ──────────────────────────────────────────
   # 정기(월): 감시 법령의 개정 여부 확인 → 바뀐 경우에만 조문 전체 재적재
