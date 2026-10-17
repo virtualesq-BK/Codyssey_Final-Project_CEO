@@ -14,3 +14,6 @@ node_modules/
 .next/
 *.env.local
 *.tsbuildinfo
+
+# Vercel
+.vercel/
