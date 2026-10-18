@@ -20,7 +20,7 @@ function actionsFor(idea: Idea, status: IdeaStatus, failedStage: IdeaStatus | nu
   switch (status) {
     case "memo":
       // 비로그인은 인터뷰 대신 메모만으로 프로필 1~3을 미리 본다
-      if (!loggedIn) return [{ label: "프로필 미리보기", href: `${base}?action=preview`, note: "하루 1회" }];
+      if (!loggedIn) return [{ label: "프로필\n미리보기", href: `${base}?action=preview`, note: "하루 1회" }];
       return [
         { label: "AI 인터뷰", href: `${base}?action=interview`, needsLogin: true },
         { label: "직접 작성", href: `${base}?action=write`, needsLogin: true },
@@ -159,7 +159,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
           {actions.map((a) => {
             const inner = (
               <>
-                <span className="text-sm font-bold leading-tight">{a.label}</span>
+                <span className="text-sm font-bold leading-tight whitespace-pre-line">{a.label}</span>
                 {a.note && <span className="text-[11px] font-medium mt-0.5 opacity-70">{a.note}</span>}
               </>
             );
