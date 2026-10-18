@@ -126,18 +126,73 @@ class CombinedRetriever:
         return out
 
 
-def build_web_search_retriever() -> Optional[WebSearchRetriever]:
-    """Anthropic 키가 있으면 웹검색 근거 수집기를 만든다. WEB_SEARCH_ENABLED=false로 끌 수 있다"""
+NAVER_SEARCH_URL = "https://openapi.naver.com/v1/search/webkr.json"
+
+
+class NaverWebSearchRetriever:
+    """네이버 웹 검색 API — NAVER_CLIENT_ID/SECRET이 있을 때 Anthropic 대신 사용하는 fallback"""
+
+    def __init__(self, client_id: str, client_secret: str, display: int = 6):
+        self._id = client_id
+        self._secret = client_secret
+        self._display = display
+
+    async def __call__(self, query: str) -> list[Evidence]:
+        params = {"query": query, "display": self._display, "sort": "date"}
+        headers = {"X-Naver-Client-Id": self._id, "X-Naver-Client-Secret": self._secret}
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                resp = await client.get(NAVER_SEARCH_URL, params=params, headers=headers)
+                resp.raise_for_status()
+            items = resp.json().get("items", [])
+            out: list[Evidence] = []
+            for item in items:
+                url = item.get("link") or ""
+                # 네이버 검색 결과의 HTML 태그 제거
+                import re as _re
+                title = _re.sub(r"<[^>]+>", "", item.get("title") or "")[:120]
+                desc = _re.sub(r"<[^>]+>", "", item.get("description") or "")[:400]
+                if not desc:
+                    continue
+                out.append(
+                    Evidence(
+                        title=title,
+                        source=f"웹검색(Naver) · {_domain(url)}" if url else "웹검색(Naver)",
+                        url=url or None,
+                        content=desc,
+                        confidence=0.5,
+                    )
+                )
+            logger.info("[NaverSearch] %s → 근거 %d건", query[:40], len(out))
+            return out
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("[NaverSearch] 실패 query=%r: %s", query[:60], exc)
+            return []
+
+
+def build_web_search_retriever():
+    """웹검색 수집기를 반환한다.
+    - ANTHROPIC_API_KEY가 있으면 Anthropic web_search 도구 사용 (최고 품질)
+    - 없고 NAVER_CLIENT_ID/SECRET가 있으면 Naver 웹검색 API fallback
+    - WEB_SEARCH_ENABLED=false 로 전체 비활성화 가능
+    """
     from app.core.config import settings
 
     if os.getenv("WEB_SEARCH_ENABLED", "true").lower() in ("0", "false", "no"):
         return None
-    if not settings.anthropic_api_key:
-        logger.info("[WebSearch] ANTHROPIC_API_KEY 없음 — 웹검색 비활성화")
-        return None
-    return WebSearchRetriever(
-        api_key=settings.anthropic_api_key,
-        base_url=os.getenv("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
-        model=os.getenv("WEB_SEARCH_MODEL", "claude-haiku-4"),
-        max_uses=int(os.getenv("WEB_SEARCH_MAX_USES", "2")),
-    )
+    if settings.anthropic_api_key:
+        return WebSearchRetriever(
+            api_key=settings.anthropic_api_key,
+            base_url=os.getenv("ANTHROPIC_BASE_URL") or "https://api.anthropic.com",
+            model=os.getenv("WEB_SEARCH_MODEL", "claude-haiku-4"),
+            max_uses=int(os.getenv("WEB_SEARCH_MAX_USES", "2")),
+        )
+    if settings.naver_client_id and settings.naver_client_secret:
+        logger.info("[WebSearch] ANTHROPIC_API_KEY 없음 — Naver 웹검색 fallback 사용")
+        return NaverWebSearchRetriever(
+            client_id=settings.naver_client_id,
+            client_secret=settings.naver_client_secret,
+            display=int(os.getenv("WEB_SEARCH_NAVER_MAX", "6")),
+        )
+    logger.info("[WebSearch] API 키 없음 — 웹검색 비활성화")
+    return None

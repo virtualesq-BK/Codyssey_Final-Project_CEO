@@ -18,6 +18,14 @@ services:
         value: production
       - key: OPENAI_API_KEY
         sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_BASE_URL
+        sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
       - key: LAW_OC
         sync: false
     healthCheckPath: /api/v1/health

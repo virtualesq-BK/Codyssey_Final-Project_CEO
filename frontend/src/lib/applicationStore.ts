@@ -3,7 +3,7 @@
  * 보고서까지 나온 아이템만 지원서를 만들 수 있다.
  */
 import type { User } from "firebase/auth";
-import type { Application, ApplicationStatus } from "@/lib/application";
+import type { Application, ApplicationStatus, ModeusAnswers } from "@/lib/application";
 import { deleteApplicationFS, getApplicationsFS, setApplicationFS } from "@/lib/firestore";
 import { type Idea, displayTitle, effectiveStatus } from "@/lib/idea";
 import { newId } from "@/lib/ideaStore";
@@ -40,6 +40,7 @@ export async function createApplication(
   existing: Application[],
   idea: Idea,
   program: Program,
+  modeusAnswers?: ModeusAnswers,
 ): Promise<Application> {
   if (existing.some((a) => a.ideaId === idea.id && a.programId === program.id)) {
     throw new Error("이 아이템으로 이 사업에 지원하는 지원서가 이미 있어요.");
@@ -57,6 +58,7 @@ export async function createApplication(
     status: "draft",
     createdAt: now,
     updatedAt: now,
+    ...(modeusAnswers ? { modeusAnswers } : {}),
   };
   if (user) await setApplicationFS(user.uid, app);
   else saveLocal([app, ...loadLocal()]);

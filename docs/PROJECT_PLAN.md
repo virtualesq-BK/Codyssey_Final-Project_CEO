@@ -160,6 +160,13 @@ Agent → LLMProvider → OpenAI GPT / Anthropic Claude
       ▼
   Vercel (Frontend, Next.js)
       │  Next.js API Routes (프록시, 300초 타임아웃)
+      │    /api/v1/analyze
+      │    /api/v1/programs
+      │    /api/v1/report/scores
+      │    /api/v1/report/profile-digest
+      │    /api/v1/report/modues-application   ← NEW
+      │    /api/v1/market/sizing
+      │    /api/v1/finance/statement
       ▼
   Render (Backend, FastAPI)
       │
@@ -232,6 +239,23 @@ BusinessIdea (Pydantic)
 - PostgreSQL 마이그레이션 (SQLite → Render PostgreSQL)
 - CI/CD 파이프라인 구성 (GitHub Actions)
 - 발표 자료 및 데모 시나리오 준비
+
+**추가 완료 (4주차 이후)**
+- MY지원서 기능 전체 구현 ✅
+  - 보고서 완성 아이디어 기반 지원서 생성·상태 관리 (작성중/제출완료/선정/탈락)
+  - Firestore(로그인) / localStorage(비로그인) 이중 저장
+  - `/ideas` 카드에서 "지원서 쓰기" 버튼 → `/applications?new=1&idea=...` 직통 연결
+- 모두의 창업 지원서 AI 자동 작성 ✅
+  - 지원사업 목록 상단에 "모두의 창업" 상시 노출 (PINNED_PROGRAMS 상수)
+  - 보고서 DecisionResult 데이터로 6개 문항 LLM 자동 작성
+  - 백엔드 `/api/v1/report/modues-application` 엔드포인트 신규 추가
+  - 프론트엔드 2-step 다이얼로그: 아이템·공고 선택 → 폼 자동작성 진입
+- 보고서 영역별 점수 채점 기능 (`/api/v1/report/scores`) ✅
+- 프로필 섹션 요약 생성 기능 (`/api/v1/report/profile-digest`) ✅
+- 시장 규모(TAM/SAM/SOM) 계산 API (`/api/v1/market/sizing`) ✅
+- 손익계산서 생성 API (`/api/v1/finance/statement`) ✅
+- Concept-B 디자인 시스템 적용 (Pretendard 폰트, 수평 로고 헤더, 새 파비콘) ✅
+- Naver API Fallback 추가 (웹검색 안정성 강화) ✅
 
 ### 5.3 팀 구성 및 담당
 

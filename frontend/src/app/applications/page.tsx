@@ -6,12 +6,14 @@ import Header from "@/components/Header";
 import PageHero from "@/components/PageHero";
 import NewApplicationDialog from "@/components/NewApplicationDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { listReports } from "@/lib/ideaStore";
 import {
   APPLICATION_FILTERS,
   APPLICATION_STATUS,
   type Application,
   type ApplicationFilter,
   type ApplicationStatus,
+  type ModeusAnswers,
   matchesFilter,
 } from "@/lib/application";
 import {
@@ -68,8 +70,8 @@ export default function ApplicationsPage() {
   const eligible = ideas.filter(canApply);
   const visible = apps.filter((a) => matchesFilter(a, filter));
 
-  async function create(idea: Idea, program: Program) {
-    const app = await createApplication(user, apps, idea, program);
+  async function create(idea: Idea, program: Program, modeusAnswers?: ModeusAnswers) {
+    const app = await createApplication(user, apps, idea, program, modeusAnswers);
     setApps((prev) => [app, ...prev]);
     setDialog(null);
     setFilter("all");
@@ -258,6 +260,10 @@ export default function ApplicationsPage() {
           presetProgramId={dialog.programId}
           onCreate={create}
           onClose={() => setDialog(null)}
+          fetchLatestReport={async (ideaId) => {
+            const reports = await listReports(user, ideaId);
+            return reports.sort((a, b) => b.version - a.version)[0] ?? null;
+          }}
         />
       )}
     </div>

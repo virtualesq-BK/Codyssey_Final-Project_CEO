@@ -4,6 +4,15 @@
  */
 export type ApplicationStatus = "draft" | "submitted" | "selected" | "rejected";
 
+export interface ModeusAnswers {
+  q1: string;
+  q2: string;
+  q3_1: string;
+  q3_2: string;
+  q4_1: string;
+  q4_2: string;
+}
+
 export interface Application {
   id: string;
   ideaId: string;
@@ -16,6 +25,8 @@ export interface Application {
   status: ApplicationStatus;
   createdAt: string;
   updatedAt: string;
+  /** 모두의 창업 지원서 답변 (해당 프로그램에만 존재) */
+  modeusAnswers?: ModeusAnswers;
 }
 
 export const APPLICATION_STATUS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {
