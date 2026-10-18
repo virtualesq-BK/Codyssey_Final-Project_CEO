@@ -5,7 +5,7 @@ const STEPS = [
   { step: "02", title: "AI 심층 분석", desc: "6개 에이전트가 병렬로 분석합니다" },
   { step: "03", title: "아이템 프로파일", desc: "시장·고객·경쟁·수익 모델 도출" },
   { step: "04", title: "사업성 진단", desc: "GO / PIVOT / VALIDATE / STOP 판정" },
-  { step: "05", title: "공고 & 지원서", desc: "맞춤 창업 공고와 지원서 재료 제공" },
+  { step: "05", title: "공고 & 지원서", desc: "맞춤 창업 공고 제공 및 지원서 작성 지원" },
 ];
 
 /** 비로그인 랜딩 — 서비스 소개와 시작 버튼 */
@@ -49,7 +49,7 @@ export default function Landing() {
           <h1 className="text-4xl md:text-5xl font-bold leading-tight m-0 tracking-tight" style={{ color: "#071B45" }}>
             아이디어 한 줄에서
             <br />
-            <span style={{ color: "#134CD8" }}>지원서 재료</span>까지
+            <span style={{ color: "#134CD8" }}>지원서 작성</span>까지
           </h1>
 
           <p className="text-lg max-w-xl m-0 leading-relaxed" style={{ color: "#53647A" }}>
