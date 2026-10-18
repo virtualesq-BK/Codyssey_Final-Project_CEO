@@ -344,7 +344,7 @@ export default function ProfileWorkspace(props: Props) {
             </div>
 
             <div>
-              {!sectionLocked && <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} empty={empty} />}
+              {!sectionLocked && <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} fromMemo={!!idea.previewProfile} empty={empty} />}
             </div>
           </div>
         );
@@ -534,6 +534,21 @@ export default function ProfileWorkspace(props: Props) {
           </div>
         )}
 
+        {!user && (
+          <div
+            className="rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
+            style={{ background: "#FFF6DE", color: "#8A4B08" }}
+          >
+            <span className="leading-relaxed">
+              <b>{idea.previewProfile ? "메모만으로 만든 미리보기 프로필이에요." : "로그인하지 않으셨네요."}</b> 이 브라우저에만 저장돼 있어요. 로그인하면
+              계정에 저장되고, AI 인터뷰로 더 정확하게 다듬을 수 있어요.
+            </span>
+            <Link href={`/login?next=/ideas/${idea.id}`} className="font-bold underline whitespace-nowrap" style={{ color: "#071B45" }}>
+              로그인하고 저장하기 ›
+            </Link>
+          </div>
+        )}
+
         {tab === "overview" && (
           <section id="profile" className="bg-white rounded-lg shadow-card px-6 py-4 scroll-mt-20" style={{ border: `1px solid ${line}` }}>
             {sections.filter((s) => !s.fromReport).map((s) => renderSection(s, false))}
@@ -566,6 +581,15 @@ export default function ProfileWorkspace(props: Props) {
                       >
                         상세분석하기 (유료)
                       </button>
+                    )}
+                    {!user && (
+                      <Link
+                        href={`/login?next=/ideas/${idea.id}`}
+                        className="min-h-[48px] px-6 rounded-xl text-sm font-bold no-underline inline-flex items-center"
+                        style={{ border: "1px solid #071B45", color: "#071B45", textDecoration: "none" }}
+                      >
+                        로그인하고 상세분석하기
+                      </Link>
                     )}
                     {status === "diagnosing" && <StatusPill status="diagnosing" />}
                     {missingCount > 0 && (
@@ -665,7 +689,13 @@ export default function ProfileWorkspace(props: Props) {
               ))}
             </section>
           ) : (
-            <EmptyCard text="인터뷰 없이 직접 작성한 프로필이에요." />
+            <EmptyCard
+              text={
+                idea.previewProfile
+                  ? "메모만으로 만든 미리보기 프로필이에요. 로그인하면 AI 인터뷰로 더 정확하게 다듬을 수 있어요."
+                  : "인터뷰 없이 직접 작성한 프로필이에요."
+              }
+            />
           ))}
       </main>
 
@@ -806,11 +836,14 @@ function SourceBadge({
   row,
   sectionFromReport,
   fromInterview,
+  fromMemo,
   empty,
 }: {
   row: ProfileRow;
   sectionFromReport: boolean;
   fromInterview: boolean;
+  /** 비로그인 미리보기 — 메모만 보고 AI가 쓴 프로필 */
+  fromMemo?: boolean;
   empty: boolean;
 }) {
   const base = "inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap";
@@ -843,7 +876,7 @@ function SourceBadge({
       </span>
     ) : (
     <span className={base} style={{ background: fromInterview ? "#F5F7FB" : "#F5F7FB", color: fromInterview ? "#071B45" : "#53647A" }}>
-      {fromInterview ? "인터뷰 · AI" : "직접 입력"}
+      {fromInterview ? "인터뷰 · AI" : fromMemo ? "메모 · AI" : "직접 입력"}
     </span>
     )
   );

@@ -100,6 +100,8 @@ export interface Idea {
   reportDigest?: { reportId: string; rows: Record<string, string> } | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
+  /** 비로그인 '프로필 미리보기'로 메모만 보고 만든 프로필 (인터뷰 없음) */
+  previewProfile?: boolean;
   createdAt: string;
   updatedAt: string;
 }

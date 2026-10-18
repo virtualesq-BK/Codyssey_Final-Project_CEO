@@ -12,6 +12,8 @@ import {
   type InterviewTurn,
   interviewDraftProfile,
   interviewNext,
+  previewProfile,
+  type ProfileDraft,
 } from "@/lib/api";
 import {
   EMPTY_PROFILE,
@@ -255,19 +257,26 @@ export async function finishInterview(user: User | null, idea: Idea): Promise<Id
       errorMessage: err instanceof Error ? err.message : String(err),
     });
   }
-  return updateIdea(user, current, {
-    status: "profile",
-    profile: {
-      name: draft.name || current.profile.name || current.memo.split("\n")[0].slice(0, 40),
-      oneLiner: draft.one_liner,
-      industry: draft.industry,
-      location: draft.location || EMPTY_PROFILE.location,
-      customer: draft.customer,
-      problem: draft.problem,
-      solution: draft.solution,
-      revenueModel: draft.revenue_model,
-    },
-  });
+  return updateIdea(user, current, { status: "profile", profile: profileFromDraft(current, draft) });
+}
+
+function profileFromDraft(idea: Idea, draft: ProfileDraft): IdeaProfile {
+  return {
+    name: draft.name || idea.profile.name || idea.memo.split("\n")[0].slice(0, 40),
+    oneLiner: draft.one_liner,
+    industry: draft.industry,
+    location: draft.location || EMPTY_PROFILE.location,
+    customer: draft.customer,
+    problem: draft.problem,
+    solution: draft.solution,
+    revenueModel: draft.revenue_model,
+  };
+}
+
+/** 비로그인 '프로필 미리보기' — 메모만으로 프로필 1~3을 만들어 브라우저에 저장한다 (로그인하면 계정으로 옮겨짐) */
+export async function makePreviewProfile(user: User | null, idea: Idea): Promise<Idea> {
+  const draft = await previewProfile(idea.memo);
+  return updateIdea(user, idea, { status: "profile", profile: profileFromDraft(idea, draft), previewProfile: true });
 }
 
 // ── 가설 검증 기록 ──────────────────────────────────────────────────────

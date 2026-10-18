@@ -170,6 +170,24 @@ export function interviewDraftProfile(memo: string, messages: InterviewMessage[]
   return postJson<ProfileDraft>("/api/v1/interview/profile", { memo, messages }, "프로필 초안 요청 실패");
 }
 
+/** 오늘 미리보기를 이미 쓴 경우 (같은 IP 하루 1회) */
+export class PreviewLimitError extends Error {}
+
+/** 비로그인 '프로필 미리보기' — 메모만으로 프로필 1~3 초안 */
+export async function previewProfile(memo: string): Promise<ProfileDraft> {
+  const res = await fetch("/api/v1/interview/preview-profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ memo }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const message = typeof err.detail === "string" ? err.detail : "프로필 미리보기를 만들지 못했어요.";
+    throw res.status === 429 ? new PreviewLimitError(message) : new Error(message);
+  }
+  return res.json();
+}
+
 export async function healthCheck(): Promise<boolean> {
   try {
     const res = await fetch("/api/v1/health");
