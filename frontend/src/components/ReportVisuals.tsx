@@ -173,6 +173,11 @@ export function EvidenceOverview({ report }: { report: IdeaReport }) {
                       </span>
                     )}
                     <span className="block text-xs" style={{ color: gray }}>
+                      {s.source.startsWith("창업가 검증") && (
+                        <b className="mr-1.5 px-1.5 py-0.5 rounded text-[11px]" style={{ background: "#FFF6DE", color: "#8A4B08" }}>
+                          창업가 제출
+                        </b>
+                      )}
                       {s.source}
                     </span>
                   </span>
@@ -925,6 +930,7 @@ export function AreaScores({
   saved,
   onSave,
   onLoaded,
+  onValidateArea,
 }: {
   report: IdeaReport;
   financeSummary?: string | null;
@@ -932,6 +938,8 @@ export function AreaScores({
   onSave?: (v: { reportId: string; data: AreaScore[] }) => Promise<void> | void;
   /** 점수가 준비되면 알려준다 (판정 줄의 '점수 4.3/10'에 쓴다) */
   onLoaded?: (scores: AreaScore[]) => void;
+  /** 가장 약한 영역 '검증하기' */
+  onValidateArea?: (area: string, reason: string) => void;
 }) {
   const fresh = saved && saved.reportId === report.id ? saved.data : null;
   const [scores, setScores] = useState<AreaScore[] | null>(fresh);
@@ -949,7 +957,16 @@ export function AreaScores({
         .filter((a) => ar[a])
         .map((a) => [a, { summary: ar[a].summary.slice(0, 2500), findings: JSON.stringify(ar[a].findings).slice(0, 3500), evidence_count: ar[a].evidence?.length ?? 0 }]),
     );
-    scoreReport({ idea: { name: report.profile?.name ?? "", industry: report.profile?.industry ?? "" }, areas, finance_summary: financeSummary ?? "" })
+    // 이 보고서를 만들 때 넣은 창업가 검증도 함께 보내 점수에 반영한다
+    const validations = (report.input.validations ?? []).map((v) => ({
+      area: v.area,
+      hypothesis: v.hypothesis,
+      result: v.result,
+      method: v.method,
+      sample_size: v.sample_size,
+      metric: v.metric,
+    }));
+    scoreReport({ idea: { name: report.profile?.name ?? "", industry: report.profile?.industry ?? "" }, areas, finance_summary: financeSummary ?? "", validations })
       .then(async (res) => {
         setScores(res);
         await onSave?.({ reportId: report.id, data: res });
@@ -1018,6 +1035,24 @@ export function AreaScores({
           );
         })}
       </ul>
+      {onValidateArea && max !== min && (() => {
+        const weakest = scores.find((s) => s.score === min)!;
+        return (
+          <div className="flex items-center justify-between gap-3 flex-wrap rounded-lg px-3 py-2.5" style={{ background: "#FFF6F5" }}>
+            <span className="text-xs leading-snug" style={{ color: slate }}>
+              <b style={{ color: "#B42318" }}>{AREA_NAMES[weakest.area] ?? weakest.area} {weakest.score}점</b> — 이 영역의 가설을 직접 검증하면 다음 보고서 점수에 반영돼요
+            </span>
+            <button
+              type="button"
+              onClick={() => onValidateArea(weakest.area, weakest.reason)}
+              className="p-0 text-[11px] font-semibold underline underline-offset-2 shrink-0"
+              style={{ background: "none", border: "none", color: "#B42318", cursor: "pointer" }}
+            >
+              검증하기 ›
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }

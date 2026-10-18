@@ -15,10 +15,12 @@ type CardAction = {
 };
 
 /** 단계별 카드 버튼. ?action=은 상세 화면이 받아서 바로 실행한다 */
-function actionsFor(idea: Idea, status: IdeaStatus, failedStage: IdeaStatus | null): CardAction[] {
+function actionsFor(idea: Idea, status: IdeaStatus, failedStage: IdeaStatus | null, loggedIn: boolean): CardAction[] {
   const base = `/ideas/${idea.id}`;
   switch (status) {
     case "memo":
+      // 비로그인은 인터뷰 대신 메모만으로 프로필 1~3을 미리 본다
+      if (!loggedIn) return [{ label: "프로필\n미리보기", href: `${base}?action=preview`, note: "하루 1회" }];
       return [
         { label: "AI 인터뷰", href: `${base}?action=interview`, needsLogin: true },
         { label: "직접 작성", href: `${base}?action=write`, needsLogin: true },
@@ -67,7 +69,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
   const title = displayTitle(idea);
   // 이름이 없으면 메모가 제목이 되므로 본문에서 반복하지 않는다
   const body = idea.profile.oneLiner || idea.latestReport?.summary || (idea.memo.trim() !== title ? idea.memo : "");
-  const actions = actionsFor(idea, status, failedStage);
+  const actions = actionsFor(idea, status, failedStage, loggedIn);
 
   // 열린 카드는 바깥을 누르거나 Esc를 누르면 닫는다
   useEffect(() => {
@@ -157,7 +159,7 @@ export default function IdeaCard({ idea, open, loggedIn, onToggle, onClose, onDe
           {actions.map((a) => {
             const inner = (
               <>
-                <span className="text-sm font-bold leading-tight">{a.label}</span>
+                <span className="text-sm font-bold leading-tight whitespace-pre-line">{a.label}</span>
                 {a.note && <span className="text-[11px] font-medium mt-0.5 opacity-70">{a.note}</span>}
               </>
             );

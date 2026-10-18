@@ -37,9 +37,11 @@ interface Props {
   scores?: AreaScore[] | null;
   /** 종합 평가 아래에 넣을 내용 (영역별 점수) */
   children?: React.ReactNode;
+  /** 약점 옆 '검증하기' — 누르면 그 약점을 가설로 채운 검증 입력을 연다 */
+  onValidateWeakness?: (text: string) => void;
 }
 
-export default function DecisionBanner({ result, scores, children }: Props) {
+export default function DecisionBanner({ result, scores, children, onValidateWeakness }: Props) {
   const cfg = DECISION_CONFIG[result.decision];
   const avg = scores?.length ? scores.reduce((a, x) => a + x.score, 0) / scores.length : null;
   const guide = scores?.length ? guideFor(result.decision, scores) : null;
@@ -93,8 +95,18 @@ export default function DecisionBanner({ result, scores, children }: Props) {
               </div>
               <ul className="m-0 p-0 list-none flex flex-col gap-2">
                 {g.items.map((t, i) => (
-                  <li key={i} className="rounded-lg px-3 py-2" style={{ background: g.bg, color: "#53647A" }}>
+                  <li key={i} className="rounded-lg px-3 py-2 flex flex-col gap-1.5" style={{ background: g.bg, color: "#53647A" }}>
                     <LeadBold text={stripConfidence(t)} />
+                    {g.title === "약점" && onValidateWeakness && (
+                      <button
+                        type="button"
+                        onClick={() => onValidateWeakness(stripConfidence(t))}
+                        className="self-start p-0 text-[11px] font-semibold underline underline-offset-2"
+                        style={{ background: "none", border: "none", color: "#B42318", cursor: "pointer" }}
+                      >
+                        검증하기 ›
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -100,6 +100,8 @@ export interface Idea {
   reportDigest?: { reportId: string; rows: Record<string, string> } | null;
   reportCount: number;
   profileChangedSinceReport: boolean;
+  /** 비로그인 '프로필 미리보기'로 메모만 보고 만든 프로필 (인터뷰 없음) */
+  previewProfile?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -112,6 +114,8 @@ export interface IdeaReport {
   input: AnalyzeRequest;
   response: AnalyzeResponse;
   elapsedMs?: number;
+  /** 이 보고서를 만들기 직전 버전의 판정·점수 — '무엇이 바뀌었나' 비교용 */
+  baseline?: { reportId: string; version: number; decision?: Decision; scores: AreaScore[] | null } | null;
   createdAt: string;
 }
 

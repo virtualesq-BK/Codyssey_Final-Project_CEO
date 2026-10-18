@@ -132,9 +132,11 @@ export default function IdeasPage() {
             className="mb-6 rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
             style={{ background: "#FFFFFF", border: "1px solid #D7E0ED", color: "#53647A" }}
           >
-            <span>이 브라우저에만 저장돼 있어요. 로그인하면 계정으로 옮겨져요.</span>
-            <Link href="/login?next=/ideas" className="font-semibold underline" style={{ color: "#071B45" }}>
-              로그인 ›
+            <span>
+              <b style={{ color: "#071B45" }}>로그인하지 않으셨네요.</b> 다른 기기에서 열면 메모가 사라져요. 로그인해서 계정에 안전하게 저장하세요.
+            </span>
+            <Link href="/login?next=/ideas" className="font-semibold underline whitespace-nowrap" style={{ color: "#071B45" }}>
+              로그인하고 저장하기 ›
             </Link>
           </div>
         )}

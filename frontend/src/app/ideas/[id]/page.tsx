@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import InterviewPanel from "@/components/InterviewPanel";
 import { DiagnoseStartModal, DiagnosisProgressModal } from "@/components/DiagnosisModals";
 import ProfileWorkspace from "@/components/ProfileWorkspace";
+import ProfilePreviewModal from "@/components/ProfilePreviewModal";
 import StatusPill from "@/components/StatusPill";
 import { useAuth } from "@/contexts/AuthContext";
 import type { AnalyzeJob } from "@/lib/api";
@@ -30,6 +31,7 @@ import {
   listReports,
   patchIdea,
   startDiagnosis,
+  makePreviewProfile,
   saveProfile,
   startInterview,
   updateIdea,
@@ -70,6 +72,8 @@ export default function IdeaDetailPage() {
   const [job, setJob] = useState<AnalyzeJob | null>(null);
   const [diagnosisDone, setDiagnosisDone] = useState(false);
   const [reportSignal, setReportSignal] = useState(0);
+  // 비로그인 '프로필 미리보기' (메모만으로 프로필 1~3, 하루 1회)
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -127,6 +131,7 @@ export default function IdeaDetailPage() {
 
     const h = handlersRef.current;
     const { status } = effectiveStatus(idea);
+    if (action === "preview" && !user && status === "memo") setPreviewOpen(true);
     if (h && user) {
       if (action === "interview" && status === "memo") h.beginInterview();
       else if (action === "write" && (status === "memo" || status === "interviewing")) h.startProfile();
@@ -443,13 +448,24 @@ export default function IdeaDetailPage() {
                   </button>
                 </div>
               ) : (
-                <Link
-                  href={loginHref}
-                  className="self-start min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
-                  style={{ background: "#134CD8", textDecoration: "none" }}
-                >
-                  로그인하고 인터뷰 시작
-                </Link>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Link
+                    href={loginHref}
+                    className="min-h-[48px] px-6 rounded-xl font-bold text-sm text-white no-underline inline-flex items-center"
+                    style={{ background: "#134CD8", textDecoration: "none" }}
+                  >
+                    로그인하고 인터뷰 시작
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewOpen(true)}
+                    disabled={busy || !memoDraft.trim()}
+                    className="min-h-[48px] px-5 rounded-xl text-sm font-semibold bg-white disabled:opacity-50"
+                    style={{ border: "1.5px solid #D7E0ED", color: "#071B45", cursor: "pointer" }}
+                  >
+                    프로필 미리보기 <span className="text-xs font-normal" style={{ color: "#6B7280" }}>· 하루 1회</span>
+                  </button>
+                </div>
               )}
             </div>
           </section>
@@ -494,6 +510,22 @@ export default function IdeaDetailPage() {
         )}
 
       </main>
+      {previewOpen && (
+        <ProfilePreviewModal
+          idea={current}
+          onMake={async () => {
+            const saved =
+              memoDraft.trim() && memoDraft.trim() !== current.memo ? await updateIdea(user, current, { memo: memoDraft.trim() }) : current;
+            return makePreviewProfile(user, saved);
+          }}
+          onDone={(next) => {
+            setPreviewOpen(false);
+            setIdea(next);
+            setDraft(next.profile);
+          }}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 }

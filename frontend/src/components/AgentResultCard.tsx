@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { AgentResult } from "@/lib/api";
 import { SHOW_CONFIDENCE } from "@/lib/agents";
+import { cleanRecommendations, cleanSummary } from "@/lib/reportText";
 
 const AGENT_LABELS: Record<string, string> = {
   MarketAgent: "시장",
@@ -45,6 +46,8 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
   const label = AGENT_LABELS[agentName] ?? agentName;
 
   const isFailed = result.status === "failed" || result.status === "skipped";
+  const summary = cleanSummary(result.summary ?? "");
+  const recommendations = cleanRecommendations(result.recommendations);
 
   return (
     <div
@@ -69,19 +72,19 @@ export default function AgentResultCard({ agentName, result, hideLabel, hideSumm
       )}
 
 
-      {!hideSummary && result.summary && (
+      {!hideSummary && summary && (
         <p className="text-sm leading-relaxed text-text-secondary m-0">
-          {result.summary}
+          {summary}
         </p>
       )}
 
       {children}
 
-      {!isFailed && result.recommendations.length > 0 && (
+      {!isFailed && recommendations.length > 0 && (
         <div>
           <div className="text-xs font-semibold text-text-muted mb-2">권장 사항</div>
           <ul className="m-0 pl-5 list-disc flex flex-col gap-1">
-            {result.recommendations.slice(0, 3).map((rec, i) => (
+            {recommendations.slice(0, 3).map((rec, i) => (
               <li key={i} className="text-sm text-text-secondary leading-relaxed">
                 {rec}
               </li>

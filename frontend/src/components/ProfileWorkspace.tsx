@@ -21,10 +21,13 @@ import {
   displayTitle,
   effectiveStatus,
 } from "@/lib/idea";
-import { deleteIdea, listIdeas } from "@/lib/ideaStore";
+import { deleteIdea, deleteValidation, listIdeas, listValidations, saveValidation } from "@/lib/ideaStore";
+import ValidationBoard from "@/components/ValidationBoard";
+import ValidationForm, { type ValidationDraft, type ValidationPrefill } from "@/components/ValidationForm";
+import { type Validation, pendingValidations } from "@/lib/validation";
 import { type ProfileRow, isUnknown, profileFieldRows, reportRows, updateRow } from "@/lib/profileRows";
 
-type Tab = "overview" | "report" | "interview";
+type Tab = "overview" | "report" | "validation" | "interview";
 
 interface Section {
   no: number;
@@ -60,6 +63,7 @@ interface Props {
   onSaveDigest?: (v: { reportId: string; rows: Record<string, string> }) => Promise<void>;
 }
 
+const IDEA_LIMIT = 3;
 const ink = "#071B45";
 const slate = "#53647A";
 const iron = "#6B7280";
@@ -73,7 +77,14 @@ export default function ProfileWorkspace(props: Props) {
   const [editing, setEditing] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  // 왼쪽 '내 아이디어'는 3개까지만 — 보고서 목차가 화면 안에 보이도록
+  const [showAllIdeas, setShowAllIdeas] = useState(false);
   const router = useRouter();
+  // 가설 검증 기록 — 다음 보고서의 '창업가 검증' 근거
+  const [validations, setValidations] = useState<Validation[]>([]);
+  const [validationsLoading, setValidationsLoading] = useState(true);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [form, setForm] = useState<ValidationPrefill | null>(null);
 
   // 카드의 '보고서 보기'(#report)로 들어오면 보고서 탭부터
   useEffect(() => {
@@ -88,6 +99,36 @@ export default function ProfileWorkspace(props: Props) {
   useEffect(() => {
     listIdeas(user).then(setIdeas).catch(() => setIdeas([]));
   }, [user, idea.updatedAt]);
+  useEffect(() => {
+    let alive = true;
+    setValidationsLoading(true);
+    listValidations(user, idea.id)
+      .then((list) => alive && (setValidations(list), setValidationError(null)))
+      .catch((err) => alive && setValidationError(err instanceof Error ? err.message : String(err)))
+      .finally(() => alive && setValidationsLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [user, idea.id]);
+
+  async function submitValidation(draft: ValidationDraft) {
+    const saved = await saveValidation(user, idea.id, draft);
+    setValidations((list) => [saved, ...list.filter((v) => v.id !== saved.id)]);
+    setValidationError(null);
+    setForm(null);
+    // 보고서에서 시작했어도 저장 뒤엔 검증 기록 탭에서 '보고서에 반영'으로 이어지게
+    setTab("validation");
+  }
+
+  async function removeValidation(v: Validation) {
+    if (!confirm("이 검증 기록을 삭제할까요? 이미 만든 보고서에는 그대로 남아 있어요.")) return;
+    try {
+      await deleteValidation(user, idea.id, v.id);
+      setValidations((list) => list.filter((x) => x.id !== v.id));
+    } catch (err) {
+      setValidationError(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   const latest = reports[0] ?? null;
   const selectedReport = reports.find((r) => r.id === selectedReportId) ?? latest;
@@ -303,13 +344,21 @@ export default function ProfileWorkspace(props: Props) {
             </div>
 
             <div>
-              {!sectionLocked && <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} empty={empty} />}
+              {!sectionLocked && <SourceBadge row={r} sectionFromReport={!!s.fromReport} fromInterview={fromInterview} fromMemo={!!idea.previewProfile} empty={empty} />}
             </div>
           </div>
         );
       })}
     </div>
   );
+
+  // 지금 보고 있는 아이디어는 3개 안에 늘 들어가게 한다
+  const visibleIdeas = (() => {
+    if (showAllIdeas || ideas.length <= IDEA_LIMIT) return ideas;
+    const top = ideas.slice(0, IDEA_LIMIT);
+    const current = ideas.find((i) => i.id === idea.id);
+    return current && !top.includes(current) ? [...top.slice(0, IDEA_LIMIT - 1), current] : top;
+  })();
 
   const diagnoseLabel = hasReport ? "보고서 새로 작성 (유료)" : "상세분석하기 (유료)";
 
@@ -321,7 +370,7 @@ export default function ProfileWorkspace(props: Props) {
         <div className="text-xs px-2 pb-1" style={{ color: iron }}>
           내 아이디어
         </div>
-        {ideas.map((i) => {
+        {visibleIdeas.map((i) => {
           const active = i.id === idea.id;
           return (
             <Link
@@ -337,6 +386,17 @@ export default function ProfileWorkspace(props: Props) {
             </Link>
           );
         })}
+        {ideas.length > IDEA_LIMIT && (
+          <button
+            type="button"
+            onClick={() => setShowAllIdeas((v) => !v)}
+            aria-expanded={showAllIdeas}
+            className="rounded-lg py-2 text-xs font-semibold"
+            style={{ background: "none", border: "none", color: slate, cursor: "pointer" }}
+          >
+            {showAllIdeas ? "접기 ▴" : `더보기 (${ideas.length - IDEA_LIMIT}) ▾`}
+          </button>
+        )}
         <Link
           href="/ideas"
           className="mt-2 rounded-lg py-3 text-center text-sm font-semibold no-underline"
@@ -396,6 +456,7 @@ export default function ProfileWorkspace(props: Props) {
             [
               ["overview", "프로필", null],
               ["report", "진단 보고서", reports.length || (idea.latestReport ? 1 : 0)],
+              ["validation", "검증 기록", validations.length],
               ["interview", "인터뷰 기록", idea.interview?.messages.filter((m) => m.role === "user").length ?? 0],
             ] as [Tab, string, number | null][]
           ).map(([key, label, count]) => (
@@ -473,6 +534,21 @@ export default function ProfileWorkspace(props: Props) {
           </div>
         )}
 
+        {!user && (
+          <div
+            className="rounded-xl p-4 text-sm flex items-center justify-between gap-3 flex-wrap"
+            style={{ background: "#FFF6DE", color: "#8A4B08" }}
+          >
+            <span className="leading-relaxed">
+              <b>{idea.previewProfile ? "메모만으로 만든 미리보기 프로필이에요." : "로그인하지 않으셨네요."}</b> 이 브라우저에만 저장돼 있어요. 로그인하면
+              계정에 저장되고, AI 인터뷰로 더 정확하게 다듬을 수 있어요.
+            </span>
+            <Link href={`/login?next=/ideas/${idea.id}`} className="font-bold underline whitespace-nowrap" style={{ color: "#071B45" }}>
+              로그인하고 저장하기 ›
+            </Link>
+          </div>
+        )}
+
         {tab === "overview" && (
           <section id="profile" className="bg-white rounded-lg shadow-card px-6 py-4 scroll-mt-20" style={{ border: `1px solid ${line}` }}>
             {sections.filter((s) => !s.fromReport).map((s) => renderSection(s, false))}
@@ -505,6 +581,15 @@ export default function ProfileWorkspace(props: Props) {
                       >
                         상세분석하기 (유료)
                       </button>
+                    )}
+                    {!user && (
+                      <Link
+                        href={`/login?next=/ideas/${idea.id}`}
+                        className="min-h-[48px] px-6 rounded-xl text-sm font-bold no-underline inline-flex items-center"
+                        style={{ border: "1px solid #071B45", color: "#071B45", textDecoration: "none" }}
+                      >
+                        로그인하고 상세분석하기
+                      </Link>
                     )}
                     {status === "diagnosing" && <StatusPill status="diagnosing" />}
                     {missingCount > 0 && (
@@ -548,6 +633,9 @@ export default function ProfileWorkspace(props: Props) {
                 onSaveMarketSizing={onSaveMarket}
                 areaScores={idea.areaScores}
                 onSaveAreaScores={onSaveScores}
+                onValidate={user ? (prefill) => setForm(prefill) : undefined}
+                validationCounts={validations.reduce<Record<string, number>>((acc, v) => ({ ...acc, [v.area]: (acc[v.area] ?? 0) + 1 }), {})}
+                onOpenValidations={() => setTab("validation")}
               />
             ) : idea.latestReport ? (
               <div className="bg-white rounded-lg shadow-card p-8 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
@@ -567,6 +655,26 @@ export default function ProfileWorkspace(props: Props) {
           </section>
         )}
 
+        {tab === "validation" &&
+          (user ? (
+            <ValidationBoard
+              validations={validations}
+              reports={reports}
+              loading={validationsLoading}
+              error={validationError}
+              canDiagnose={canDiagnose}
+              diagnosing={status === "diagnosing"}
+              onAdd={(prefill) => setForm(prefill)}
+              onEdit={(v) => setForm(v)}
+              onDelete={removeValidation}
+              onDiagnose={onDiagnose}
+            />
+          ) : (
+            <EmptyCard text="검증 기록은 로그인한 뒤에 남길 수 있어요." />
+          ))}
+
+        {form && <ValidationForm initial={form} onSave={submitValidation} onClose={() => setForm(null)} />}
+
         {tab === "interview" &&
           (idea.interview?.messages.length ? (
             <section className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-3" style={{ border: `1px solid ${line}` }}>
@@ -581,7 +689,13 @@ export default function ProfileWorkspace(props: Props) {
               ))}
             </section>
           ) : (
-            <EmptyCard text="인터뷰 없이 직접 작성한 프로필이에요." />
+            <EmptyCard
+              text={
+                idea.previewProfile
+                  ? "메모만으로 만든 미리보기 프로필이에요. 로그인하면 AI 인터뷰로 더 정확하게 다듬을 수 있어요."
+                  : "인터뷰 없이 직접 작성한 프로필이에요."
+              }
+            />
           ))}
       </main>
 
@@ -599,6 +713,7 @@ export default function ProfileWorkspace(props: Props) {
           onOpenReport={() => setTab("report")}
           job={diagnosisJob ?? null}
           onShowProgress={onShowProgress}
+          pendingValidationCount={latest ? pendingValidations(validations, latest).length : 0}
         />
 
         <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-2" style={{ border: `1px solid ${line}` }}>
@@ -721,11 +836,14 @@ function SourceBadge({
   row,
   sectionFromReport,
   fromInterview,
+  fromMemo,
   empty,
 }: {
   row: ProfileRow;
   sectionFromReport: boolean;
   fromInterview: boolean;
+  /** 비로그인 미리보기 — 메모만 보고 AI가 쓴 프로필 */
+  fromMemo?: boolean;
   empty: boolean;
 }) {
   const base = "inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap";
@@ -758,7 +876,7 @@ function SourceBadge({
       </span>
     ) : (
     <span className={base} style={{ background: fromInterview ? "#F5F7FB" : "#F5F7FB", color: fromInterview ? "#071B45" : "#53647A" }}>
-      {fromInterview ? "인터뷰 · AI" : "직접 입력"}
+      {fromInterview ? "인터뷰 · AI" : fromMemo ? "메모 · AI" : "직접 입력"}
     </span>
     )
   );
@@ -776,7 +894,9 @@ function DiagnosisCard({
   onOpenReport,
   job,
   onShowProgress,
+  pendingValidationCount = 0,
 }: {
+  pendingValidationCount?: number;
   idea: Idea;
   status: IdeaStatus;
   latest: IdeaReport | null;
@@ -870,7 +990,7 @@ function DiagnosisCard({
             className="min-h-[48px] rounded-xl text-sm font-bold disabled:opacity-50"
             // 보고서가 있고 프로필이 그대로면 보조 버튼으로 (강조는 진짜 다음 할 일에만)
             style={
-              dr && !idea.profileChangedSinceReport && status !== "failed"
+              dr && !idea.profileChangedSinceReport && !pendingValidationCount && status !== "failed"
                 ? { background: "#fff", color: "#071B45", border: "1px solid #D9DBDA", cursor: "pointer" }
                 : { background: "#134CD8", color: "#fff", border: "none", cursor: "pointer" }
             }
@@ -882,6 +1002,8 @@ function DiagnosisCard({
               ? "* 필수 항목을 채우면 분석할 수 있어요"
               : idea.profileChangedSinceReport
                 ? "프로필이 바뀌었어요. 새 보고서를 만들 수 있어요"
+                : dr && pendingValidationCount
+                  ? `반영 전 검증 ${pendingValidationCount}건 — 새 보고서에 근거로 들어가요`
                 : dr
                   ? "이전 보고서는 버전으로 남아요 · 3분 안팎"
                   : "보통 3분 안팎 걸려요"}

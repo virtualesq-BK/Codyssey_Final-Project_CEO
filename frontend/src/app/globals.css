@@ -53,3 +53,9 @@ button, input, select, textarea { font: inherit; }
   outline: 3px solid var(--blue) !important;
   outline-offset: 3px;
 }
+
+/* 프로필 미리보기 — 인터뷰 예시 말풍선이 아래에서 떠오른다 */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}

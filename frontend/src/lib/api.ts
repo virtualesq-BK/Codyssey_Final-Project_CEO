@@ -1,3 +1,4 @@
+import type { ValidationInput } from "@/lib/validation";
 export type BusinessStage = "idea" | "validation" | "early" | "growth";
 export type AgentStatus = "pending" | "running" | "success" | "partial" | "failed" | "skipped";
 export type Decision = "GO" | "PIVOT" | "VALIDATE_MORE" | "STOP";
@@ -10,6 +11,8 @@ export interface AnalyzeRequest {
   industry: string;
   location: string;
   business_stage: BusinessStage;
+  /** 창업가 검증 기록 — 있으면 '창업가 검증' 근거로 들어간다 (상세분석 작업만 받음) */
+  validations?: ValidationInput[];
 }
 
 export interface Evidence {
@@ -167,6 +170,24 @@ export function interviewDraftProfile(memo: string, messages: InterviewMessage[]
   return postJson<ProfileDraft>("/api/v1/interview/profile", { memo, messages }, "프로필 초안 요청 실패");
 }
 
+/** 오늘 미리보기를 이미 쓴 경우 (같은 IP 하루 1회) */
+export class PreviewLimitError extends Error {}
+
+/** 비로그인 '프로필 미리보기' — 메모만으로 프로필 1~3 초안 */
+export async function previewProfile(memo: string): Promise<ProfileDraft> {
+  const res = await fetch("/api/v1/interview/preview-profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ memo }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const message = typeof err.detail === "string" ? err.detail : "프로필 미리보기를 만들지 못했어요.";
+    throw res.status === 429 ? new PreviewLimitError(message) : new Error(message);
+  }
+  return res.json();
+}
+
 export async function healthCheck(): Promise<boolean> {
   try {
     const res = await fetch("/api/v1/health");
@@ -248,6 +269,7 @@ export async function scoreReport(req: {
   idea: Record<string, string>;
   areas: Record<string, { summary: string; findings: string; evidence_count: number }>;
   finance_summary: string;
+  validations?: { area: string; hypothesis: string; result: string; method: string; sample_size: number | null; metric: string }[];
 }): Promise<AreaScore[]> {
   const res = await fetch("/api/v1/report/scores", {
     method: "POST",
