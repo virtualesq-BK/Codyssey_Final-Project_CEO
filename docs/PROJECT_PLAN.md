@@ -220,28 +220,28 @@ BusinessIdea (Pydantic)
 | 주차 | 마일스톤 | 완료 기준 |
 |---|---|---|
 | **1주차** | E2E 골격 연결 | Frontend → FastAPI → Orchestrator → Agents → Frontend 정상 응답 ✅ |
-| **2주차** | 핵심 Agent 구현 | MarketAgent RAG 완성, Customer·Competitor·BM Agent LLM 연결 |
-| **3주차** | 전체 Agent 통합 | Financial·Risk Agent 완성, 공고 실데이터 연동 |
-| **4주차** | 완성 및 배포 | UI 완성, 통합 테스트, 발표 자료 준비 |
+| **2주차** | 핵심 Agent 구현 | MarketAgent RAG 완성, Customer·Competitor·BM Agent LLM 연결 ✅ |
+| **3주차** | 전체 Agent 통합 | Financial·Risk Agent 완성, 공고 실데이터 연동 ✅ |
+| **4주차** | 완성 및 배포 | UI 완성, 통합 테스트, 발표 자료 준비 ✅ |
 
 ### 5.2 주차별 세부 계획
 
 **1주차 (완료)**
-- 공통 Domain Schema 정의
+- 공통 Domain Schema 정의 (김병국)
 - BaseAgent / LLMProvider 추상화
 - OrchestratorAgent, DecisionAgent 구현
 - FastAPI 서버 및 엔드포인트 구성
 - Next.js 전체 UI 구현 (5개 메뉴)
-- Vercel / Render 배포 파이프라인 구성
-- 외부 API Evidence Retriever 연결 (KOSIS ✅)
+- Vercel / Render 배포 파이프라인 구성 (김병국)
+- 외부 API Evidence Retriever 연결 (KOSIS 등)
 
-**2주차**
+**2주차 (완료)**
 - MarketAgent RAG 파이프라인 완성 (조경학)
 - Pinecone Serverless Vector DB 구축 및 시맨틱·하이브리드 검색 연동 (조경학)
 - CustomerAgent / CompetitorAgent / BusinessModelAgent LLM 연결 (유상우)
 - Firebase 로그인 / Firestore 분석 결과 저장 통합
 
-**3주차**
+**3주차 (완료)**
 - FinancialAgent 완성 — 재무 계산 로직 + 단위 테스트 (전선형)
 - RiskAgent 완성 — 리스크 매트릭스 (전선형)
 - 법원 판례 수집기 연동 (law.go.kr DRF API, 10개 주제 정기 수집) (조경학)
@@ -249,8 +249,8 @@ BusinessIdea (Pydantic)
 - Naver DataLab / KIPRIS API 권한 활성화
 - Token usage DB 저장 연동
 
-**4주차**
-- 전체 E2E 통합 테스트
+**4주차 (완료)**
+- 전체 E2E 통합 테스트 (김병국)
 - UI/UX 개선 및 반응형 최적화 (전지영)
 - PostgreSQL 마이그레이션 (SQLite → Render PostgreSQL)
 - CI/CD 파이프라인 구성 (GitHub Actions)
