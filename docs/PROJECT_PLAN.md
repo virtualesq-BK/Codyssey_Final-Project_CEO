@@ -164,7 +164,8 @@ Agent → LLMProvider → OpenAI GPT / Anthropic Claude
       │    /api/v1/programs
       │    /api/v1/report/scores
       │    /api/v1/report/profile-digest
-      │    /api/v1/report/modues-application   ← NEW
+      │    /api/v1/report/modues-application
+      │    /api/v1/interview/preview-profile  ← NEW
       │    /api/v1/market/sizing
       │    /api/v1/finance/statement
       ▼
@@ -256,6 +257,26 @@ BusinessIdea (Pydantic)
 - 손익계산서 생성 API (`/api/v1/finance/statement`) ✅
 - Concept-B 디자인 시스템 적용 (Pretendard 폰트, 수평 로고 헤더, 새 파비콘) ✅
 - Naver API Fallback 추가 (웹검색 안정성 강화) ✅
+- **가설 검증 시스템 구현** ✅ (2026-10-17~18)
+  - 보고서 약점·면적 점수 섹션에 "이 분야 검증하기" 링크 표시, 검증 N건 배지
+  - ValidationBoard: 가설 검증 기록 상태 보드 (미처리 건수·재분석 버튼)
+  - ValidationForm: 인터뷰·설문·예약주문·MVP·영업테스트·전문가 자문·데이터 분석 7가지 방법
+  - 검증 기록 Firestore `users/{uid}/ideas/{id}/validations` 서브컬렉션에 저장
+  - 다음 재분석 시 `user_validation.py`가 검증 기록을 `창업가 검증` Evidence로 변환·주입
+  - 보고서 v(n-1)→v(n) 판정·점수·검증 활용 변화 요약 표시
+- **비회원 프로필 미리보기** ✅ (2026-10-18)
+  - 메모만 입력한 비회원도 프로필 섹션 1~3 AI 생성 미리보기
+  - `POST /api/v1/interview/preview-profile` — IP당 하루 1회 제한(인메모리), 429 시 로그인 CTA
+  - ProfilePreviewModal: 2턴 인터뷰 예시 리플레이 + 프로필 1~3 결과 표시
+  - 비회원 IdeaCard 버튼 "프로필 / 미리보기" 두 줄 표기
+  - 미리보기 결과는 브라우저 저장 후 로그인 시 계정으로 자동 이전
+- **공고 목록 페이지네이션 및 필터 개선** ✅ (2026-10-18)
+  - 30개씩 번호 페이저, 필터 변경 시 첫 페이지로 자동 이동
+  - 2행 필터: 1행(검색), 2행(모집상태·지역·분야 라벨 셀렉트)
+  - 기본값: 모집중 · 전체 지역 · 사업화 분야
+- **Vercel 빌드 오류 수정** ✅ (2026-10-19)
+  - 루트 `vercel.json` 추가로 FastAPI 오감지(`FASTAPI_ENTRYPOINT_NOT_FOUND`) 해결
+  - 빌드 경로를 `frontend/` 명시, Next.js 프레임워크 선언
 
 ### 5.3 팀 구성 및 담당
 

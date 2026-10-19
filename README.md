@@ -105,6 +105,9 @@ FinancialAgent  RiskAgent
 | 시맨틱 RAG 검색 | Pinecone Vector DB 기반 시맨틱·하이브리드 검색으로 관련 공공데이터 정밀 조회 |
 | **MY지원서** | 보고서가 완성된 아이디어로 창업 지원 공고에 지원서 생성·관리 |
 | **모두의 창업 지원서 자동 작성** | "모두의 창업" 선택 시 AI가 보고서 데이터 기반으로 6개 문항 자동 작성 |
+| **가설 검증 보드** | 보고서 약점·면적 점수별 "이 분야 검증하기" 링크 → 인터뷰·설문·MVP 등 검증 방법 기록, 다음 분석 시 창업자 근거로 자동 반영 |
+| **비회원 프로필 미리보기** | 메모만 입력한 비회원도 프로필 1~3 AI 생성 미리보기 가능 (IP당 하루 1회), 섹션 4~7은 로그인 CTA |
+| **공고 페이지네이션** | 창업 지원 공고 30개씩 페이지 분리, 2행 필터(검색 / 모집상태·지역·분야), 기본값 사업화 |
 
 ---
 
@@ -199,6 +202,7 @@ pytest
 | `POST` | `/api/v1/report/scores` | 보고서 영역별 점수 채점 (1~10점) |
 | `POST` | `/api/v1/report/profile-digest` | 프로필 섹션 요약 생성 |
 | `POST` | `/api/v1/report/modues-application` | 모두의 창업 지원서 6개 문항 AI 자동 작성 |
+| `POST` | `/api/v1/interview/preview-profile` | 비회원 메모 기반 프로필 1~3 생성 미리보기 (IP당 1일 1회) |
 | `GET` | `/api/v1/market/sizing` | TAM·SAM·SOM 시장 규모 계산 |
 | `POST` | `/api/v1/finance/statement` | 손익계산서 생성 |
 | `GET` | `/api/v1/health` | 헬스체크 |
@@ -223,7 +227,12 @@ pytest
 │   │   ├── db/              # SQLAlchemy 모델 및 세션
 │   │   ├── financial/       # 재무 계산기 (BEP, CAC, LTV 등)
 │   │   └── rag/             # RAG 어댑터 및 외부 리트리버
-│   └── rag/bizrag/          # Shared RAG 인프라 (벡터 스토어, 커넥터)
+│   ├── rag/
+│   │   ├── bizrag/          # Shared RAG 인프라 (벡터 스토어, 커넥터)
+│   │   └── user_validation.py  # 사용자 가설 검증 기록 조회 (Firestore → Evidence 변환)
+│   └── tests/
+│       ├── test_user_validation.py  # 가설 검증 Evidence 변환 단위 테스트
+│       └── test_preview_profile.py  # 비회원 프로필 미리보기 단위 테스트
 ├── frontend/
 │   └── src/
 │       ├── app/
@@ -234,12 +243,16 @@ pytest
 │       │   └── api/v1/             # Next.js API 프록시 라우터
 │       ├── components/
 │       │   ├── NewApplicationDialog.tsx  # 지원서 생성 다이얼로그 (모두의창업 폼 포함)
+│       │   ├── ValidationBoard.tsx       # 가설 검증 보드 (검증 기록 목록·상태)
+│       │   ├── ValidationForm.tsx        # 검증 기록 입력 폼 (7개 방법 선택)
+│       │   ├── ProfilePreviewModal.tsx   # 비회원 프로필 1~3 미리보기 모달
 │       │   └── ...
 │       ├── contexts/        # Auth Context
 │       └── lib/
 │           ├── application.ts       # 지원서 타입 (ModeusAnswers 포함)
 │           ├── applicationStore.ts  # 지원서 저장소 (Firestore/localStorage)
 │           ├── programs.ts          # 공고 타입 + PINNED_PROGRAMS 상수
+│           ├── validation.ts        # 가설 검증 타입 및 Firestore 저장 로직
 │           └── ...
 ├── docker-compose.yml
 ├── render.yaml
@@ -259,10 +272,33 @@ pytest
 - 국가법령정보 판례 API 연동 — 창업·소비자·식품위생 등 10개 주제 정기 수집
 - **MY지원서 기능** — 보고서가 완성된 아이디어 기반 지원서 생성·상태 관리 (Firestore/localStorage)
 - **모두의 창업 지원서 AI 자동 작성** — 보고서 DecisionResult 데이터를 LLM에 전달하여 6개 문항(Q1~Q4-2) 자동 생성
+- **가설 검증 시스템** — 보고서 약점·영역 점수별 "이 분야 검증하기" 링크, 검증 보드(ValidationBoard)로 인터뷰·설문·MVP 등 7개 방법 기록, 다음 재분석 시 창업자 근거(`창업가 검증` Evidence)로 자동 주입, 보고서 v(n-1)→v(n) 변화 요약 표시
+- **비회원 프로필 미리보기** — 메모 입력 비회원도 프로필 섹션 1~3 AI 생성 미리보기 (`POST /api/v1/interview/preview-profile`), IP당 하루 1회 제한, 로그인 시 계정으로 이전
+- **공고 목록 페이지네이션** — 30개씩 번호 페이저, 2행 필터(검색 / 모집상태·지역·분야), 기본값 사업화 분야
 
 ---
 
 ## 변경 이력
+
+### v1.3.0 (2026-10-19)
+
+**가설 검증 시스템 · 비회원 프로필 미리보기 · 공고 페이지네이션**
+
+- `backend/app/rag/user_validation.py`: 사용자 가설 검증 기록(Firestore) → `창업가 검증` Evidence 변환 모듈 신규 추가
+- `backend/app/api/analyze_jobs.py`: 재분석 시 validations를 Evidence로 주입, 영역 점수 가감 로직 연동
+- `backend/app/api/report_routes.py`: 보고서 v(n-1)→v(n) 변화 요약 생성 엔드포인트 추가
+- `backend/app/api/interview_routes.py`: `POST /api/v1/interview/preview-profile` 신규 — 메모 기반 프로필 1~3 생성, IP당 하루 1회 제한(인메모리), 429 시 로그인 CTA
+- `firestore.rules`: `users/{uid}/ideas/{ideaId}/validations` 서브컬렉션 보안 규칙 추가
+- `frontend/src/components/ValidationBoard.tsx`: 가설 검증 보드 신규 — 상태 보드·미처리 건수·재분석 버튼
+- `frontend/src/components/ValidationForm.tsx`: 검증 기록 입력 폼 — 인터뷰·설문·예약주문·MVP·영업테스트·전문가 자문·데이터 분석 7개 방법
+- `frontend/src/components/ReportView.tsx`: 보고서 약점·영역 점수 섹션에 "이 분야 검증하기" 링크, 검증 N건 배지, v(n-1)→v(n) 변화 요약 표시
+- `frontend/src/components/ProfilePreviewModal.tsx`: 비회원 프로필 미리보기 모달 — 2턴 예시 리플레이 + 프로필 1~3 표시, 섹션 4~7 잠금 + 로그인 CTA
+- `frontend/src/components/IdeaCard.tsx`: 비회원 카드 버튼이 "프로필 / 미리보기" 두 줄 표시
+- `frontend/src/lib/validation.ts`: 가설 검증 타입 정의 및 Firestore 저장·조회 함수
+- `frontend/src/app/programs/page.tsx`: 공고 목록 30개씩 번호 페이저, 2행 필터(검색/모집상태·지역·분야), 기본값 사업화 분야
+- `vercel.json` (루트): 루트에 추가 — Vercel이 FastAPI로 오감지하는 문제 해결, Next.js 빌드 경로 명시
+
+---
 
 ### v1.2.0 (2026-10-18)
 
