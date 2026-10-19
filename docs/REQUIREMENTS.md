@@ -22,7 +22,7 @@
 | `business_stage` | enum | — | 사업 단계 (기본값: `idea`) |
 
 #### FR-01-2. Multi-Agent 병렬 분석
-- 시스템은 입력된 아이디어를 7개 전문 에이전트에 전달하여 분석을 수행한다.
+- 시스템은 입력된 아이디어를 분석 파이프라인의 7개 전문 에이전트에 전달하여 분석을 수행한다. (인터뷰/프로필 전용 InterviewAgent 포함 시 총 8개 AI 에이전트 운영)
 - Phase 1 (병렬): MarketAgent, CustomerAgent, CompetitorAgent가 동시에 실행된다.
 - Phase 2 (순차): BusinessModelAgent가 Phase 1 결과를 바탕으로 실행된다.
 - Phase 3 (병렬): FinancialAgent, RiskAgent가 동시에 실행된다.

@@ -60,7 +60,12 @@ Multi-Agent AI 시스템으로 전문 컨설팅 수준의 분석을 **저비용�
 
 ### 3.1 Multi-Agent Architecture
 
-총 7개의 전문 에이전트가 단계별로 협력한다.
+총 **8개의 AI 에이전트**가 역할별로 협력한다.
+
+- **분석 파이프라인 에이전트 (7개, Orchestrator 관리):** 사업 아이디어를 입력받아 GO/PIVOT/VALIDATE_MORE/STOP 판정을 산출한다.
+- **인터뷰/프로필 에이전트 (1개, 독립 운영):** 대화형 인터뷰로 아이디어를 탐색하고 아이템 프로필 초안을 생성한다.
+
+#### 분석 파이프라인 (7개)
 
 ```
 [사용자 입력]
@@ -90,6 +95,10 @@ Multi-Agent AI 시스템으로 전문 컨설팅 수준의 분석을 **저비용�
 
 | Agent | AI 활용 방법 | 핵심 출력 |
 |---|---|---|
+**분석 파이프라인 (Orchestrator, 7개)**
+
+| Agent | AI 활용 방법 | 핵심 출력 |
+|---|---|---|
 | **MarketAgent** | RAG + KOSIS·DataLab 실데이터 → LLM 종합 | 시장 규모, 성장률, 트렌드 |
 | **CustomerAgent** | LLM 기반 페르소나 생성, Pain/Gain 추출 | 고객 세그먼트, 핵심 니즈 |
 | **CompetitorAgent** | 웹 검색 + LLM 경쟁사 비교 분석 | 경쟁 구도, 차별화 포인트 |
@@ -97,6 +106,12 @@ Multi-Agent AI 시스템으로 전문 컨설팅 수준의 분석을 **저비용�
 | **FinancialAgent** | 구조화 계산 + LLM 시나리오 생성 | 초기 비용, 손익분기점 |
 | **RiskAgent** | LLM 기반 리스크 매트릭스 생성 | 리스크 항목, 대응 전략 |
 | **DecisionAgent** | 전체 결과 종합 → SWOT + 판정 | 최종 GO/PIVOT/VALIDATE/STOP |
+
+**인터뷰/프로필 에이전트 (독립, 1개)**
+
+| Agent | AI 활용 방법 | 핵심 출력 |
+|---|---|---|
+| **InterviewAgent** | LLM 기반 대화형 인터뷰 진행 (최대 14턴), 메모·대화 기록 기반 프로필 초안 생성 | `next_turn` — 다음 인터뷰 질문 / `draft_profile` — 프로필 섹션 1~7 / `preview-profile` — 비회원 프로필 1~3 미리보기 |
 
 ### 3.3 Evidence 기반 판단 원칙
 

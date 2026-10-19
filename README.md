@@ -7,7 +7,7 @@
 
 ## 프로젝트 개요
 
-예비창업자가 아이디어를 입력하면 7개의 전문 AI 에이전트가 시장·고객·경쟁사·비즈니스모델·재무·리스크를 단계적으로 분석하고, 공공데이터 기반 근거(Evidence)와 함께 창업 여부에 대한 최종 판정을 제공합니다.
+예비창업자가 아이디어를 입력하면 **8개의 전문 AI 에이전트**가 협력하여 시장·고객·경쟁사·비즈니스모델·재무·리스크를 단계적으로 분석합니다. 분석 파이프라인의 7개 에이전트(Orchestrator)가 공공데이터 기반 근거(Evidence)와 함께 창업 여부에 대한 최종 판정을 제공하고, 별도의 InterviewAgent가 대화형 인터뷰와 아이템 프로필 생성을 담당합니다.
 
 - **목표:** 단순 창업정보 챗봇이 아닌, 근거 기반 의사결정 지원
 - **원칙:** 임의 수치 생성 금지 — 근거 부족 시 "데이터 부족 / 추가 조사 필요"로 명시
@@ -87,6 +87,18 @@ FinancialAgent  RiskAgent
   판정: GO / PIVOT / VALIDATE_MORE / STOP
 ```
 
+**분석 파이프라인 외 에이전트:**
+```
+사용자 메모 / 인터뷰 대화
+        │
+  InterviewAgent
+  ├── next_turn()        → 인터뷰 다음 질문 생성 (최대 14턴)
+  ├── draft_profile()    → 인터뷰 전문 기반 아이템 프로필 초안 생성 (섹션 1~7)
+  └── preview-profile()  → 비회원 메모 기반 프로필 1~3 미리보기 (IP당 1일 1회)
+```
+
+> 총 AI 에이전트: **8개** — 분석 파이프라인 7개(Orchestrator) + InterviewAgent 1개
+
 **공공데이터 커넥터 (RAG Evidence):** KOSIS(통계청), Naver DataLab, KIPRIS(특허청), 공공데이터포털, 한국은행, WorldBank, 국가법령정보(법령·판례), Pinecone Vector DB (시맨틱/하이브리드 검색)
 
 ---
@@ -95,7 +107,7 @@ FinancialAgent  RiskAgent
 
 | 기능 | 설명 |
 |------|------|
-| 사업성 AI 분석 | 아이디어 입력 → 7 에이전트 분석 → 최종 판정 + 근거 리포트 |
+| 사업성 AI 분석 | 아이디어 입력 → 분석 파이프라인 7 에이전트 → 최종 판정 + 근거 리포트 |
 | MY아이디어 이력 | 분석 결과 자동 저장 (localStorage + Firestore) |
 | 창업 지원 공고 | 정부·지자체 공고 목록 (필터: 마감·지역·분야·키워드) |
 | 스타트업 라운지 | 창업 뉴스, 투자 정보, 정부 포털 링크 |
@@ -215,7 +227,7 @@ pytest
 .
 ├── backend/
 │   ├── app/
-│   │   ├── agents/          # 7개 전문 에이전트 + Orchestrator
+│   │   ├── agents/          # 8개 AI 에이전트 (분석 파이프라인 7 + InterviewAgent 1)
 │   │   ├── api/             # FastAPI 라우터
 │   │   │   ├── routes.py            # 분석·공고 라우터
 │   │   │   ├── report_routes.py     # 보고서 점수·요약·모두의창업 자동작성
@@ -263,7 +275,7 @@ pytest
 
 ## 주요 결과
 
-- 7개 전문 에이전트의 병렬·순차 파이프라인으로 분석 시간 단축
+- 분석 파이프라인 7개 에이전트(병렬·순차)로 분석 시간 단축, InterviewAgent로 대화형 아이디어 탐색 (총 8개 AI 에이전트)
 - 공공데이터(KOSIS, 특허청, 공공데이터포털, 한국은행, 법원 판례 등) 기반 Evidence-Chain으로 hallucination 방지
 - GO / PIVOT / VALIDATE_MORE / STOP 4단계 판정 + 실행 계획 자동 생성
 - Firebase Auth를 통한 소셜 로그인 및 Firestore 기반 분석 이력 영속화
