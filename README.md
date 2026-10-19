@@ -17,6 +17,7 @@
 - **시연 영상:** https://youtu.be/8i3llfY2BlE
 - **기획서:** [기획서 (PROJECT_PLAN.md)](docs/PROJECT_PLAN.md)
 - **기능 요구 명세서:** [기능 요구 명세서(REQUIREMENTS.md)](docs/REQUIREMENTS.md)
+- **발표자료:** [나도사장_발표자료_최종본(나도사장_발표자료_최종본.pdf)](docs/나도사장_발표자료_최종본.pdf)
 ---
 
 ## 팀원 역할
