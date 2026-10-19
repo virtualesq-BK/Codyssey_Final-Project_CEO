@@ -37,7 +37,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| 언어 | Python 3.11 |
+| 언어 | Python 3.12 |
 | API Framework | FastAPI 0.115 + Uvicorn |
 | LLM | OpenAI GPT-4o / GPT-4o-mini, Anthropic Claude 3.5 Sonnet / Haiku |
 | ORM | SQLAlchemy 2.0 (async) + aiosqlite |
